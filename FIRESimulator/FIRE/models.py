@@ -1,7 +1,11 @@
 from django.db import models
+from django.contrib.auth.models import User
+import uuid
 
 # Create your models here.
 class Simulation(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=50)
     current_age = models.PositiveSmallIntegerField()
     estimated_retirement_age = models.PositiveSmallIntegerField()
     current_yearly_salary = models.PositiveBigIntegerField()
@@ -28,3 +32,4 @@ class Simulation(models.Model):
     esitmated_ira_yearly_return = models.FloatField()
     current_iba_balance = models.PositiveBigIntegerField()
     esitmated_iba_yearly_return = models.FloatField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)

@@ -1,81 +1,95 @@
 from django.db.models import F
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib import messages
+from django.db import IntegrityError
 
 from .models import Simulation
+from .forms import SimulationForm, CreateUserForm
+from .functions import saveobject, yearly_contribution_limits, yearly_amounts,start_end_balances, yearly_contributions, DFtoHTML
 
 import math
 import pandas as pd 
 
 # Create your views here.
-def index(request):
-    return HttpResponse("Hello, world. You're at the FIRE index.")
 
-def yearly_amounts(current,percentage,years,derived=False):
-    incrementing_list = []
-    if derived == True:
-        current = current * percentage
-    for num in range(0,years):
-        if num != 0:
-            new_amount = incrementing_list[num-1] * (1+percentage)
-            incrementing_list.append(math.floor(new_amount))
+def signupuser(request):
+    if request.method == "GET":
+        return render(request, 'FIRE/signupuser.html', {'form':CreateUserForm()})
+    else:
+        if request.POST.get('password1') == request.POST.get('password2'):
+            try:
+                if User.objects.filter(email=request.POST.get('email')).exists():
+                    return render(request, 'FIRE/signupuser.html', {'form':CreateUserForm(), 'error':'Email provided is already associated with an account.'})
+                else:
+                    user = User.objects.create_user(username=request.POST.get('username'), email=request.POST.get('email'), password=request.POST.get('password1')) 
+                    user.save()
+                    login(request, user)
+                    messages.success(request, "User created successfully!")
+                    return redirect('usersimulations')
+            except IntegrityError: 
+                return render(request, 'FIRE/signupuser.html', {'form':CreateUserForm(), 'error':'Username has already been taken.'})
+            
+def signupsave(request, simulation_id):
+    if request.method == "GET":
+        return render(request, 'FIRE/signupuser.html', {'form':CreateUserForm()})
+    else:
+        if request.POST.get('password1') == request.POST.get('password2'):
+            try:
+                if User.objects.filter(email=request.POST.get('email')).exists():
+                    return render(request, 'FIRE/signupuser.html', {'form':CreateUserForm(), 'error':'Email provided is already associated with an account.'})
+                else:
+                    user = User.objects.create_user(username=request.POST.get('username'), email=request.POST.get('email'), password=request.POST.get('password1')) 
+                    user.save()
+                    simulation_id = request.path_info.split("/")[2]
+                    simulation = get_object_or_404(Simulation, pk=simulation_id)
+                    simulation.user = user
+                    simulation.save()
+                    login(request, user)
+                    messages.success(request, "User created successfully!")
+                    return redirect('usersimulations')
+            except IntegrityError: 
+                return render(request, 'FIRE/signupuser.html', {'form':CreateUserForm(), 'error':'Username has already been taken.'})
         else:
-            incrementing_list.append(math.floor(current))
-    return incrementing_list
+            return render(request, 'FIRE/signupuser.html', {'form':CreateUserForm(), 'error':'Passwords did not match.'})
 
-def yearly_contribution_limits(start,increment_amount,years):
-    limits = []
-    limits.append(start)
-    for num in range(0,years-1):
-        limits.append(limits[num] + increment_amount)
-    return limits
-
-def yearly_contributions(years,savings,hsa_cont_limits,retirement_cont_limits,ira_cont_limits):
-    hsa_contributions = []
-    ira_contributions = []
-    retirement_contributions = []
-    iba_contributions = []
-    for num in range(0,years):
-        if savings[num] < 0:
-            hsa_contributions.append(0)
-            retirement_contributions.append(0)
-            ira_contributions.append(0)
-            iba_contributions.append(0)
-        if savings[num] > hsa_cont_limits[num] + retirement_cont_limits[num] + ira_cont_limits[num]:
-            hsa_contributions.append(hsa_cont_limits[num])
-            retirement_contributions.append(retirement_cont_limits[num])
-            ira_contributions.append(ira_cont_limits[num])
-            iba_contributions.append(savings[num] - hsa_cont_limits[num] - retirement_cont_limits[num] - ira_cont_limits[num])
-        elif savings[num] > hsa_cont_limits[num] + retirement_cont_limits[num]:
-            hsa_contributions.append(hsa_cont_limits[num])
-            retirement_contributions.append(retirement_cont_limits[num])
-            ira_contributions.append(savings[num] - hsa_cont_limits[num] - retirement_cont_limits[num])
-            iba_contributions.append(0)
-        elif savings[num] > hsa_cont_limits[num]:
-            hsa_contributions.append(hsa_cont_limits[num])
-            retirement_contributions.append(savings[num] - hsa_cont_limits[num])
-            ira_contributions.append(0)
-            iba_contributions.append(0)
+def loginuser(request):
+    if request.method == "GET":
+        return render(request, 'FIRE/loginuser.html', {'form':AuthenticationForm()})
+    else:
+        user = authenticate(request, username=request.POST.get('username'), password=request.POST.get('password'))
+        if user is None:
+            return render(request, 'FIRE/loginuser.html', {'form':AuthenticationForm(), 'error':"Username and password did not match."})
         else:
-            hsa_contributions.append(savings[num])
-            retirement_contributions.append(0)
-            ira_contributions.append(0)
-            iba_contributions.append(0)
+            login(request, user)
+            messages.success(request, "Logged in successfully!")
+            return redirect('usersimulations')
+        
+@login_required
+def logoutuser(request):
+    if request.method == "POST":
+        logout(request)
+        messages.success(request, "Logged out successfully!")
+        return redirect('newsimulation')
 
-    return hsa_contributions,retirement_contributions,ira_contributions,iba_contributions
-
-def start_end_balances(current_balance,years,contributions_list,salaries_list,yearly_return,employer_contribution=0):
-    start_list = [current_balance]
-    end_list = []
-    for num in range(0,years):
-        end_list.append(math.floor((start_list[num] + contributions_list[num] + (salaries_list[num] * employer_contribution)) * (1+yearly_return)))
-        if num != years - 1:
-            start_list.append(math.floor(end_list[num]))
-    return start_list,end_list
+def usersimulations(request):
+    if request.user.is_authenticated:
+        simulations = Simulation.objects.filter(user=request.user)
+        return render(request, 'FIRE/usersimulations.html', {'simulations' : simulations})
+    else:
+        print("redirecting")
+        return redirect('loginuser')
 
 def firesimulation(request, simulation_id):
+    # print(request.path_info.split("/")[2])
     simulation = get_object_or_404(Simulation, pk=simulation_id)
+    if request.user.is_authenticated and request.user != simulation.user:
+            return redirect('/newsimulation')
     years_until_retirement = simulation.estimated_retirement_age - simulation.current_age
     salaries = yearly_amounts(simulation.current_yearly_salary,simulation.estimated_salary_raise,years_until_retirement)
     bonuses = yearly_amounts(simulation.current_yearly_salary,simulation.estimated_salary_raise,years_until_retirement,derived=True)
@@ -128,6 +142,44 @@ def firesimulation(request, simulation_id):
         'INDIVIDUAL END': iba_end, 
         'NET WORTH': net_worth} 
    
+    
     df = pd.DataFrame(dict)
-    df = df.to_html()
-    return render(request, "FIRE/firesimulation.html", {"salaries": salaries, "df": df})
+    for column in list(df.columns):
+       df[column] = df[column].apply(lambda x : "${:,}".format(x)) 
+    df = DFtoHTML(df)
+    return render(request, "FIRE/firesimulation.html", {"salaries": salaries, "df": df, "simulation": simulation})
+
+def newsimulation(request):
+    if request.method == "GET":
+        return render(request, 'FIRE/newsimulation.html', {'form': SimulationForm()})
+    else:
+        # try:
+        form = SimulationForm(request.POST)
+        newsim = saveobject(form, request)
+        id = newsim.id
+            # newplaylist.user = request.user
+            # ''' Spotify API Logic '''
+            # playlistDF = URLtoDF(form['url'].value())
+            # newplaylist.playlistHTML = DFtoHTML(playlistDF)
+            # newplaylist.songs = len(playlistDF)
+            # newplaylist.save()
+            # messages.success(request, f"{newplaylist.name} imported successfully!")
+        return redirect(f'/firesimulation/{id}')
+        # except (spotipy.SpotifyException, ValueError):
+            # return render(request, 'TopsListGenerator/importplaylist.html', {'form':PlaylistForm(), 'error': 'Sptofiy playlist URL not recongnized, please try again.'})
+
+@login_required
+def editsimulation(request, simulation_id):
+    simulation = get_object_or_404(Simulation, pk=simulation_id)
+    if request.method == "GET":
+        form = SimulationForm(instance=simulation)
+        return render(request, 'FIRE/editsimulation.html', {'simulation' : simulation, 'form' : form})
+    else:
+        # try:
+        form = SimulationForm(request.POST, instance=simulation)
+        newsim = saveobject(form, request)
+        id = newsim.id
+        # messages.success(request, f"{editedplaylist.name} info updated successfully!")
+        return redirect(f'/firesimulation/{id}')
+        # except (spotipy.SpotifyException, ValueError):
+        #     return render(request, 'TopsListGenerator/editplaylist.html', {'playlist' : playlist, 'form' : form,'error' : 'Sptofiy playlist URL not recongnized, please try again.'})

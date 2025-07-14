@@ -1,0 +1,44 @@
+{% extends 'FIRE/base.html' %}
+
+{% block content %}
+
+<div class="container">
+
+    {% if error %}
+
+        <div class="alert alert-danger" role="alert">
+            {{ error }}
+        </div>
+
+    {% endif %}
+
+    <div class="col-4 mx-auto">
+
+        <h1 class="text-center">Login</h1>
+
+        <form method="POST"> 
+        {% csrf_token %}
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="username" name="username" placeholder="username">
+                <label for="username">Username</label>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input type="password" class="form-control" id="password" name="password"placeholder="Password">
+                <label for="password">Password</label>
+            </div>
+
+            <div class="d-flex justify-content-center">
+                <button type="submit" class="btn btn-primary">Login</button>
+            </div>
+
+        </form>
+
+        <br>
+        <br>
+
+        <p class="text-center">Don't have an account? <a href="{% url 'signupuser' %}">Sign-up here</a></p>
+
+    </div>
+
+{% endblock %}

@@ -16,8 +16,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from FIRE import views
 
 urlpatterns = [
-    path("FIRE/", include("FIRE.urls")),
+    path("signup/", views.signupuser, name="signupuser"),
+    path("signup/<str:simulation_id>", views.signupsave, name="signupsave"),
+    path('logout/', views.logoutuser, name='logoutuser'),
+    path('login/', views.loginuser, name='loginuser'),
+    path("firesimulation/<str:simulation_id>", views.firesimulation, name="firesimulation"),
+    path("editsimulation/<str:simulation_id>", views.editsimulation, name="editsimulation"),
+    path("", views.newsimulation, name="newsimulation"),
+    path("mysimulations/", views.usersimulations, name="usersimulations"),
     path("admin/", admin.site.urls),
 ]

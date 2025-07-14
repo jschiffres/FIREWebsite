@@ -1,0 +1,57 @@
+{% extends 'FIRE/base.html' %}
+
+{% block content %}
+
+{% if simulations %}
+<div class="container">
+	<h1>{{ user.username }}'s Simulations</h1>
+
+	<div>
+
+		<hr class="rounded">
+
+	        <div class="accordion" id="simulationssaccordion">
+	        	{% for simulation in simulations %}
+				<div class="accordion-item">
+			    	<h2 class="accordion-header" id="heading">
+			      		<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse--{{ simulation.pk }}" aria-expanded="true" aria-controls="collapse">
+			        		{{ simulation.name }}
+			      		</button>
+			    	</h2>
+				    <div id="collapse--{{ simulation.pk }}" class="accordion-collapse collapse" aria-labelledby="heading" data-bs-parent="#simulationssaccordion">
+				      	<div class="accordion-body">
+
+				      		<ul class="list-group list-group-horizontal d-flex justify-content-center">
+
+				        		<li class="list-group-item">
+					        	    <form action="{% url 'editsimulation' simulation.id %}">
+	              						<button type="submit" class="btn btn-primary">Edit Simulation</button>
+	          						</form>
+		          				</li>
+
+		          				<li class="list-group-item">		
+	          						<form method="POST" action="{% url 'firesimulation' simulation.id %}">
+	            					{% csrf_token %}
+	              						<button type="submit" class="btn btn-dark">Run Simulation</button>
+	          						</form>
+	          					</li>
+
+	          				</ul>
+
+				      	</div>
+				    </div>
+				</div>
+				{% endfor %}
+			 </div>
+	    
+	    {% else %}
+
+	        <div class="text-center">
+	            <h2>Looks like you don't have any simulations!</h2>
+	        	<br>
+	        	<a role="button" class="btn btn-outline-primary" href="{% url 'newsimulation' %}">Create Simulation</a>
+	        </div>
+	    {% endif %}
+	</div>
+
+{% endblock %}

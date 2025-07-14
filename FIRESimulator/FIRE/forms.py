@@ -1,0 +1,41 @@
+from django.forms import ModelForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django import forms
+from django.contrib.auth.models import User
+from .models import Simulation
+
+class SimulationForm(ModelForm):
+	class Meta:
+		model = Simulation
+		fields = ['current_age',
+                'estimated_retirement_age',
+                'current_yearly_salary',
+                'estimated_salary_raise',
+                'estimated_bonus',
+                'current_yearly_other_income',
+                'estimated_other_income_increase',
+                'current_yearly_fixed_costs',
+                'estimated_fixed_costs_inflation',
+                'current_yearly_cost_of_living',
+                'estimated_cost_of_living_inflation',
+                'current_yearly_health_insurance_cost',
+                'estimated_health_insurance_inflation',
+                'estimated_tax_rate',
+                'current_hsa_balance',
+                'current_hsa_yearly_contribution_limit',
+                'esitmated_hsa_yearly_return', 
+                'current_401k_balance', 
+                'current_401k_yearly_contribution_limit', 
+                'current_401k_employer_contribution', 
+                'esitmated_401k_yearly_return', 
+                'current_ira_balance', 
+                'current_ira_yearly_contribution_limit', 
+                'esitmated_ira_yearly_return', 
+                'current_iba_balance', 
+                'esitmated_iba_yearly_return']
+		
+class CreateUserForm(UserCreationForm):
+	email = forms.EmailField(required=True)
+	class Meta:
+		model = User
+		fields = ['username', 'email', 'password1', 'password2']
