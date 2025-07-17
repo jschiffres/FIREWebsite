@@ -8,13 +8,94 @@
 
     {% else %}
 
-        <p class="text-center">Want to save this sumulation? <a href="{% url 'signupsave' simulation.id %}">Sign-up here</a></p>
+        <p class="text-center">Want to save and edit this sumulation? <a href="{% url 'signupsave' simulation.id %}">Sign-up here</a></p>
     
     {% endif %}
 
-        <div class="container">
-            {{ df|safe }}
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
+        <div>
+            <table border="1" class="table table-striped table-hover">
+                <thead class="table-dark" style="position: sticky;">
+                    <tr style="text-align: center;">
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#000000;" colspan="2">PERSONAL INFO</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#000000;" colspan="3">INCOME</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#000000;" colspan="4">EXPENSES</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#000000;" colspan="1">-</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#000000;" colspan="4">HEALTH SAVINGS ACCOUNT ({{ simulation.esitmated_hsa_yearly_return }}% GROWTH)</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#000000;" colspan="5">EMPLOYER SPONSORED RETIREMENT PLAN</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#000000;" colspan="4">INDIVIDUAL RETIREMENT ACCOUNT</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#000000;" colspan="3">TAXABLE BROKERAGE ACCOUNT</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#000000;" colspan="3">FIRE INDICATORS</th>
+                    </tr>
+                </thead>
+                <thead class="table-dark" style="position: sticky;">
+                    <tr style="text-align: center;">
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#9B9B9B;">YEAR</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#9B9B9B;">AGE</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#70AD47;">SALARY</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#70AD47;">BONUS</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#70AD47;">OTHER INCOME</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#FF0000;">FIXED COSTS</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#FF0000;">VARIABLE COSTS</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#FF0000;">HEALTH INSURANCE</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#FF0000;">TAXES</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#70AD47;">SAVINGS</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#9B9B9B;">HSA START</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#9B9B9B;">HSA CONTRIBUTION LIMIT</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#9B9B9B;">HSA CONTRIBUTION</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#70AD47;">HSA END</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#9B9B9B;">RETIREMENT PLAN START</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#9B9B9B;">RETIREMENT PLAN CONTRIBUTION LIMIT</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#9B9B9B;">RETIREMENT PLAN CONTRIBUTION</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#9B9B9B;">RETIREMENT PLAN EMPLOYER CONTRIBUTION</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#70AD47;">RETIREMENT PLAN END</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#9B9B9B;">IRA START</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#9B9B9B;">IRA CONTRIBUTION LIMIT</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#9B9B9B;">IRA CONTRIBUTION</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#70AD47;">IRA END</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#9B9B9B;">TBA START</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#9B9B9B;">TBA CONTRIBUTION</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#70AD47;">TBA END</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#000000;">NET WORTH</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#7030A0;">MAGIC NUMBER</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#7030A0;">DRAWDOWN %</th>
+                    </tr>
+                </thead class="table-dark">
+                <tbody>
+                    {% for d in data %}
+                    <tr style="text-align: center;">
+                        <td style="background-color:#EDEDED;">{{ d.year }}</td>
+                        <td style="background-color:#EDEDED; border-right-color: #000000; border-right-width: px;">{{ d.age }}</td>
+                        <td style="background-color:#E2EFDA;">{{ d.salary }}</td>
+                        <td style="background-color:#E2EFDA;">{{ d.bonus }}</td>
+                        <td style="background-color:#E2EFDA;">{{ d.other_income }}</td>
+                        <td style="background-color:#FFCCCC;">{{ d.fixed_costs }}</td>
+                        <td style="background-color:#FFCCCC;">{{ d.cost_of_living }}</td>
+                        <td style="background-color:#FFCCCC;">{{ d.health_insurance }}</td>
+                        <td style="background-color:#FFCCCC;">{{ d.taxes }}</td>
+                        <td style="background-color:#E2EFDA;">{{ d.savings }}</td>
+                        <td style="background-color:#EDEDED;">{{ d.hsa_start }}</td>
+                        <td style="background-color:#EDEDED;">{{ d.hsa_cont_limits }}</td>
+                        <td style="background-color:#EDEDED;">{{ d.hsa_contributions }}</td>
+                        <td style="background-color:#E2EFDA;">{{ d.hsa_end }}</td>
+                        <td style="background-color:#EDEDED;">{{ d.retirement_start }}</td>
+                        <td style="background-color:#EDEDED;">{{ d.retirement_cont_limits }}</td>
+                        <td style="background-color:#EDEDED;">{{ d.retirement_contributions }}</td>
+                        <td style="background-color:#EDEDED;">{{ d.employer_retirement_contributions }}</td>
+                        <td style="background-color:#E2EFDA;">{{ d.retirement_end }}</td>
+                        <td style="background-color:#EDEDED;">{{ d.ira_start }}</td>
+                        <td style="background-color:#EDEDED;">{{ d.ira_cont_limits }}</td>
+                        <td style="background-color:#EDEDED;">{{ d.ira_contributions }}</td>
+                        <td style="background-color:#E2EFDA;">{{ d.ira_end }}</td>
+                        <td style="background-color:#EDEDED;">{{ d.iba_start }}</td>
+                        <td style="background-color:#EDEDED;">{{ d.iba_contributions }}</td>
+                        <td style="background-color:#E2EFDA;">{{ d.iba_end }}</td>
+                        <td style="background-color:#D0CECE;">{{ d.net_worth }}</td>
+                        <td style="background-color:#CDACE6;">{{ d.magic_number }}</td>
+                        <td style="background-color:#CDACE6;">{{ d.drawdown }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
 
 {% endblock %}

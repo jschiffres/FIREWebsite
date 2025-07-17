@@ -7,7 +7,8 @@ from .models import Simulation
 class SimulationForm(ModelForm):
 	class Meta:
 		model = Simulation
-		fields = ['current_age',
+		fields = ['name',
+		'current_age',
                 'estimated_retirement_age',
                 'current_yearly_salary',
                 'estimated_salary_raise',
@@ -23,13 +24,16 @@ class SimulationForm(ModelForm):
                 'estimated_tax_rate',
                 'current_hsa_balance',
                 'current_hsa_yearly_contribution_limit',
+		'estimated_hsa_yearly_contribution_limit_step',
                 'esitmated_hsa_yearly_return', 
                 'current_401k_balance', 
-                'current_401k_yearly_contribution_limit', 
+                'current_401k_yearly_contribution_limit',
+		'estimated_401k_yearly_contribution_limit_step',
                 'current_401k_employer_contribution', 
                 'esitmated_401k_yearly_return', 
                 'current_ira_balance', 
-                'current_ira_yearly_contribution_limit', 
+                'current_ira_yearly_contribution_limit',
+		'estimated_ira_yearly_contribution_limit_step', 
                 'esitmated_ira_yearly_return', 
                 'current_iba_balance', 
                 'esitmated_iba_yearly_return']

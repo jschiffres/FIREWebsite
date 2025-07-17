@@ -1,74 +1,110 @@
 import math
 import pandas as pd
 
-def saveobject(self, request):
-    newobject = self.save(commit=False)
-    if str(request.user) != "AnonymousUser":
-        newobject.user = request.user
-    newobject.save()
-    print(newobject.user)
-    return newobject
+def savesimulation(self, request):
+    newsimulation = self.save(commit=False)
+    if newsimulation.current_age > newsimulation.estimated_retirement_age:
+        return "Current age must be less than estimated retirement age."
+    try:
+        if str(request.user) != "AnonymousUser":
+            newsimulation.user = request.user
+        newsimulation.estimated_salary_raise=round(newsimulation.estimated_salary_raise/100,3)
+        newsimulation.estimated_bonus=round(newsimulation.estimated_bonus/100,3)
+        newsimulation.estimated_other_income_increase=round(newsimulation.estimated_other_income_increase/100,3)
+        newsimulation.estimated_fixed_costs_inflation=round(newsimulation.estimated_fixed_costs_inflation/100,3)
+        newsimulation.estimated_cost_of_living_inflation=round(newsimulation.estimated_cost_of_living_inflation/100,3)
+        newsimulation.estimated_health_insurance_inflation=round(newsimulation.estimated_health_insurance_inflation/100,3)
+        newsimulation.esitmated_hsa_yearly_return=round(newsimulation.esitmated_hsa_yearly_return/100,3)
+        newsimulation.current_401k_employer_contribution=round(newsimulation.current_401k_employer_contribution/100,3)
+        newsimulation.esitmated_401k_yearly_return=round(newsimulation.esitmated_401k_yearly_return/100,3)
+        newsimulation.esitmated_ira_yearly_return=round(newsimulation.esitmated_ira_yearly_return/100,3)
+        newsimulation.esitmated_iba_yearly_return=round(newsimulation.esitmated_iba_yearly_return/100,3)
+        newsimulation.save()
+        return newsimulation
+    except Exception as e:
+        return "Error creating simulation, please try again."
 
-def yearly_amounts(current,percentage,years,derived=False):
-    incrementing_list = []
-    if derived == True:
-        current = current * percentage
-    for num in range(0,years):
-        if num != 0:
-            new_amount = incrementing_list[num-1] * (1+percentage)
-            incrementing_list.append(math.floor(new_amount))
-        else:
-            incrementing_list.append(math.floor(current))
-    return incrementing_list
-
-def yearly_contribution_limits(start,increment_amount,years):
-    limits = []
-    limits.append(start)
-    for num in range(0,years-1):
-        limits.append(limits[num] + increment_amount)
+def yearly_contribution_limits(current,step,years):
+    limits = [current + (year * step) for year in range(0,years)]
     return limits
 
-def yearly_contributions(years,savings,hsa_cont_limits,retirement_cont_limits,ira_cont_limits):
+def yearly_contributions(years,savings,salaries,hsa_cont_limits,retirement_cont_limits,ira_cont_limits,employer_contribution):
     hsa_contributions = []
     ira_contributions = []
     retirement_contributions = []
+    employer_retirement_contributions = []
     iba_contributions = []
-    for num in range(0,years):
-        if savings[num] < 0:
+    for year in range(0,years):
+        employer_contribution_amount = math.floor(employer_contribution * salaries[year])
+        # IF SAVINGS IS LESS THAN 0
+        if savings[year] < 0:
             hsa_contributions.append(0)
             retirement_contributions.append(0)
+            employer_retirement_contributions.append(0)
             ira_contributions.append(0)
             iba_contributions.append(0)
-        if savings[num] > hsa_cont_limits[num] + retirement_cont_limits[num] + ira_cont_limits[num]:
-            hsa_contributions.append(hsa_cont_limits[num])
-            retirement_contributions.append(retirement_cont_limits[num])
-            ira_contributions.append(ira_cont_limits[num])
-            iba_contributions.append(savings[num] - hsa_cont_limits[num] - retirement_cont_limits[num] - ira_cont_limits[num])
-        elif savings[num] > hsa_cont_limits[num] + retirement_cont_limits[num]:
-            hsa_contributions.append(hsa_cont_limits[num])
-            retirement_contributions.append(retirement_cont_limits[num])
-            ira_contributions.append(savings[num] - hsa_cont_limits[num] - retirement_cont_limits[num])
+        # if savings[year] < employer_contribution_amount:
+        #     employer_retirement_contributions.append(savings[year])
+        #     retirement_contributions.append(savings[year])
+        # if savings[year] > employer_contribution_amount:
+        #     employer_retirement_contributions.append(employer_contribution_amount)
+        #     retirement_contributions.append(employer_contribution_amount)
+        #     if savings[year] > employer_contribution_amount + hsa_cont_limits[year]:
+
+        # IF SAVINGS IS GREATER THAN ALL CONTRIBUTION LIMITS
+        elif savings[year] >= hsa_cont_limits[year] + retirement_cont_limits[year] + ira_cont_limits[year]:
+            hsa_contributions.append(hsa_cont_limits[year])
+            retirement_contributions.append(retirement_cont_limits[year])
+            employer_retirement_contributions.append(employer_contribution_amount)
+            ira_contributions.append(ira_cont_limits[year])
+            iba_contributions.append(savings[year] - hsa_cont_limits[year] - retirement_cont_limits[year] - ira_cont_limits[year])
+        #IF SAVINGS IS GREATER THAN HSA & 401K CONTRIBUTION LIMITS
+        elif savings[year] >= hsa_cont_limits[year] + retirement_cont_limits[year]:
+            hsa_contributions.append(hsa_cont_limits[year])
+            retirement_contributions.append(retirement_cont_limits[year])
+            employer_retirement_contributions.append(employer_contribution_amount)
+            ira_contributions.append(savings[year] - hsa_cont_limits[year] - retirement_cont_limits[year])
             iba_contributions.append(0)
-        elif savings[num] > hsa_cont_limits[num]:
-            hsa_contributions.append(hsa_cont_limits[num])
-            retirement_contributions.append(savings[num] - hsa_cont_limits[num])
+        #IF SAVINGS IS GREATER THAN EMPLOYER CONTRIBUTION MATCH and HSA CONTRIBUTION LIMIT
+        elif savings[year] >= employer_contribution_amount + hsa_cont_limits[year]:
+            hsa_contributions.append(hsa_cont_limits[year])
+            retirement_contributions.append(savings[year] - hsa_cont_limits[year])
+            employer_retirement_contributions.append(employer_contribution_amount)
+            ira_contributions.append(0)
+            iba_contributions.append(0)
+        #IF SAVINGS IS GREATER THAN EMPLOYER CONTRIBUTION MATCH
+        elif savings[year] > employer_contribution_amount:
+            hsa_contributions.append(savings[year] - employer_contribution_amount)
+            if employer_contribution_amount > retirement_cont_limits[year]:
+                retirement_contributions.append(retirement_cont_limits[year])
+            else:
+                retirement_contributions.append(employer_contribution_amount)
+            employer_retirement_contributions.append(employer_contribution_amount)
             ira_contributions.append(0)
             iba_contributions.append(0)
         else:
-            hsa_contributions.append(savings[num])
-            retirement_contributions.append(0)
+        #IF SAVINGS IS LESS THAN EMPLOYER CONTRIBUTION MATCH
+            hsa_contributions.append(0)
+            if employer_contribution_amount > retirement_cont_limits[year]:
+                retirement_contributions.append(retirement_cont_limits[year])
+            else:
+                retirement_contributions.append(savings[year])
+            employer_retirement_contributions.append(savings[year])
             ira_contributions.append(0)
             iba_contributions.append(0)
 
-    return hsa_contributions,retirement_contributions,ira_contributions,iba_contributions
+    return hsa_contributions,retirement_contributions,employer_retirement_contributions,ira_contributions,iba_contributions
 
-def start_end_balances(current_balance,years,contributions_list,salaries_list,yearly_return,employer_contribution=0):
+def start_end_balances(current_balance,years,contributions_list,yearly_return,employer_contributions_list=[]):
     start_list = [current_balance]
     end_list = []
-    for num in range(0,years):
-        end_list.append(math.floor((start_list[num] + contributions_list[num] + (salaries_list[num] * employer_contribution)) * (1+yearly_return)))
-        if num != years - 1:
-            start_list.append(math.floor(end_list[num]))
+    for year in range(0,years):
+        if employer_contributions_list == []:
+            end_list.append(math.floor((start_list[year] + contributions_list[year]) * (1 + yearly_return)))
+        else:
+            end_list.append(math.floor((start_list[year] + contributions_list[year] + employer_contributions_list[year]) * (1 + yearly_return)))
+        if year != years - 1:
+            start_list.append(math.floor(end_list[year]))
     return start_list,end_list
 
 def DFtoHTML(df):

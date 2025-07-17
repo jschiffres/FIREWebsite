@@ -2,206 +2,315 @@
 
 {% block content %}
 
+    {% if error %}
+
+        <div class="alert alert-danger" role="alert">
+            {{ error }}
+        </div>
+
+    {% endif %}
+
     <h1 class="text-center"><strong>FIRE Questionnaire</strong></h1>
 
 
     <form method="POST"> 
     {% csrf_token %}
 
-    <h3 class="text">Personal Info</h3>    
-
-        <div class="form-floating mb-3">
-            <input type="text" class="form-control" id="name" name="name" placeholder="FIRE Simulation" value="My Simulation">
-            <label for="name">Simulation Name</label>
-            <div id="nameHelp" class="form-text">Provide a name for this simulation.</div>
-        </div>
+    <h3 class="text">1. Personal Info</h3> 
     
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="current_age" name="current_age" min="1" max="100" value="25">
-            <label for="current_age">Current Age</label>
-            <div id="current_ageHelp" class="form-text">How old are you?</div>
+        <div class="row justify-content-start">
+
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h6>Welcome!</h6>
+                        <p>
+                            The following survey will inquire not only about your current financial sitution but also your anticipated future in areas including income, expenses and savings. <i>At the end you'll be able to see the power of investing long term for your future!</i>
+                        </p>
+                        <p>
+                            If you are currently not budgeting on a monthly or yearly basis, take time to understand where your money is going. <u>A clear grasp of your budget will be critical as a baseline to create an accurate simulation.</u> 
+                        </p>
+                        <p>
+                            Start by answering the first section, including your first estimate: <b>When would you like to retire?</b>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6">
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="name" name="name" placeholder="FIRE Simulation" value="My Simulation" required>
+                    <label for="name">Simulation Name</label>
+                    <div id="nameHelp" class="form-text">Provide a name for this simulation.</div>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="current_age" name="current_age" min="1" max="100" value="25" required>
+                    <label for="current_age">Current Age</label>
+                    <div id="current_ageHelp" class="form-text">How old are you?</div>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="estimated_retirement_age" name="estimated_retirement_age" min="2" max="101" value="40" required>
+                    <label for="estimated_retirement_age">Retirement Age</label>
+                    <div id="estimated_retirement_ageHelp" class="form-text">At what age would you like to retire?</div>
+                </div>
+            </div>
+
         </div>
 
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="estimated_retirement_age" name="estimated_retirement_age" min="2" max="101" value="40">
-            <label for="estimated_retirement_age">Retirement Age</label>
-            <div id="estimated_retirement_ageHelp" class="form-text">At what age would you like to retire?</div>
+    <hr>
+
+    <h3 class="text">2. Income</h3>
+
+        <div class="row justify-content-start">
+
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h6>The Good</h6>
+                        <p>
+                            The following survey will inquire not only about your current financial sitution but also your anticipated future in areas including income, expenses and savings. <i>At the end you'll be able to see the power of investing long term for your future!</i>
+                        </p>
+                        <p>
+                            If you are currently not budgeting on a monthly or yearly basis, take time to understand where your money is going. <u>A clear grasp of your budget will be critical as a baseline to create an accurate simulation.</u> 
+                        </p>
+                        <p>
+                            Start by answering the first section, including your first estimate: <b>When would you like to retire?</b>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6">
+                <h5 class="text">Salary & Bonus</h5>
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="current_yearly_salary" name="current_yearly_salary" min="1000" max="1000000" value="75000" required>
+                    <label for="current_yearly_salary">Current Yearly Gross Salary ($)</label>
+                    <div id="current_yearly_salaryHelp" class="form-text">What is your current yearly gross salary prior to any deductions i.e., taxes, retirement accounts, health insurance?</div>
+                </div>
+  
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="estimated_salary_raise" name="estimated_salary_raise" min="0" max="99.9" value="3.0" step=".1" required>
+                    <label for="estimated_salary_raise">Estimated Yearly Salary Raise (%)</label>
+                    <div id="estimated_salary_raiseHelp" class="form-text">On average, how much do you anticipate your salary to increase each year?</div>
+                </div>
+   
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="estimated_bonus" name="estimated_bonus" min="0" max="99.9" value="3.0" step=".1" required>
+                    <label for="estimated_bonus">Estimated Yearly Bonus (%)</label>
+                    <div id="estimated_bonusHelp" class="form-text">On average, what percentage of your yearly salary do you anticipate to recieve as a bonus each year?</div>
+                </div>
+
+                <h5 class="text">Other Income</h5>   
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="current_yearly_other_income" name="current_yearly_other_income" min="0" max="1000000" value="0" required>
+                    <label for="current_yearly_other_income">Current Other Income ($)</label>
+                    <div id="current_yearly_other_incomeHelp" class="form-text">Do you currently receive any addtional income on a yearly basis? i.e., Rental Properties, Trusts, Side Hustles</div>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="estimated_other_income_increase" name="estimated_other_income_increase" min="0" max="99.9" value="0.0" step=".1" required>
+                    <label for="estimated_other_income_increase">Estimated Yearly Other Income Increase (%)</label>
+                    <div id="estimated_other_income_increaseHelp" class="form-text">On average, how much do you anticipate your other income to increase each year?</div>
+                </div>
+            </div>
+
         </div>
 
-        <h3 class="text">Income</h3>
+    <hr>
 
-        <h5 class="text">Salary</h5>
+    <div class="row justify-content-start">
+        <h3 class="text">3. Expenses</h3>
 
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="current_yearly_salary" name="current_yearly_salary" min="1000" max="100000000" value="80000">
-            <label for="current_yearly_salary">Current Yearly Gross Salary ($)</label>
-            <div id="current_yearly_salaryHelp" class="form-text">What is your current yearly gross salary prior to any deductions i.e., taxes, retirement accounts, health insurance?</div>
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h6>Welcome!</h6>
+                        <p>
+                            The following survey will inquire not only about your current financial sitution but also your anticipated future in areas including income, expenses and savings. <i>At the end you'll be able to see the power of investing long term for your future!</i>
+                        </p>
+                        <p>
+                            If you are currently not budgeting on a monthly or yearly basis, take time to understand where your money is going. <u>A clear grasp of your budget will be critical as a baseline to create an accurate simulation.</u> 
+                        </p>
+                        <p>
+                            Start by answering the first section, including your first estimate: <b>When would you like to retire?</b>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6">
+                <h5 class="text">Fixed Costs</h5>    
+                    <div class="form-floating mb-3">
+                        <input type="number" class="form-control" id="current_yearly_fixed_costs" name="current_yearly_fixed_costs" min="1" max="100000000" value="17500" required>
+                        <label for="current_yearly_fixed_costs">Current Yearly Fixed Costs ($)</label>
+                        <div id="current_yearly_fixed_costsHelp" class="form-text">What is your current yearly fixed costs expense amount? Review bank/credit statments, total amounts paid for <b>rent, utilities, insurance, subscriptions</b> etc.</div>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="number" class="form-control" id="estimated_fixed_costs_inflation" name="estimated_fixed_costs_inflation" min="0" max="99.9" value="3.2" step=".1" required>
+                        <label for="estimated_fixed_costs_inflation">Estimated Yearly Fixed Costs Increase (%)</label>
+                        <div id="estimated_fixed_costs_inflationHelp" class="form-text">On average, how much do you anticipate your fixed costs to increase each year? Inflation can fluctuate from year to year - 3.2% is a good estimate.</div>
+                    </div>
+            
+
+                <h5 class="text">Variable Costs</h5>
+                    <div class="form-floating mb-3">
+                        <input type="number" class="form-control" id="current_yearly_cost_of_living" name="current_yearly_cost_of_living" min="1" max="100000000" value="20000" required>
+                        <label for="current_yearly_cost_of_living">Current Yearly Variable Costs ($)</label>
+                        <div id="current_yearly_cost_of_livingHelp" class="form-text">What is your current yearly variable costs expense amount? Review bank/credit statments, total amounts paid for <b>food, entertainment, travel, shopping</b> etc.</div>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="number" class="form-control" id="estimated_cost_of_living_inflation" name="estimated_cost_of_living_inflation" min="0" max="99.9" value="3.2" step=".1" required>
+                        <label for="estimated_cost_of_living_inflation">Estimated Yearly Variable Costs Increase (%)</label>
+                        <div id="estimated_cost_of_living_inflationHelp" class="form-text">On average, how much do you anticipate your variable costs to increase each year? Inflation can fluctuate from year to year - 3.2% is a good estimate.</div>
+                    </div>
+
+                <h5 class="text">Health Care</h5>
+                    <div class="form-floating mb-3">
+                        <input type="number" class="form-control" id="current_yearly_health_insurance_cost" name="current_yearly_health_insurance_cost" min="0" max="100000000" value="1500" required>
+                        <label for="current_yearly_health_insurance_cost">Current Yearly Health Insurance Cost ($)</label>
+                        <div id="current_yearly_health_insurance_costHelp" class="form-text">What is your current yearly health insurance cost? Review your paycheck if health insurance is taken out of your salary.</div>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <input type="number" class="form-control" id="estimated_health_insurance_inflation" name="estimated_health_insurance_inflation" min="0" max="99.9" value="5.0" step=".1" required>
+                        <label for="estimated_health_insurance_inflation">Estimated Yearly Heath Insurance Cost Increase (%)</label>
+                        <div id="estimated_health_insurance_inflationHelp" class="form-text">On average, how much do you anticipate your health insurance cost to increase each year?</div>
+                    </div>
+
+                <h5 class="text">Taxes</h5>
+                    <div class="form-floating mb-3">
+                        <input type="number" class="form-control" id="estimated_tax_rate" name="estimated_tax_rate" min="0" max="99.9" value="18.0" step=".1" required>
+                        <label for="estimated_tax_rate">Estimated Tax Rate (%)</label>
+                        <div id="estimated_tax_rateHelp" class="form-text">On average, what do you anticipate your tax rate to be each year? Review prior W2s / Tax Returns.</div>
+                    </div>
+            </div>
         </div>
 
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="estimated_salary_raise" name="estimated_salary_raise" min="0" max=".999" value="0.04" step=".001">
-            <label for="estimated_salary_raise">Estimated Yearly Salary Raise (%)</label>
-            <div id="estimated_salary_raiseHelp" class="form-text">On average, how much do you anticipate your salary to increase each year?</div>
+    <hr>
+
+    <h3 class="text">4. Savings</h3>
+        <div class="row justify-content-start">   
+            <div class="col-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h6>Welcome!</h6>
+                        <p>
+                            The following survey will inquire not only about your current financial sitution but also your anticipated future in areas including income, expenses and savings. <i>At the end you'll be able to see the power of investing long term for your future!</i>
+                        </p>
+                        <p>
+                            If you are currently not budgeting on a monthly or yearly basis, take time to understand where your money is going. <u>A clear grasp of your budget will be critical as a baseline to create an accurate simulation.</u> 
+                        </p>
+                        <p>
+                            Start by answering the first section, including your first estimate: <b>When would you like to retire?</b>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6">
+            <h5 class="text">Health Savings Account (HSA)</h5> 
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="current_hsa_balance" name="current_hsa_balance" min="0" max="100000000" value="1500" required>
+                    <label for="current_hsa_balance">Current HSA Balance ($)</label>
+                    <div id="current_hsa_balanceHelp" class="form-text">How much money is currently in your HSA(s)?</div>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="esitmated_hsa_yearly_return" name="esitmated_hsa_yearly_return" min="0" max="99.9" value="5.0" step=".1" required>
+                    <label for="esitmated_hsa_yearly_return">Estimated HSA Yearly Return (%)</label>
+                    <div id="esitmated_hsa_yearly_returnHelp" class="form-text">On average, how much do you expect your HSA investments to grow annually?</div>
+                </div>
+            
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="current_hsa_yearly_contribution_limit" name="current_hsa_yearly_contribution_limit" min="1" max="100000000" value="4300" required>
+                    <label for="current_hsa_yearly_contribution_limit">Current HSA Yearly Contribution Limit ($)</label>
+                    <div id="current_hsa_yearly_contribution_limitHelp" class="form-text">The current contribution limit for a HSA is $4,300.</div>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="hsa_yearly_contribution_limit_step" name="estimated_hsa_yearly_contribution_limit_step" min="0" max="10000" value="150" step="1" required>
+                    <label for="hsa_yearly_contribution_limit_step">Estimated HSA Yearly Contribution Limit Increase ($)</label>
+                    <div id="hsa_yearly_contribution_limit_stepHelp" class="form-text">On average, how much do you expect the HSA contribution limit to increase each year?</div>
+                </div>
+    
+
+            <h5 class="text">Employer Sponsored Retirement Savings Plans (401k, 403b etc.)</h5>
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="current_401k_balance" name="current_401k_balance" min="0" max="100000000" value="25000" required>
+                    <label for="current_401k_balance">Current Retirement Plan Balance ($)</label>
+                    <div id="current_401k_balanceHelp" class="form-text">How much money is currently in your employer sponsored retirement plan(s)?</div>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="esitmated_401k_yearly_return" name="esitmated_401k_yearly_return" min="0" max="99.9" value="5.0" step=".1" required>
+                    <label for="esitmated_401k_yearly_return">Estimated Retirment Plan Yearly Return (%)</label>
+                    <div id="esitmated_401k_yearly_returnHelp" class="form-text">On average, how much do you expect your retirement plan investments to grow annually?</div>
+                </div>
+   
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="current_401k_employer_contribution" name="current_401k_employer_contribution" min="0" max="99.9" value="3.0" step=".1" required>
+                    <label for="current_401k_employer_contribution">Current Retirement Plan Employer Contribution (%)</label>
+                    <div id="current_401k_employer_contributionHelp" class="form-text">On average, what percentage of your yearly salary do you anticipate your employer to contribute to your retirement plan each year?</div>
+                </div>
+         
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="current_401k_yearly_contribution_limit" name="current_401k_yearly_contribution_limit" min="1" max="100000000" value="23500" required>
+                    <label for="current_401k_yearly_contribution_limit">Current Retirement Plan Yearly Contribution Limit ($)</label>
+                    <div id="current_401k_yearly_contribution_limitHelp" class="form-text">The current contribution limit for a 401k/403b is $23,500.</div>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="401k_yearly_contribution_limit_step" name="estimated_401k_yearly_contribution_limit_step" min="0" max="10000" value="500" step="1" required>
+                    <label for="401k_yearly_contribution_limit_step">Estimated Retirement Plan Yearly Contribution Limit Increase ($)</label>
+                    <div id="401k_yearly_contribution_limit_stepHelp" class="form-text">On average, how much do you expect the 401k/403b contribution limit to increase each year?</div>
+                </div>
+
+            <h5 class="text">Individual Retirement Account (Traditional, Roth etc.)</h5>    
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="current_ira_balance" name="current_ira_balance" min="0" max="100000000" value="5000" required>
+                    <label for="current_ira_balance">Current IRA Balance ($)</label>
+                    <div id="current_ira_balanceHelp" class="form-text">How much money is currently in your IRA(s)?</div>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="esitmated_ira_yearly_return" name="esitmated_ira_yearly_return" min="0" max="99.9" value="5.0" step=".1" required>
+                    <label for="esitmated_ira_yearly_return">Estimated IRA Yearly Return (%)</label>
+                    <div id="esitmated_ira_yearly_returnHelp" class="form-text">On average, how much do you expect your IRA investments to grow annually?</div>
+                </div>
+          
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="current_ira_yearly_contribution_limit" name="current_ira_yearly_contribution_limit" min="1" max="100000000" value="7000" required>
+                    <label for="current_ira_yearly_contribution_limit">Current IRA Yearly Contribution Limit ($)</label>
+                    <div id="current_ira_yearly_contribution_limitHelp" class="form-text">The current contribution limit for an IRA is $7,000.</div>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="ira_yearly_contribution_limit_step" name="estimated_ira_yearly_contribution_limit_step" min="0" max="10000" value="300" step="1" required>
+                    <label for="ira_yearly_contribution_limit_step">Estimated IRA Yearly Contribution Limit Increase ($)</label>
+                    <div id="ira_yearly_contribution_limit_stepHelp" class="form-text">On average, how much do you expect the IRA contribution limit to increase each year?</div>
+                </div>
+
+            <h5 class="text">Taxable Brokerage Account (TBA)</h5> 
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="current_iba_balance" name="current_iba_balance" min="0" max="100000000" value="15000" required>
+                    <label for="current_iba_balance">Current TBA Balance ($)</label>
+                    <div id="current_iba_balanceHelp" class="form-text">How much money is currently in your TBA(s)?</div>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="number" class="form-control" id="esitmated_iba_yearly_return" name="esitmated_iba_yearly_return" min="0" max="99.9" value="5.0" step=".1" required>
+                    <label for="esitmated_iba_yearly_return">Estimated TBA Yearly Return (%)</label>
+                    <div id="esitmated_iba_yearly_returnHelp" class="form-text">On average, how much do you expect your TBA investments to grow annually?</div>
+                </div>
+            </div>
+            
         </div>
 
-        <h5 class="text">Bonus</h5>
-
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="estimated_bonus" name="estimated_bonus" min="0" max=".999" value="0.03" step=".001">
-            <label for="estimated_bonus">Estimated Yearly Bonus (%)</label>
-            <div id="estimated_bonusHelp" class="form-text">On average, what percentage of your yearly salary do you anticipate to recieve as a bonus each year?</div>
-        </div>
-
-        <h5 class="text">Other Income</h5>
-
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="current_yearly_other_income" name="current_yearly_other_income" min="0" max="100000000" value="500">
-            <label for="current_yearly_other_income">Current Other Income ($)</label>
-            <div id="current_yearly_other_incomeHelp" class="form-text">Do you currently receive any addtional income on a yearly basis? i.e., Rental Properties, Trusts, Side Hustles</div>
-        </div>
-
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="estimated_other_income_increase" name="estimated_other_income_increase" min="0" max=".999" value="0.02" step=".001">
-            <label for="estimated_other_income_increase">Estimated Yearly Other Income Increase (%)</label>
-            <div id="estimated_other_income_increaseHelp" class="form-text">On average, how much do you anticipate your other income to increase each year?</div>
-        </div>
-
-        <h3 class="text">Expenses</h3>
-
-        <h5 class="text">Fixed Costs</h5>
-
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="current_yearly_fixed_costs" name="current_yearly_fixed_costs" min="1" max="100000000" value="17500">
-            <label for="current_yearly_fixed_costs">Current Yearly Fixed Costs ($)</label>
-            <div id="current_yearly_fixed_costsHelp" class="form-text">What is your current yearly fixed costs expense amount? Review bank/credit statments, total amounts paid for <b>rent, utilities, insurance, subscriptions</b> etc.</div>
-        </div>
-
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="estimated_fixed_costs_inflation" name="estimated_fixed_costs_inflation" min="0" max=".999" value="0.032" step=".001">
-            <label for="estimated_fixed_costs_inflation">Estimated Yearly Fixed Costs Increase (%)</label>
-            <div id="estimated_fixed_costs_inflationHelp" class="form-text">On average, how much do you anticipate your fixed costs to increase each year? Inflation can fluctuate from year to year - 3.2% is a good estimate.</div>
-        </div>
-
-        <h5 class="text">Variable Costs</h5>
-
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="current_yearly_cost_of_living" name="current_yearly_cost_of_living" min="1" max="100000000" value="20000">
-            <label for="current_yearly_cost_of_living">Current Yearly Variable Costs ($)</label>
-            <div id="current_yearly_cost_of_livingHelp" class="form-text">What is your current yearly variable costs expense amount? Review bank/credit statments, total amounts paid for <b>food, entertainment, travel, shopping</b> etc.</div>
-        </div>
-
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="estimated_cost_of_living_inflation" name="estimated_cost_of_living_inflation" min="0" max=".999" value="0.032" step=".001">
-            <label for="estimated_cost_of_living_inflation">Estimated Yearly Variable Costs Increase (%)</label>
-            <div id="estimated_cost_of_living_inflationHelp" class="form-text">On average, how much do you anticipate your variable costs to increase each year? Inflation can fluctuate from year to year - 3.2% is a good estimate.</div>
-        </div>
-
-        <h5 class="text">Health Care</h5>
-
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="current_yearly_health_insurance_cost" name="current_yearly_health_insurance_cost" min="0" max="100000000" value="1500">
-            <label for="current_yearly_health_insurance_cost">Current Yearly Health Care Cost ($)</label>
-            <div id="current_yearly_health_insurance_costHelp" class="form-text">What is your current yearly health care cost? Review your paycheck if health insurance is taken out of your paycheck.</div>
-        </div>
-
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="estimated_health_insurance_inflation" name="estimated_health_insurance_inflation" min="0" max=".999" value="0.05" step=".001">
-            <label for="estimated_health_insurance_inflation">Estimated Yearly Heath Care Cost Increase (%)</label>
-            <div id="estimated_health_insurance_inflationHelp" class="form-text">On average, how much do you anticipate your health care cost to increase each year?</div>
-        </div>
-
-        <h5 class="text">Taxes</h5>
-
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="estimated_tax_rate" name="estimated_tax_rate" min="0" max=".99" value="0.18" step=".01">
-            <label for="estimated_tax_rate">Estimated Tax Rate</label>
-            <div id="estimated_tax_rateHelp" class="form-text">On average, what do you anticipate your tax rate to be each year?</div>
-        </div>
-
-        <h3 class="text">Savings</h3>
-
-        <h5 class="text">Health Savings Account (HSA)</h5>
-
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="current_hsa_balance" name="current_hsa_balance" min="0" max="100000000" value="1500">
-            <label for="current_hsa_balance">Current HSA Balance ($)</label>
-            <div id="current_hsa_balanceHelp" class="form-text">How much money is currently in your HSA(s)?</div>
-        </div>
-
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="current_hsa_yearly_contribution_limit" name="current_hsa_yearly_contribution_limit" min="1" max="100000000" value="4300">
-            <label for="current_hsa_yearly_contribution_limit">Current HSA Yearly Contribution Limit ($)</label>
-            <div id="current_hsa_yearly_contribution_limitHelp" class="form-text">The current contribution limit for HSAs is $4,300.</div>
-        </div>
-
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="esitmated_hsa_yearly_return" name="esitmated_hsa_yearly_return" min="0" max=".999" value="0.04" step=".001">
-            <label for="esitmated_hsa_yearly_return">Estimated HSA Yearly Return (%)</label>
-            <div id="esitmated_hsa_yearly_returnHelp" class="form-text">On average, how much do you expect your HSA investments to grow annually?</div>
-        </div>
-
-        <h5 class="text">Employer Sponsored Retirement Savings Plans (401k, 403b etc.)</h5>
-
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="current_401k_balance" name="current_401k_balance" min="0" max="100000000" value="10000">
-            <label for="current_401k_balance">Current 401k/403b Balance ($)</label>
-            <div id="current_401k_balanceHelp" class="form-text">How much money is currently in your employer sponsored retirement plan(s)?</div>
-        </div>
-
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="current_401k_yearly_contribution_limit" name="current_401k_yearly_contribution_limit" min="1" max="100000000" value="23500">
-            <label for="current_401k_yearly_contribution_limit">Current 401k/403b Yearly Contribution Limit ($)</label>
-            <div id="current_401k_yearly_contribution_limitHelp" class="form-text">The current contribution limit for HSAs is $23,500.</div>
-        </div>
-
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="current_401k_employer_contribution" name="current_401k_employer_contribution" min="0" max=".999" value="0.03" step=".001">
-            <label for="current_401k_employer_contribution">Current 401k/403b Employer Contribution (%)</label>
-            <div id="current_401k_employer_contributionHelp" class="form-text">On average, what percentage of your yearly salary do you anticipate your employer to contribute to your 401k/403b each year?</div>
-        </div>
-
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="esitmated_401k_yearly_return" name="esitmated_401k_yearly_return" min="0" max=".999" value="0.05" step=".001">
-            <label for="esitmated_401k_yearly_return">Estimated 401k/403b Yearly Return (%)</label>
-            <div id="esitmated_401k_yearly_returnHelp" class="form-text">On average, how much do you expect your 401k/403b investments to grow annually?</div>
-        </div>
-
-
-        <h5 class="text">Individual Retirement Account (Traditional, Roth etc.)</h5>
-
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="current_ira_balance" name="current_ira_balance" min="0" max="100000000" value="3000">
-            <label for="current_ira_balance">Current IRA Balance ($)</label>
-            <div id="current_ira_balanceHelp" class="form-text">How much money is currently in your IRA(s)?</div>
-        </div>
-
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="current_ira_yearly_contribution_limit" name="current_ira_yearly_contribution_limit" min="1" max="100000000" value="7000">
-            <label for="current_ira_yearly_contribution_limit">Current IRA Yearly Contribution Limit ($)</label>
-            <div id="current_ira_yearly_contribution_limitHelp" class="form-text">The current contribution limit for HSAs is $7,000.</div>
-        </div>
-
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="esitmated_ira_yearly_return" name="esitmated_ira_yearly_return" min="0" max=".999" value="0.05" step=".001">
-            <label for="esitmated_ira_yearly_return">Estimated IRA Yearly Return (%)</label>
-            <div id="esitmated_ira_yearly_returnHelp" class="form-text">On average, how much do you expect your IRA investments to grow annually?</div>
-        </div>
-
-        <h5 class="text">Individual Brokerage Account (IBA)</h5>
-
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="current_iba_balance" name="current_iba_balance" min="1" max="100000000" value="15000">
-            <label for="current_iba_balance">Current IBA Balance ($)</label>
-            <div id="current_iba_balanceHelp" class="form-text">How much money is currently in your IBA(s)?</div>
-        </div>
-
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="esitmated_iba_yearly_return" name="esitmated_iba_yearly_return" min="0" max=".999" value="0.05" step=".001">
-            <label for="esitmated_iba_yearly_return">Estimated IBA Yearly Return (%)</label>
-            <div id="esitmated_iba_yearly_returnHelp" class="form-text">On average, how much do you expect your IBA investments to grow annually?</div>
-        </div>
-
-        <div class="d-flex justify-content-ccurrent_yearly_salary">
+        <div class="d-flex justify-content-center">
             <button type="submit" class="btn btn-primary">Create Simulation</button>
         </div>
     
