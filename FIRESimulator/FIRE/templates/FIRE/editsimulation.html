@@ -63,7 +63,7 @@
 
             <div class="col-4">    
                 <div class="form-floating mb-3">
-                    <input type="number" class="form-control" id="estimated_salary_raise" name="estimated_salary_raise" min="0" max=".999" value="{{ simulation.estimated_salary_raise }}" step=".001" required>
+                    <input type="number" class="form-control" id="estimated_salary_raise" name="estimated_salary_raise" min="0" max="99.9" value="{{ simulation.estimated_salary_raise }}" step=".1" required>
                     <label for="estimated_salary_raise">Estimated Yearly Salary Raise (%)</label>
                     <div id="estimated_salary_raiseHelp" class="form-text">On average, how much do you anticipate your salary to increase each year?</div>
                 </div>
@@ -71,7 +71,7 @@
 
             <div class="col-4">    
                 <div class="form-floating mb-3">
-                    <input type="number" class="form-control" id="estimated_bonus" name="estimated_bonus" min="0" max=".999" value="{{ simulation.estimated_bonus }}" step=".001" required>
+                    <input type="number" class="form-control" id="estimated_bonus" name="estimated_bonus" min="0" max="99.9" value="{{ simulation.estimated_bonus }}" step=".1" required>
                     <label for="estimated_bonus">Estimated Yearly Bonus (%)</label>
                     <div id="estimated_bonusHelp" class="form-text">On average, what percentage of your yearly salary do you anticipate to recieve as a bonus each year?</div>
                 </div>
@@ -93,7 +93,7 @@
 
             <div class="col-5"> 
                 <div class="form-floating mb-3">
-                    <input type="number" class="form-control" id="estimated_other_income_increase" name="estimated_other_income_increase" min="0" max=".999" value="{{ simulation.estimated_other_income_increase }}" step=".001" required>
+                    <input type="number" class="form-control" id="estimated_other_income_increase" name="estimated_other_income_increase" min="0" max="99.9" value="{{ simulation.estimated_other_income_increase }}" step=".1" required>
                     <label for="estimated_other_income_increase">Estimated Yearly Other Income Increase (%)</label>
                     <div id="estimated_other_income_increaseHelp" class="form-text">On average, how much do you anticipate your other income to increase each year?</div>
                 </div>
@@ -119,7 +119,7 @@
 
             <div class="col-5"> 
                 <div class="form-floating mb-3">
-                    <input type="number" class="form-control" id="estimated_fixed_costs_inflation" name="estimated_fixed_costs_inflation" min="0" max=".999" value="{{ simulation.estimated_fixed_costs_inflation }}" step=".001" required>
+                    <input type="number" class="form-control" id="estimated_fixed_costs_inflation" name="estimated_fixed_costs_inflation" min="0" max="99.9" value="{{ simulation.estimated_fixed_costs_inflation }}" step=".1" required>
                     <label for="estimated_fixed_costs_inflation">Estimated Yearly Fixed Costs Increase (%)</label>
                     <div id="estimated_fixed_costs_inflationHelp" class="form-text">On average, how much do you anticipate your fixed costs to increase each year? Inflation can fluctuate from year to year - 3.2% is a good estimate.</div>
                 </div>
@@ -141,7 +141,7 @@
 
             <div class="col-5"> 
                 <div class="form-floating mb-3">
-                    <input type="number" class="form-control" id="estimated_cost_of_living_inflation" name="estimated_cost_of_living_inflation" min="0" max=".999" value="{{ simulation.estimated_cost_of_living_inflation }}" step=".001" required>
+                    <input type="number" class="form-control" id="estimated_cost_of_living_inflation" name="estimated_cost_of_living_inflation" min="0" max="99.9" value="{{ simulation.estimated_cost_of_living_inflation }}" step=".1" required>
                     <label for="estimated_cost_of_living_inflation">Estimated Yearly Variable Costs Increase (%)</label>
                     <div id="estimated_cost_of_living_inflationHelp" class="form-text">On average, how much do you anticipate your variable costs to increase each year? Inflation can fluctuate from year to year - 3.2% is a good estimate.</div>
                 </div>
@@ -163,7 +163,7 @@
 
             <div class="col-5"> 
                 <div class="form-floating mb-3">
-                    <input type="number" class="form-control" id="estimated_health_insurance_inflation" name="estimated_health_insurance_inflation" min="0" max=".999" value="{{ simulation.estimated_health_insurance_inflation }}" step=".001" required>
+                    <input type="number" class="form-control" id="estimated_health_insurance_inflation" name="estimated_health_insurance_inflation" min="0" max="99.9" value="{{ simulation.estimated_health_insurance_inflation }}" step=".1" required>
                     <label for="estimated_health_insurance_inflation">Estimated Yearly Heath Care Cost Increase (%)</label>
                     <div id="estimated_health_insurance_inflationHelp" class="form-text">On average, how much do you anticipate your health care cost to increase each year?</div>
                 </div>
@@ -177,7 +177,7 @@
 
             <div class="col-7">     
                 <div class="form-floating mb-3">
-                    <input type="number" class="form-control" id="estimated_tax_rate" name="estimated_tax_rate" min="0" max=".999" value="{{ simulation.estimated_tax_rate }}" step=".001" required>
+                    <input type="number" class="form-control" id="estimated_tax_rate" name="estimated_tax_rate" min="0" max="99.9" value="{{ simulation.estimated_tax_rate }}" step=".1" required>
                     <label for="estimated_tax_rate">Estimated Tax Rate (%)</label>
                     <div id="estimated_tax_rateHelp" class="form-text">On average, what do you anticipate your tax rate to be each year? Review prior W2s / Tax Returns.</div>
                 </div>
@@ -203,7 +203,7 @@
 
             <div class="col-6"> 
                 <div class="form-floating mb-3">
-                    <input type="number" class="form-control" id="esitmated_hsa_yearly_return" name="esitmated_hsa_yearly_return" min="0" max=".999" value="{{ simulation.esitmated_hsa_yearly_return }}" step=".001" required>
+                    <input type="number" class="form-control" id="esitmated_hsa_yearly_return" name="esitmated_hsa_yearly_return" min="0" max="99.9" value="{{ simulation.esitmated_hsa_yearly_return }}" step=".1" required>
                     <label for="esitmated_hsa_yearly_return">Estimated HSA Yearly Return (%)</label>
                     <div id="esitmated_hsa_yearly_returnHelp" class="form-text">On average, how much do you expect your HSA investments to grow annually?</div>
                 </div>
@@ -245,7 +245,7 @@
 
             <div class="col-4"> 
                 <div class="form-floating mb-3">
-                    <input type="number" class="form-control" id="esitmated_401k_yearly_return" name="esitmated_401k_yearly_return" min="0" max=".999" value="{{ simulation.esitmated_401k_yearly_return }}" step=".001" required>
+                    <input type="number" class="form-control" id="esitmated_401k_yearly_return" name="esitmated_401k_yearly_return" min="0" max="99.9" value="{{ simulation.esitmated_401k_yearly_return }}" step=".1" required>
                     <label for="esitmated_401k_yearly_return">Estimated Retirement Plan Yearly Return (%)</label>
                     <div id="esitmated_401k_yearly_returnHelp" class="form-text">On average, how much do you expect your retirement plan investments to grow annually?</div>
                 </div>
@@ -253,7 +253,7 @@
 
             <div class="col-4">     
                 <div class="form-floating mb-3">
-                    <input type="number" class="form-control" id="current_401k_employer_contribution" name="current_401k_employer_contribution" min="0" max=".999" value="{{ simulation.current_401k_employer_contribution }}" step=".001" required>
+                    <input type="number" class="form-control" id="current_401k_employer_contribution" name="current_401k_employer_contribution" min="0" max="99.9" value="{{ simulation.current_401k_employer_contribution }}" step=".1" required>
                     <label for="current_401k_employer_contribution">Current Retirement Plan Employer Contribution (%)</label>
                     <div id="current_401k_employer_contributionHelp" class="form-text">On average, what percentage of your yearly salary do you anticipate your employer to contribute to your retirement plan each year?</div>
                 </div>
@@ -295,7 +295,7 @@
 
             <div class="col-6"> 
                 <div class="form-floating mb-3">
-                    <input type="number" class="form-control" id="esitmated_ira_yearly_return" name="esitmated_ira_yearly_return" min="0" max=".999" value="{{ simulation.esitmated_ira_yearly_return }}" step=".001" required>
+                    <input type="number" class="form-control" id="esitmated_ira_yearly_return" name="esitmated_ira_yearly_return" min="0" max="99.9" value="{{ simulation.esitmated_ira_yearly_return }}" step=".1" required>
                     <label for="esitmated_ira_yearly_return">Estimated IRA Yearly Return (%)</label>
                     <div id="esitmated_ira_yearly_returnHelp" class="form-text">On average, how much do you expect your IRA investments to grow annually?</div>
                 </div>
@@ -337,7 +337,7 @@
 
             <div class="col-6"> 
                 <div class="form-floating mb-3">
-                    <input type="number" class="form-control" id="esitmated_iba_yearly_return" name="esitmated_iba_yearly_return" min="0" max=".999" value="{{ simulation.esitmated_iba_yearly_return }}" step=".001" required>
+                    <input type="number" class="form-control" id="esitmated_iba_yearly_return" name="esitmated_iba_yearly_return" min="0" max="99.9" value="{{ simulation.esitmated_iba_yearly_return }}" step=".1" required>
                     <label for="esitmated_iba_yearly_return">Estimated TBA Yearly Return (%)</label>
                     <div id="esitmated_iba_yearly_returnHelp" class="form-text">On average, how much do you expect your TBA investments to grow annually?</div>
                 </div>

@@ -20,6 +20,7 @@ class Simulation(models.Model):
     current_yearly_health_insurance_cost = models.PositiveBigIntegerField()
     estimated_health_insurance_inflation = models.FloatField()
     estimated_tax_rate = models.FloatField()
+    hsa_enrollment = models.BooleanField(default=False)
     current_hsa_balance = models.PositiveBigIntegerField()
     current_hsa_yearly_contribution_limit = models.PositiveBigIntegerField()
     estimated_hsa_yearly_contribution_limit_step = models.PositiveBigIntegerField()

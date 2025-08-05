@@ -97,13 +97,13 @@ def firesimulation(request, simulation_id):
     years_until_retirement = simulation.estimated_retirement_age - simulation.current_age
 
     # Calculate yearly amounts for income, expenses and savings
-    salaries = [math.floor(simulation.current_yearly_salary * ((1 + simulation.estimated_salary_raise) ** year)) for year in range(0,years_until_retirement)]
-    bonuses = [math.floor(salaries[year] * simulation.estimated_bonus) for year in range(0,years_until_retirement)]
-    other_income = [math.floor(simulation.current_yearly_other_income * ((1 + simulation.estimated_other_income_increase) ** year)) for year in range(0,years_until_retirement)]
-    fixed_costs = [math.floor(simulation.current_yearly_fixed_costs * ((1 + simulation.estimated_fixed_costs_inflation) ** year)) for year in range(0,years_until_retirement)]
-    cost_of_living = [math.floor(simulation.current_yearly_cost_of_living * ((1 + simulation.estimated_cost_of_living_inflation) ** year)) for year in range(0,years_until_retirement)]
-    health_insurance = [math.floor(simulation.current_yearly_health_insurance_cost * ((1 + simulation.estimated_health_insurance_inflation) ** year)) for year in range(0,years_until_retirement)]
-    taxes = [math.floor((salaries[year] + bonuses[year] + other_income[year]) * simulation.estimated_tax_rate) for year in range(0,years_until_retirement)]
+    salaries = [math.floor(simulation.current_yearly_salary * ((1 + round(simulation.estimated_salary_raise/100,3)) ** year)) for year in range(0,years_until_retirement)]
+    bonuses = [math.floor(salaries[year] * round(simulation.estimated_bonus/100,3)) for year in range(0,years_until_retirement)]
+    other_income = [math.floor(simulation.current_yearly_other_income * ((1 + round(simulation.estimated_other_income_increase/100,3)) ** year)) for year in range(0,years_until_retirement)]
+    fixed_costs = [math.floor(simulation.current_yearly_fixed_costs * ((1 + round(simulation.estimated_fixed_costs_inflation/100,3)) ** year)) for year in range(0,years_until_retirement)]
+    cost_of_living = [math.floor(simulation.current_yearly_cost_of_living * ((1 + round(simulation.estimated_cost_of_living_inflation/100,3)) ** year)) for year in range(0,years_until_retirement)]
+    health_insurance = [math.floor(simulation.current_yearly_health_insurance_cost * ((1 + round(simulation.estimated_health_insurance_inflation/100,3)) ** year)) for year in range(0,years_until_retirement)]
+    taxes = [math.floor((salaries[year] + bonuses[year] + other_income[year]) * round(simulation.estimated_tax_rate/100,3)) for year in range(0,years_until_retirement)]
     savings = [math.floor(salaries[year] + bonuses[year] + other_income[year] - fixed_costs[year] - cost_of_living[year] - health_insurance[year] - taxes[year]) for year in range(0,years_until_retirement)]
 
     # Caluclate yearly contribution limits for retirement accounts based on current limits, step and years until retirement
@@ -112,7 +112,7 @@ def firesimulation(request, simulation_id):
     retirement_cont_limits = yearly_contribution_limits(simulation.current_401k_yearly_contribution_limit,simulation.estimated_401k_yearly_contribution_limit_step,years_until_retirement)
 
     # Calculate actual contributions based on yearly savings and contribution limit amounts
-    hsa_contributions,retirement_contributions,employer_retirement_contributions,ira_contributions,iba_contributions = yearly_contributions(years_until_retirement,savings,salaries,hsa_cont_limits,retirement_cont_limits,ira_cont_limits,simulation.current_401k_employer_contribution)
+    hsa_contributions,retirement_contributions,employer_retirement_contributions,ira_contributions,iba_contributions = yearly_contributions(years_until_retirement,savings,salaries,hsa_cont_limits,retirement_cont_limits,ira_cont_limits,simulation.current_401k_employer_contribution,simulation.hsa_enrollment)
 
     # Calculate investment account start and end balances based on current balances, contributions and estimated returns
     ira_start,ira_end = start_end_balances(simulation.current_ira_balance,years_until_retirement,ira_contributions,simulation.esitmated_ira_yearly_return)
@@ -217,7 +217,7 @@ def editsimulation(request, simulation_id):
     else:
         try:   
             form = SimulationForm(request.POST, instance=simulation)
-            newsim = savesimulation(form, request)
+            newsim = savesimulation(form, request, create=False)
             if type(newsim) == str:
                 return render(request, 'FIRE/editsimulation.html', {'simulation': simulation, 'form': form, 'error': newsim})
             id = newsim.id

@@ -22,6 +22,7 @@ class SimulationForm(ModelForm):
                 'current_yearly_health_insurance_cost',
                 'estimated_health_insurance_inflation',
                 'estimated_tax_rate',
+		'hsa_enrollment',
                 'current_hsa_balance',
                 'current_hsa_yearly_contribution_limit',
 		'estimated_hsa_yearly_contribution_limit_step',

@@ -4,11 +4,11 @@
 
     {% if user.is_authenticated %}
 
-        <p class="text-center">Edit Simulation <a href="{% url 'editsimulation' simulation.id %}">{{ simulation.name }}</a></p>
+        <p>Edit Simulation <a href="{% url 'editsimulation' simulation.id %}">{{ simulation.name }}</a></p>
 
     {% else %}
 
-        <p class="text-center">Want to save and edit this sumulation? <a href="{% url 'signupsave' simulation.id %}">Sign-up here</a></p>
+        <p>Want to save and edit this sumulation? <a href="{% url 'signupsave' simulation.id %}">Sign-up here</a></p>
     
     {% endif %}
 
@@ -16,11 +16,49 @@
             <table border="1" class="table table-striped table-hover">
                 <thead class="table-dark" style="position: sticky;">
                     <tr style="text-align: center;">
+                        <th style="white-space:nowrap; color:#3F3F76; background-color:#FFCC99;" colspan="2" class="border-end border-dark">RETIREMENT AGE</th>
+                        <th style="white-space:nowrap; color:#3F3F76; background-color:#FFCC99;" colspan="1">SALARY GROWTH</th>
+                        <th style="white-space:nowrap; color:#3F3F76; background-color:#FFCC99;" colspan="1">BONUS PERCENTAGE</th>
+                        <th style="white-space:nowrap; color:#3F3F76; background-color:#FFCC99;" colspan="1" class="border-end border-dark">OTHER INCOME GROWTH</th>
+                        <th style="white-space:nowrap; color:#3F3F76; background-color:#FFCC99;" colspan="1">FIXED COSTS INFLATION</th>
+                        <th style="white-space:nowrap; color:#3F3F76; background-color:#FFCC99;" colspan="1">VARIABLE COSTS INFLATION</th>
+                        <th style="white-space:nowrap; color:#3F3F76; background-color:#FFCC99;" colspan="1">HEALTH INSURANCE INFLATION</th>
+                        <th style="white-space:nowrap; color:#3F3F76; background-color:#FFCC99;" colspan="1" class="border-end border-dark">TAX RATE</th>
+                        <th style="white-space:nowrap; color:#3F3F76; background-color:#FFCC99;" colspan="1" class="border-end border-dark">-</th>
+                        <th style="white-space:nowrap; color:#3F3F76; background-color:#FFCC99;" colspan="4" class="border-end border-dark">HEALTH SAVINGS ACCOUNT GROWTH</th>
+                        <th style="white-space:nowrap; color:#3F3F76; background-color:#FFCC99;" colspan="3">EMPLOYER SPONSORED RETIREMENT PLAN GROWTH</th>
+                        <th style="white-space:nowrap; color:#3F3F76; background-color:#FFCC99;" colspan="2" class="border-end border-dark">EMPLOYER CONTRIBUTION SALARY MATCH</th>
+                        <th style="white-space:nowrap; color:#3F3F76; background-color:#FFCC99;" colspan="4" class="border-end border-dark">INDIVIDUAL RETIREMENT ACCOUNT GROWTH</th>
+                        <th style="white-space:nowrap; color:#3F3F76; background-color:#FFCC99;" colspan="3" class="border-end border-dark">TAXABLE BROKERAGE ACCOUNT GROWTH</th>
+                        <th style="white-space:nowrap; color:#3F3F76; background-color:#FFCC99;" colspan="3">LOGIC</th>
+                    </tr>
+                </thead>
+                <thead class="table-dark" style="position: sticky;">
+                    <tr style="text-align: center;">
+                        <th style="white-space:nowrap; color:#000000; background-color:#ffffff;" colspan="2" class="border-end border-dark">{{ simulation.estimated_retirement_age }}</th>
+                        <th style="white-space:nowrap; color:#000000; background-color:#ffffff;" colspan="1">{{ simulation.estimated_salary_raise }}%</th>
+                        <th style="white-space:nowrap; color:#000000; background-color:#ffffff;" colspan="1">{{ simulation.estimated_bonus }}%</th>
+                        <th style="white-space:nowrap; color:#000000; background-color:#ffffff;" colspan="1" class="border-end border-dark">{{ simulation.estimated_other_income_increase }}%</th>
+                        <th style="white-space:nowrap; color:#000000; background-color:#ffffff;" colspan="1">{{ simulation.estimated_fixed_costs_inflation }}%</th>
+                        <th style="white-space:nowrap; color:#000000; background-color:#ffffff;" colspan="1">{{ simulation.estimated_cost_of_living_inflation }}%</th>
+                        <th style="white-space:nowrap; color:#000000; background-color:#ffffff;" colspan="1">{{ simulation.estimated_health_insurance_inflation }}%</th>
+                        <th style="white-space:nowrap; color:#000000; background-color:#ffffff;" colspan="1" class="border-end border-dark">{{ simulation.estimated_tax_rate }}%</th>
+                        <th style="white-space:nowrap; color:#000000; background-color:#ffffff;" colspan="1" class="border-end border-dark">-</th>
+                        <th style="white-space:nowrap; color:#000000; background-color:#ffffff;" colspan="4" class="border-end border-dark">{{ simulation.esitmated_hsa_yearly_return }}%</th>
+                        <th style="white-space:nowrap; color:#000000; background-color:#ffffff;" colspan="3">{{ simulation.esitmated_401k_yearly_return }}%</th>
+                        <th style="white-space:nowrap; color:#000000; background-color:#ffffff;" colspan="2" class="border-end border-dark">{{ simulation.current_401k_employer_contribution }}%</th>
+                        <th style="white-space:nowrap; color:#000000; background-color:#ffffff;" colspan="4" class="border-end border-dark">{{ simulation.esitmated_ira_yearly_return }}%</th>
+                        <th style="white-space:nowrap; color:#000000; background-color:#ffffff;" colspan="3" class="border-end border-dark">{{ simulation.esitmated_iba_yearly_return }}%</th>
+                        <th style="white-space:nowrap; color:#000000; background-color:#ffffff; font-size: 50%;" colspan="3">Magic Number = (Fixed Costs + Variable Costs + Health Insurance) x 25<br>Drawdown = (Fixed Costs + Variable Costs + Health Insurance) / Net Worth</th>
+                    </tr>
+                </thead>
+                <thead class="table-dark" style="position: sticky;">
+                    <tr style="text-align: center;">
                         <th style="white-space:nowrap; color:#ffffff; background-color:#000000;" colspan="2">PERSONAL INFO</th>
                         <th style="white-space:nowrap; color:#ffffff; background-color:#000000;" colspan="3">INCOME</th>
                         <th style="white-space:nowrap; color:#ffffff; background-color:#000000;" colspan="4">EXPENSES</th>
                         <th style="white-space:nowrap; color:#ffffff; background-color:#000000;" colspan="1">-</th>
-                        <th style="white-space:nowrap; color:#ffffff; background-color:#000000;" colspan="4">HEALTH SAVINGS ACCOUNT ({{ simulation.esitmated_hsa_yearly_return }}% GROWTH)</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#000000;" colspan="4">HEALTH SAVINGS ACCOUNT</th>
                         <th style="white-space:nowrap; color:#ffffff; background-color:#000000;" colspan="5">EMPLOYER SPONSORED RETIREMENT PLAN</th>
                         <th style="white-space:nowrap; color:#ffffff; background-color:#000000;" colspan="4">INDIVIDUAL RETIREMENT ACCOUNT</th>
                         <th style="white-space:nowrap; color:#ffffff; background-color:#000000;" colspan="3">TAXABLE BROKERAGE ACCOUNT</th>
