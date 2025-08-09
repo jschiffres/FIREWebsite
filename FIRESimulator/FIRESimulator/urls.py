@@ -25,7 +25,9 @@ urlpatterns = [
     path('login/', views.loginuser, name='loginuser'),
     path("firesimulation/<str:simulation_id>", views.firesimulation, name="firesimulation"),
     path("editsimulation/<str:simulation_id>", views.editsimulation, name="editsimulation"),
+    path("deletesimulation/<str:simulation_id>", views.deletesimulation, name="deletesimulation"),
     path("", views.newsimulation, name="newsimulation"),
+    path('newsimulation/', views.create_lumpsum, name="create-lumpsum"),
     path("mysimulations/", views.usersimulations, name="usersimulations"),
     path("admin/", admin.site.urls),
 ]

@@ -1,13 +1,17 @@
 {% load static %}
-<!-- <link rel="stylesheet" type="text/css" href="{% static 'TopsListGenerator/style.css' %}"> -->
+
 <!doctype html>
 <html lang="en">
 
 <head>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.6/dist/htmx.min.js"></script>
+
+  <link rel="stylesheet" type="text/css" href="{% static '/main.css' %}">  
 
   <title>FIRE Simulator</title>
 
@@ -33,11 +37,11 @@
       <div class="col-md-3 text-end">
         <table>
           <form action="{% url 'newsimulation' %}">
-              <button type="submit" class="btn btn-outline-primary me-2">New Simulation</button>
+              <button type="submit" class="btn btn-outline-success me-2">New Simulation</button>
           </form>
           <form action="{% url 'logoutuser' %}" method="POST">
             {% csrf_token %}
-              <button type="submit" class="btn btn-primary">Logout</button>
+              <button type="submit" class="btn btn-success">Logout</button>
           </form>
         </table>
       </div>
@@ -51,11 +55,11 @@
       <div class="col-md-3 text-end">
         <table>
           <form action="{% url 'loginuser' %}">
-              <button type="submit" class="btn btn-outline-primary me-2">Login</button>
+              <button type="submit" class="btn btn-outline-success me-2">Login</button>
           </form>
 
           <form action="{% url 'signupuser' %}">
-              <button type="submit" class="btn btn-primary">Sign-up</button>
+              <button type="submit" class="btn btn-success">Sign-up</button>
           </form>
         </table>
       </div>

@@ -3,24 +3,12 @@ import pandas as pd
 
 def savesimulation(self, request, create=True):
     newsimulation = self.save(commit=False)
+    print(newsimulation.hsa_enrollment_opt_out)
     if newsimulation.current_age > newsimulation.estimated_retirement_age:
         return "Current age must be less than estimated retirement age."
     try:
         if str(request.user) != "AnonymousUser":
             newsimulation.user = request.user
-        # if create == True:
-            # newsimulation.estimated_salary_raise=round(newsimulation.estimated_salary_raise/100,3)
-            # newsimulation.estimated_bonus=round(newsimulation.estimated_bonus/100,3)
-            # newsimulation.estimated_other_income_increase=round(newsimulation.estimated_other_income_increase/100,3)
-            # newsimulation.estimated_fixed_costs_inflation=round(newsimulation.estimated_fixed_costs_inflation/100,3)
-            # newsimulation.estimated_cost_of_living_inflation=round(newsimulation.estimated_cost_of_living_inflation/100,3)
-            # newsimulation.estimated_tax_rate=round(newsimulation.estimated_tax_rate/100,3)
-            # newsimulation.estimated_health_insurance_inflation=round(newsimulation.estimated_health_insurance_inflation/100,3)
-            # newsimulation.esitmated_hsa_yearly_return=round(newsimulation.esitmated_hsa_yearly_return/100,3)
-            # newsimulation.current_401k_employer_contribution=round(newsimulation.current_401k_employer_contribution/100,3)
-            # newsimulation.esitmated_401k_yearly_return=round(newsimulation.esitmated_401k_yearly_return/100,3)
-            # newsimulation.esitmated_ira_yearly_return=round(newsimulation.esitmated_ira_yearly_return/100,3)
-            # newsimulation.esitmated_iba_yearly_return=round(newsimulation.esitmated_iba_yearly_return/100,3)
         newsimulation.save()
         return newsimulation
     except Exception as e:
@@ -30,7 +18,7 @@ def yearly_contribution_limits(current,step,years):
     limits = [current + (year * step) for year in range(0,years)]
     return limits
 
-def yearly_contributions(years,savings,salaries,hsa_cont_limits,retirement_cont_limits,ira_cont_limits,employer_contribution,hsa_enrollment):
+def yearly_contributions(years,savings,salaries,hsa_cont_limits,retirement_cont_limits,ira_cont_limits,employer_contribution,hsa_enrollment_opt_out):
     hsa_contributions = []
     ira_contributions = []
     retirement_contributions = []
@@ -38,54 +26,89 @@ def yearly_contributions(years,savings,salaries,hsa_cont_limits,retirement_cont_
     iba_contributions = []
     for year in range(0,years):
         employer_contribution_amount = math.floor(round(employer_contribution/100,3) * salaries[year])
-        # IF SAVINGS IS LESS THAN 0
+        # IF SAVINGS IS LESS THAN 0: contribute nothing
         if savings[year] < 0:
             hsa_contributions.append(0)
             retirement_contributions.append(0)
             employer_retirement_contributions.append(0)
             ira_contributions.append(0)
             iba_contributions.append(0)
-        # IF SAVINGS IS GREATER THAN ALL CONTRIBUTION LIMITS
-        elif savings[year] >= hsa_cont_limits[year] + retirement_cont_limits[year] + ira_cont_limits[year]:
-            hsa_contributions.append(hsa_cont_limits[year])
-            retirement_contributions.append(retirement_cont_limits[year])
-            employer_retirement_contributions.append(employer_contribution_amount)
-            ira_contributions.append(ira_cont_limits[year])
-            iba_contributions.append(savings[year] - hsa_cont_limits[year] - retirement_cont_limits[year] - ira_cont_limits[year])
-        #IF SAVINGS IS GREATER THAN HSA & 401K CONTRIBUTION LIMITS
-        elif savings[year] >= hsa_cont_limits[year] + retirement_cont_limits[year]:
-            hsa_contributions.append(hsa_cont_limits[year])
-            retirement_contributions.append(retirement_cont_limits[year])
-            employer_retirement_contributions.append(employer_contribution_amount)
-            ira_contributions.append(savings[year] - hsa_cont_limits[year] - retirement_cont_limits[year])
-            iba_contributions.append(0)
-        #IF SAVINGS IS GREATER THAN EMPLOYER CONTRIBUTION MATCH and HSA CONTRIBUTION LIMIT
-        elif savings[year] >= employer_contribution_amount + hsa_cont_limits[year]:
-            hsa_contributions.append(hsa_cont_limits[year])
-            retirement_contributions.append(savings[year] - hsa_cont_limits[year])
-            employer_retirement_contributions.append(employer_contribution_amount)
-            ira_contributions.append(0)
-            iba_contributions.append(0)
-        #IF SAVINGS IS GREATER THAN EMPLOYER CONTRIBUTION MATCH
-        elif savings[year] > employer_contribution_amount:
-            hsa_contributions.append(savings[year] - employer_contribution_amount)
-            if employer_contribution_amount > retirement_cont_limits[year]:
+        # IF HSA ENROLLMENT HAS BEEN OPTED OUT: 
+        if hsa_enrollment_opt_out:
+            # IF SAVINGS IS GREATER THAN ALL CONTRIBUTION LIMITS (excluding HSA): max 401k, ira, then rest to iba
+            if savings[year] >= retirement_cont_limits[year] + ira_cont_limits[year]:
+                hsa_contributions.append(0)
                 retirement_contributions.append(retirement_cont_limits[year])
-            else:
-                retirement_contributions.append(employer_contribution_amount)
-            employer_retirement_contributions.append(employer_contribution_amount)
-            ira_contributions.append(0)
-            iba_contributions.append(0)
-        else:
-        #IF SAVINGS IS LESS THAN EMPLOYER CONTRIBUTION MATCH
-            hsa_contributions.append(0)
-            if employer_contribution_amount > retirement_cont_limits[year]:
+                employer_retirement_contributions.append(employer_contribution_amount)
+                ira_contributions.append(ira_cont_limits[year])
+                iba_contributions.append(savings[year] - retirement_cont_limits[year] - ira_cont_limits[year])
+            # IF SAVINGS IS GREATER 401K CONTRIBUTION LIMITS: max 401k, then rest to iba
+            elif savings[year] >= retirement_cont_limits[year]:
+                hsa_contributions.append(0)
                 retirement_contributions.append(retirement_cont_limits[year])
-            else:
+                employer_retirement_contributions.append(employer_contribution_amount)
+                ira_contributions.append(savings[year] - retirement_cont_limits[year])
+                iba_contributions.append(0)
+            # IF SAVINGS IS GREATER THAN EMPLOYER CONTRIBUTION MATCH: all to 401k
+            elif savings[year] >= employer_contribution_amount:
+                hsa_contributions.append(0)
                 retirement_contributions.append(savings[year])
-            employer_retirement_contributions.append(savings[year])
-            ira_contributions.append(0)
-            iba_contributions.append(0)
+                employer_retirement_contributions.append(employer_contribution_amount)
+                ira_contributions.append(0)
+                iba_contributions.append(0)
+            # IF SAVINGS IS LESS THAN EMPLOYER CONTRIBUTION MATCH: all to 401k
+            else:
+                hsa_contributions.append(0)
+                if employer_contribution_amount > retirement_cont_limits[year]:
+                    retirement_contributions.append(retirement_cont_limits[year])
+                else:
+                    retirement_contributions.append(savings[year])
+                employer_retirement_contributions.append(savings[year])
+                ira_contributions.append(0)
+                iba_contributions.append(0)
+        # IF HSA ENROLLMENT HAS NOT BEEN OPTED OUT
+        else:
+            # IF SAVINGS IS GREATER THAN ALL CONTRIBUTION LIMITS: max hsa, 401k, ira then rest to iba
+            if savings[year] >= hsa_cont_limits[year] + retirement_cont_limits[year] + ira_cont_limits[year]:
+                hsa_contributions.append(hsa_cont_limits[year])
+                retirement_contributions.append(retirement_cont_limits[year])
+                employer_retirement_contributions.append(employer_contribution_amount)
+                ira_contributions.append(ira_cont_limits[year])
+                iba_contributions.append(savings[year] - hsa_cont_limits[year] - retirement_cont_limits[year] - ira_cont_limits[year])
+            # IF SAVINGS IS GREATER THAN HSA & 401K CONTRIBUTION LIMITS: max hsa, 401k then rest to ira
+            elif savings[year] >= hsa_cont_limits[year] + retirement_cont_limits[year]:
+                hsa_contributions.append(hsa_cont_limits[year])
+                retirement_contributions.append(retirement_cont_limits[year])
+                employer_retirement_contributions.append(employer_contribution_amount)
+                ira_contributions.append(savings[year] - hsa_cont_limits[year] - retirement_cont_limits[year])
+                iba_contributions.append(0)
+            # IF SAVINGS IS GREATER THAN EMPLOYER CONTRIBUTION MATCH and HSA CONTRIBUTION LIMIT: max hsa then rest to 401k
+            elif savings[year] >= employer_contribution_amount + hsa_cont_limits[year]:
+                hsa_contributions.append(hsa_cont_limits[year])
+                retirement_contributions.append(savings[year] - hsa_cont_limits[year])
+                employer_retirement_contributions.append(employer_contribution_amount)
+                ira_contributions.append(0)
+                iba_contributions.append(0)
+            # IF SAVINGS IS GREATER THAN EMPLOYER CONTRIBUTION MATCH: get 401k employer match then rest to hsa
+            elif savings[year] > employer_contribution_amount:
+                hsa_contributions.append(savings[year] - employer_contribution_amount)
+                if employer_contribution_amount > retirement_cont_limits[year]:
+                    retirement_contributions.append(retirement_cont_limits[year])
+                else:
+                    retirement_contributions.append(employer_contribution_amount)
+                employer_retirement_contributions.append(employer_contribution_amount)
+                ira_contributions.append(0)
+                iba_contributions.append(0)
+            else:
+            # IF SAVINGS IS LESS THAN EMPLOYER CONTRIBUTION MATCH: all to 401k
+                hsa_contributions.append(0)
+                if employer_contribution_amount > retirement_cont_limits[year]:
+                    retirement_contributions.append(retirement_cont_limits[year])
+                else:
+                    retirement_contributions.append(savings[year])
+                employer_retirement_contributions.append(savings[year])
+                ira_contributions.append(0)
+                iba_contributions.append(0)
 
     return hsa_contributions,retirement_contributions,employer_retirement_contributions,ira_contributions,iba_contributions
 

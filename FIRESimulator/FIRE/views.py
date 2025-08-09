@@ -13,7 +13,8 @@ from .forms import SimulationForm, CreateUserForm
 from .functions import savesimulation, yearly_contribution_limits,start_end_balances, yearly_contributions, DFtoHTML
 
 import math
-import pandas as pd 
+import pandas as pd
+from datetime import date
 
 # AUTHENTICATION
 def signupuser(request):
@@ -86,6 +87,10 @@ def usersimulations(request):
         return redirect('loginuser')
 
 def firesimulation(request, simulation_id):
+    #lump sum of money during specific year
+    #saving for house
+    #assets
+    #child increase in expenses
     # Retrieve simulation object from model
     simulation = get_object_or_404(Simulation, pk=simulation_id)
 
@@ -112,7 +117,7 @@ def firesimulation(request, simulation_id):
     retirement_cont_limits = yearly_contribution_limits(simulation.current_401k_yearly_contribution_limit,simulation.estimated_401k_yearly_contribution_limit_step,years_until_retirement)
 
     # Calculate actual contributions based on yearly savings and contribution limit amounts
-    hsa_contributions,retirement_contributions,employer_retirement_contributions,ira_contributions,iba_contributions = yearly_contributions(years_until_retirement,savings,salaries,hsa_cont_limits,retirement_cont_limits,ira_cont_limits,simulation.current_401k_employer_contribution,simulation.hsa_enrollment)
+    hsa_contributions,retirement_contributions,employer_retirement_contributions,ira_contributions,iba_contributions = yearly_contributions(years_until_retirement,savings,salaries,hsa_cont_limits,retirement_cont_limits,ira_cont_limits,simulation.current_401k_employer_contribution,simulation.hsa_enrollment_opt_out)
 
     # Calculate investment account start and end balances based on current balances, contributions and estimated returns
     ira_start,ira_end = start_end_balances(simulation.current_ira_balance,years_until_retirement,ira_contributions,simulation.esitmated_ira_yearly_return)
@@ -154,7 +159,7 @@ def firesimulation(request, simulation_id):
     data = []
     for year in range(0,years_until_retirement):
         year_dict = {}
-        year_dict['year'] = year+2025
+        year_dict['year'] = year+date.today().year
         year_dict['age'] = year+simulation.current_age
         year_dict['salary'] = '${:,}'.format(salaries[year])
         year_dict['bonus'] = '${:,}'.format(bonuses[year])
@@ -184,6 +189,9 @@ def firesimulation(request, simulation_id):
         year_dict['magic_number'] = '${:,}'.format((cost_of_living[year] + fixed_costs[year] + health_insurance[year]) * 25)
         year_dict['drawdown'] = str(round(((cost_of_living[year] + fixed_costs[year] + health_insurance[year]) / net_worth[year]) * 100,2)) + "%"
         data.append(year_dict)
+
+    simulation.final_net_worth = (data[-1]['net_worth'])
+    simulation.save()
     
     # # Create and return cleaned up html dataframe to /firesimulation template
     # simulation_df = pd.DataFrame(simulation_data)
@@ -199,6 +207,7 @@ def newsimulation(request):
     else:
         try:
             form = SimulationForm(request.POST)
+            lumps = request.POST.getlist('lumpsum_payment_amount')
             newsim = savesimulation(form, request)
             if type(newsim) == str:
                 return render(request, 'FIRE/newsimulation.html', {'form': form, 'error': newsim})
@@ -207,6 +216,9 @@ def newsimulation(request):
         except Exception as e:
             print(e)
             return render(request, 'FIRE/newsimulation.html', {'form': form, 'error': "Error creating simulation, please try again."})
+
+def create_lumpsum(request):
+    return render(request, 'FIRE/partials/lumpsum.html')
 
 @login_required
 def editsimulation(request, simulation_id):
@@ -224,3 +236,11 @@ def editsimulation(request, simulation_id):
             return redirect(f'/firesimulation/{id}')
         except Exception as e:
             return render(request, 'FIRE/newsimulation.html', {'simulation': simulation, 'form': form, 'error': "Error creating simulation, please try again"})
+        
+@login_required
+def deletesimulation(request, simulation_id):
+    simulation = get_object_or_404(Simulation, pk=simulation_id, user=request.user) 
+    if request.method == "POST":
+        simulation.delete()
+        messages.success(request, f"{simulation.name} deleted successfully!")
+        return redirect('usersimulations')

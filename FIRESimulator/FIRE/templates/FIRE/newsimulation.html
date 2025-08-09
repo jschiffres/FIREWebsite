@@ -2,6 +2,21 @@
 
 {% block content %}
 
+<style>
+    .nav-link
+    {
+        color: #198754;
+    }
+    .active
+    {
+       background-color: #198754 !important;
+    }
+    a:hover
+    {
+        color: #033a20 !important;
+    }
+</style>
+
     {% if error %}
 
         <div class="alert alert-danger" role="alert">
@@ -10,8 +25,8 @@
 
     {% endif %}
 
-<nav id="navbar-example2" class="navbar sticky-top navbar-light bg-light px-3">
-  <a class="navbar-brand" href="#">FIRE Questionnaire</a>
+<nav id="navbar" class="navbar sticky-top" style="background-color: #ffffff;">
+  <h1 class="navbar-brand" style="font-size:200%;"><b>FIRE Questionnaire</b></h1>
   <ul class="nav nav-pills">
     <li class="nav-item">
       <a class="nav-link" href="#personalInfo">Personal Info</a>
@@ -27,7 +42,7 @@
     </li>
   </ul>
 </nav>
-<div data-bs-spy="scroll" data-bs-target="#navbar-example2" data-bs-offset="0" class="scrollspy-example" tabindex="0">    
+<div data-bs-spy="scroll" data-bs-target="#navbar" data-bs-offset="0" class="scrollspy" tabindex="0">    
 
     <form method="POST"> 
     {% csrf_token %}
@@ -37,17 +52,17 @@
         <div class="row justify-content-start">
 
             <div class="col-7">
-                <div class="card">
+                <div class="card" style="background-color: #EAF4E4;">
                     <div class="card-body">
-                        <h6>Welcome!</h6>
+                        <h5>Welcome!</h5>
                         <p>
-                            The following survey will inquire not only about your current financial sitution but also your anticipated future in areas including income, expenses and savings. <i>At the end you'll be able to see the power of investing long term for your future!</i>
+                            The following survey will inquire not only about your <b>current financial sitution but also your anticipated future</b> in areas including income, expenses and savings. <i>At the end you'll be able to see the power of investing long term for your future!</i>
                         </p>
                         <p>
                             If you are currently not budgeting on a monthly or yearly basis, take time to understand where your money is going. <u>A clear grasp of your budget will be critical as a baseline to create an accurate simulation.</u> 
                         </p>
                         <p>
-                            Remember that the estimates you provide throughout this survey should be an average over the course of today all the way up until your retirement age. Be consistent throughout the estimates within this survey to compare various scenarios of high or low growth.
+                            Remember that the estimates you provide throughout this survey should be an average over the course of today all the way up until your retirement age. Being consistent throughout with your estimates within this survey will allow you to compare various scenarios of high or low growth.
                         </p>
                         <p>
                             Start by answering the first section, including this question: <b>What age would you like to retire?</b> 
@@ -85,11 +100,11 @@
         <div class="row justify-content-start">
 
             <div class="col-7">
-                <div class="card">
+                <div class="card" style="background-color: #EAF4E4;">
                     <div class="card-body">
-                        <h6>How much money do you make?</h6>
+                        <h5>How much money do you make?</h5>
                         <p>
-                            When determining your budget, step 1 is knowing how much money you earn. Pretty simple right...</i>
+                            When determining your budget, <b>step 1 is knowing how much money you earn.</b> Pretty simple right...</i>
                         </p>
                         <p>
                             The average person will only have one source of income - their job or potentially mutiple jobs. Presuming you are employed and your income is stable, review compensation statements provided by your employer(s) to derive your current <u>gross salary</u> figure. For those with variable income or working as independent contractors, utilize prior year amounts to inform your current amount.
@@ -98,10 +113,10 @@
                             Estimating your future salary might involve many factors some within your control such as frequent job hopping and some out of your control such as tight labor markets and recessions. An <u>annual raise of 3-5% is a safe estimate</u> but depending on your industry it could be higher or lower.
                         </p>
                         <p>
-                            Yearly bonuses are not a given and may not happen at all depending on your line of work. Utilize prior year amounts if possible and be conservative as there are many factors out of your control that may reduce this percentage. For those receiving stock as compensation along with their normal salary, include that percentage estimate here. 
+                            Yearly bonuses are not a given and may not happen at all depending on your line of work. Utilize prior year amounts if possible and be conservative as there are many factors out of your control that may reduce this percentage. <i>For those receiving stock as compensation along with their normal salary, include that percentage estimate here.</i>
                         </p>
                         <p>
-                            Other income earned outside of your normal salary(s) should be included if it is relatively consistant and is currently a factor within your monthly/yearly budget. Some examples might be easy to predict annual increases such as rental income while some might be just a fixed amount. 
+                            Other income earned outside of your normal salary(s) should be included if it is <u>relatively consistent and is currently a factor within your monthly/yearly budget.</u> Some examples might be easy to predict annual increases such as stock or rental income while some might be just a fixed amount. 
                         </p>
                     </div>
                 </div>
@@ -139,6 +154,17 @@
                     <label for="estimated_other_income_increase">Estimated Yearly Other Income Increase (%)</label>
                     <div id="estimated_other_income_increaseHelp" class="form-text">On average, how much do you anticipate your other income to increase each year?</div>
                 </div>
+
+                <h5 class="text">Lump Sum Payments</h5>
+                
+                <div id="lumpsum-div">
+                    {% include 'FIRE/partials/lumpsum.html' %}
+                </div>
+
+                <div>
+                    <button type="button" class="btn btn-success" hx-get="{% url 'create-lumpsum' %}" hx-target="#lumpsum-div" hx-swap="beforeend">+ Add Lump Sum</button>
+                </div>
+
             </div>
 
         </div>
@@ -149,32 +175,32 @@
         <h3 id="expenses" class="text">3. Expenses</h3>
 
             <div class="col-7">
-                <div class="card">
+                <div class="card" style="background-color: #EAF4E4;">
                     <div class="card-body">
-                        <h6>How much money do you spend?</h6>
+                        <h5>How much money do you spend?</h5>
                         <p>
-                            The next step to determining your budget is to understand where your money is being spent. A little bit more complicated...</i>
+                            The next step to determining your budget is to understand <b>where your money is being spent.</b> A little bit more complicated...</i>
                         </p>
                         <p>
-                            Reviewing your credit and or bank statements will be helpful to gain insight if you are unaware of your reoccuring bills and spending habits. If needed, download those statements and go line-by-line assigning each one a category such as <i>Bill or Food</i> and even a subcategory such as <i>Rent or Groceries.</i>
+                            <u>Reviewing your credit and or bank statements will be helpful to gain insight if you are unaware of your reoccuring bills and spending habits.</u> If needed, download those statements and go line-by-line assigning each one a category such as <i>Bill or Food</i> and even a subcategory such as <i>Rent or Groceries.</i>
                         </p>
                         <p>
-                            Fixed costs will generally be your monthly bills that reoccur and tend to be very predictable. These expenses usually can not be controlled without making a drastic change such as moving. Think of these costs as your needs that must be paid prior to thinking about any discretionary spending.
+                            <b>Fixed costs will generally be your monthly bills that reoccur and tend to be very predictable.</b> These expenses usually can not be controlled or altered without making a drastic change such as moving. Think of these costs as your needs that must be paid prior to thinking about any discretionary spending.
                         </p>
                         <p>
-                            Total variable costs should be a targeted value within the remainder after subtracting your mandatory bills from your <u>net salary.</u> After paying your bills you are left with, hopefuly, money for shopping, travel, food etc. Food is, of course, a need but as it could vary drastically from month to month and be controlled by things such as reducing how much you eat out - include it in your variable costs.  
+                            Total variable costs should be a targeted value within the remainder after subtracting your mandatory bills from your <u>net salary.</u> As an example, someone earning a net salary of $50k a year with $20k in Fixed Costs should target their Variable Costs to be less than or equal to $30k. After paying your bills you are left with, hopefuly, money for shopping, travel, food etc. Food is, of course, a need but as it could vary drastically from month to month and be controlled by things such as reducing how much you eat out - include it in your variable costs.  
                         </p>
                         <p>
                            Of course, there are two scenarios after subtracting your fixed and targeted variable spend amounts from your net salary - one, you have surplus money to save or two, you are in the negative and have gone into debt. The second scenario can certainly be a reality but the hope is that it can be avoided and that developing a budget will highlight the need to spend more cautiously, reduce your bills, find a more high paying job etc.
                         </p>
                         <p>
-                            Your recurring bills and variable spend very rarely will decrease over the years and there are two main factors to this, the first being inflation and the second is a change in one's lifestyle. Inflation can not be controlled or really avoided - rent, energy and food cost is going to increase with or without you and should be accounted for at the very least. An average annual inflation rate of 2-4% is a safe estimate but may vary based on a number of factors including where you live. If you anticipate your lifestyle to change as your salary increases it is wise to factor that into this estimate as well.  
+                            Your recurring bills and variable spend very rarely will decrease over the years and there are two main factors to this, the first being inflation and the second is a change in one's lifestyle. Inflation can not be controlled or really avoided - rent, energy and food cost is going to increase with or without you and should be accounted for at the very least. <u>An average annual inflation rate of 2-4% is a safe estimate</u> but may vary based on a number of factors including where you live. If you anticipate your lifestyle to change as your salary increases it is wise to factor that into this estimate as well.  
                         </p>
                         <p>
                             Health insurance and taxes are the final expenses and are <i>normally</i> taken out of one's paycheck prior to receiving your net salary. Review your paycheck or health insurance marketplace statement, if self employeed, to determine how much you are paying for health insurance. 
                         </p>
                         <p>
-                            Your tax rate is quite difficult to estimate but reviewing your prior W2s provided by your employer and your tax returns can give you an idea of how much <b>federal and state/local</b> tax you have paid in past years. As your income is most likely to increase, it is important to factor that into your estimate as this percentage will be utilized in future years when your tax bracket presumably will be higher. Consider learning about how your income is taxed - understanding how deductions from your gross salary can reduce your taxable income and thus your tax rate will be good to understand when considering FIRE.
+                            Your tax rate is quite difficult to estimate as there are many factors out of your control but reviewing your prior W2s provided by your employer and your tax returns can give you an idea of how much <b>federal and state/local</b> tax you have paid in past years. As your income is most likely to increase, it is important to factor that into your estimate as this percentage will be utilized in future years when your tax bracket presumably will be higher. <i>Consider learning about how your income is taxed - understanding how deductions from your gross salary can reduce your taxable income and thus your tax rate will be good to understand when considering FIRE.</i>
                         </p>
                     </div>
                 </div>
@@ -185,7 +211,7 @@
                     <div class="form-floating mb-3">
                         <input type="number" class="form-control" id="current_yearly_fixed_costs" name="current_yearly_fixed_costs" min="1" max="100000000" value="17500" required>
                         <label for="current_yearly_fixed_costs">Current Yearly Fixed Costs ($)</label>
-                        <div id="current_yearly_fixed_costsHelp" class="form-text">What is your current yearly fixed costs expense amount? Review bank/credit statments, total amounts paid for <b>rent, utilities, insurance, subscriptions</b> etc.</div>
+                        <div id="current_yearly_fixed_costsHelp" class="form-text">What is your current yearly fixed costs expense amount? Review bank/credit statments, total amounts paid for <b>rent, utilities, insurance</b> etc.</div>
                     </div>
 
                     <div class="form-floating mb-3">
@@ -234,10 +260,10 @@
 
     <h3 id="savings" class="text">4. Savings</h3>
         <div class="row justify-content-start">   
-            <div class="col-6">
-                <div class="card">
+            <div class="col-7">
+                <div class="card" style="background-color: #EAF4E4;">
                     <div class="card-body">
-                        <h6>How much money do you save?</h6>
+                        <h5>How much money do you save?</h5>
                         <p>
                             Lets run through a hypothetical before diving into saving your money: 
                             <ul>
@@ -254,7 +280,7 @@
                             <b>Health Savings Accounts:</b> Offers a triple tax advantage by reducing your taxable income, growing tax-free and providing tax-free withdrawals for qualified expenses. <i>Note:</i> To qualify for HSA contributions, you will need to be enrolled in a <u>High Deductible Health Plan (HDHP)</u>. It is important to evaluate which kind of medical insurance is suited for your well-being and fequency of helath-related benefits. 
                         </p>
                         <p>
-                            <b>Employer Sponsored Retirement Accounts:</b> Most common types include 401k and 403b plans. Contributions to these accounts can be made such that your taxable income is reduced (Traditional) or such that your money invested grows tax-free (Roth). Understanding the difference and between a Traditional and Roth account will be important for FIRE planning. For those with mutiple employer sponsored retirement accounts from changing jobs, be sure to add up the total of all of those accounts.  
+                            <b>Employer Sponsored Retirement Accounts:</b> Most common types include 401k and 403b plans. Contributions to these accounts can be made such that your taxable income is reduced (Traditional) or such that your money invested grows tax-free (Roth). Understanding the difference and between a Traditional (Tax-Deferred) and Roth (Tax-Exempt) accounts will be important for FIRE planning. For those with mutiple employer sponsored retirement accounts from changing jobs, be sure to add up the total of all of those accounts.  
                         </p>
                         <p>
                             For some, their employer may also contribute to these accounts at a certain percentage of one's salary provided they make contributions themselves. As an example an employer might match $0.50 for every $1 up to 6% of your salary. This essentially equates to 3% of one's salary. Employer matches are a risk free way to grow your retirement account and not leave part of your compensation on the table. 
@@ -263,23 +289,29 @@
                             <b>Individual Retirement Accounts:</b> Another tax advantaged retirement account, similar to a 401k with various types including Traditional and Roth. Traditional IRAs allow for tax deductible contributions to reduce your taxable income while Roth IRAs provide tax-free distributions aka tax-free growth. It is important to understand that unlike employer sponsored retirement accounts, IRAs have income limitations to be able to contribute. It is best to do your research or consult a tax professional if unsure about contribution implications given your financial situation.
                         </p>
                         <p>
-                            <b>Taxable Bokerage Accounts:</b> These account do not offer any tax advantages but do not have any limtations on how much your can contirbute or when you can withdraw your money. There are many different types with varying levels of investment decision making required by you such as Full Service Brokerage Accounts, Robo-Advisor Accounts and Online Accounts. Depending on your choice, your return may be impacted as financial advisors or investment platforms will charge a fee to manage your money. If is best to do your research to determine what might be best for you and your financial situation.
+                            <b>Taxable Bokerage Accounts:</b> These accounts do not offer any tax advantages but do not have any limtations on how much your can contribute or when you can withdraw your money. There are many different types with varying levels of investment decision making required by you such as Full Service Brokerage Accounts, Robo-Advisor Accounts and Online Accounts. Depending on your choice, your return may be impacted as financial advisors or investment platforms will charge a fee to manage your money. If is best to do your research to determine what might be best for you and your financial situation.
                         </p>
                         <p>
-                            <b>Simulation Logic:</b> Congrats! You have provided a lot of details, have hopefully learned a thing or two about your financial situation and are ready to create your simulation. The simulation logic is fairly straight forward - Your income minus your expenses will derive your savings. Your savings will then be allocated in the following order:<br>1. Contribute to your Employer Sponsored Retirement Account to recive the employer match<br>2. Contribute the max amount to your HSA*<br>3. Contribute the max amount to your Employer Sponsored Retirement Plan<br>4. Contribute the max amount to your IRA<br>5. Contribute the remainder to your TBA<br>*If HSA account has not be opted-out
+                            <b>Annual Returns and Investment Options:</b> There are many factors to consider when estimating the average return of each of your accounts including historical market returns and your investment strategy. It is important to remember this is just an estimate, actual returns can vary drastically from year to year and are never guaranteed. How should you invest your savings? Start by asking yourself a few basic questions such as how many years do I have to invest? what is my risk tolerance? how diversified do I want my portfolio to be? When planning for FIRE, it is best to plan for long-term growth with moderate risk. Investing in broad market index funds related to US Stocks, International Stocks and Bonds is usually recommended to diversify your portfolio. Lastly, it is reccomended to invest reguraly, avoid trying to time the market and to rebalance your portfolio peridoically.
+                        </p>
+                        <p>
+                            <b>Simulation Logic:</b> Congrats! You have provided a lot of details, have hopefully learned a thing or two about your financial situation and are ready to create your simulation. The simulation logic is fairly straight forward - Your total income minus your total expenses will derive your savings. From there, your savings will then be allocated in the following order:<br>1. Contribute to your Employer Sponsored Retirement Account to recive the employer match<br>2. Contribute the max amount to your HSA*<br>3. Contribute the max amount to your Employer Sponsored Retirement Plan<br>4. Contribute the max amount to your IRA<br>5. Contribute the remainder to your TBA<br>*If HSA account has not be opted-out
+                        </p>
+                        <p>
+                            <i>This is general education and not financial advice. Everyone's sitution is different - consider speaking with a financial professional to learn more.</i>
                         </p>
                     </div>
                 </div>
             </div>
 
-            <div class="col-6">
+            <div class="col-5">
             <h5 class="text">Health Savings Account (HSA)</h5> 
 
                 <div class="form-floating mb-3">
                     <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="hsa_enrollment" name="hsa_enrollment" value=True>
-                        <label class="form-check-label" for="hsa_enrollment">HSA Enrollment Opt-Out</label>
-                        <div id="hsa_enrollmentHelp" class="form-text">Do you plan to not contribute to an HSA?</div>
+                        <input type="checkbox" class="form-check-input" id="hsa_enrollment_opt_out" name="hsa_enrollment_opt_out" value=True>
+                        <label class="form-check-label" for="hsa_enrollment_opt_out">HSA Enrollment Opt-Out</label>
+                        <div id="hsa_enrollment_opt_outHelp" class="form-text">Do you plan to not contribute to an HSA?</div>
                     </div>
                 </div>
 
@@ -380,8 +412,8 @@
             
         </div>
 
-        <div class="d-flex justify-content-center">
-            <button type="submit" class="btn btn-primary">Create Simulation</button>
+        <div class="container d-flex justify-content-center" style="padding-top: 20px;">
+            <button type="submit" class="btn btn-success">Create Simulation</button>
         </div>
     
     </form>
