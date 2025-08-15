@@ -1,17 +1,65 @@
 import math
 import pandas as pd
 
-def savesimulation(self, request, create=True):
-    newsimulation = self.save(commit=False)
-    print(newsimulation.hsa_enrollment_opt_out)
-    if newsimulation.current_age > newsimulation.estimated_retirement_age:
-        return "Current age must be less than estimated retirement age."
+def savesimulation(self, request):
     try:
+        #Save simulation w/o Commit
+        newsimulation = self.save(commit=False)
+
+        #Check whether current age is not greater than retirement age:
+        if newsimulation.current_age > newsimulation.estimated_retirement_age:
+            return "Current age must be less than estimated retirement age."
+        
+        #Check whether Coast FIRE age was provided and if it is greater than current age but less than retirement age: 
+        if request.POST.get('estimated_coastfire_age'):
+            if int(request.POST.get('estimated_coastfire_age')) >= newsimulation.estimated_retirement_age or int(request.POST.get('estimated_coastfire_age')) <= newsimulation.current_age:
+                return "Coast FIRE age must be less than estimated retirement age and greater than your current age."
+            else:
+                newsimulation.estimated_coastfire_age = request.POST.get('estimated_coastfire_age')
+        else:
+            newsimulation.estimated_coastfire_age = 0
+        
+        #Set user equal to request user if logged in
         if str(request.user) != "AnonymousUser":
             newsimulation.user = request.user
+
+        #If HSA investment has been opted out, set input variables = to 0 else set them equal to the form inputs
+        if newsimulation.hsa_enrollment_opt_out:
+            newsimulation.current_hsa_balance = 0
+            newsimulation.current_hsa_yearly_contribution_limit = 0
+            newsimulation.estimated_hsa_yearly_contribution_limit_step = 0
+            newsimulation.esitmated_hsa_yearly_return = 0
+        else:
+            newsimulation.current_hsa_balance = request.POST.get('current_hsa_balance')
+            newsimulation.current_hsa_yearly_contribution_limit = request.POST.get('current_hsa_yearly_contribution_limit')
+            newsimulation.estimated_hsa_yearly_contribution_limit_step = request.POST.get('estimated_hsa_yearly_contribution_limit_step')
+            newsimulation.esitmated_hsa_yearly_return = request.POST.get('esitmated_hsa_yearly_return')
+        
+        #Set lumpsum payment fields equal to the list of amounts and ages within the request/form
+        newsimulation.estimated_lumpsum_payment_amounts = request.POST.getlist('estimated_lumpsum_payment_amounts')
+        newsimulation.estimated_lumpsum_payment_ages = request.POST.getlist('estimated_lumpsum_payment_ages')
+
+        #Check that there are no duplicate lumpsum payment ages:
+        if len(list(newsimulation.estimated_lumpsum_payment_ages)) != len(set(list(newsimulation.estimated_lumpsum_payment_ages))):
+            return "Limit of one lump sum payment per year."
+        
+        #Check that all lumpsum payment ages are greater than or equal to the simulation's current age:
+        if len(list(filter(lambda age: age < newsimulation.current_age, list(map(int, newsimulation.estimated_lumpsum_payment_ages))))) > 0:
+            return "Lump sum payments must occur after or equal to your current age."
+        
+        #Check that all lumpsum payment ages are less than the simulation's estimated retirement age:
+        if len(list(filter(lambda age: age >= newsimulation.estimated_retirement_age, list(map(int, newsimulation.estimated_lumpsum_payment_ages))))) > 0:
+            return "Lump sum payments must occur before your estimated retirement age."
+        
+        newsimulation.current_asset_values = request.POST.getlist('current_asset_values')
+        newsimulation.estimated_asset_value_growths = request.POST.getlist('estimated_asset_value_growths')
+
+        #Save simulation w/ Commit and return simulation object
         newsimulation.save()
         return newsimulation
+    
     except Exception as e:
+        print(e)
         return "Error creating simulation, please try again."
 
 def yearly_contribution_limits(current,step,years):

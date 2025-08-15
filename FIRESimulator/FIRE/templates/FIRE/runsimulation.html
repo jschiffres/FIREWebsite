@@ -1,0 +1,68 @@
+{% extends 'FIRE/base.html' %}
+
+{% block content %}
+
+<style>
+    table {
+        border-collapse: collapse;
+        position: relative;
+    }
+    th
+    {
+        height: 45px;
+    }
+    thead tr.first th 
+    {
+        position: sticky;
+        top: 45px;
+        vertical-align: middle;
+    }
+    thead tr.second th
+    {
+        position: sticky;
+        top: 0;
+    }
+    .tbl-container
+    {
+        max-width: fit-content;
+        max-height: fit-content;
+        padding-top: 20px;
+    }
+    .tbl-fixed
+    {
+        overflow-x: scroll;
+        overflow-y: scroll;
+        height: fit-content;
+        max-height: 450px;
+    }
+    th, td
+    {
+        font-size: 100%;
+    }
+</style>
+
+<div class="container">
+
+    {% if error %}
+        <div class="alert alert-danger" role="alert">
+            {{ error }}
+        </div>
+    {% endif %}
+
+    <h1 class="text" style="text-align: center;">{{ simulation.name }}</h1>
+    {% if user.is_authenticated %}
+        <form action="{% url 'editsimulation' simulation.id %}" style="text-align: center;">
+            <button type="submit" class="btn btn-secondary">Edit Simulation</button>
+        </form>
+    {% else %}
+        <p style="text-align: center;">Want to save, edit and download this simulation? <a class="link-success" href="{% url 'signupsave' simulation.id %}">Sign-up to save your results!</a></p>
+    {% endif %}
+    
+</div>
+
+<div id="runsimulation-div">
+    {% include 'FIRE/partials/firetable.html' %}
+</div>
+
+
+{% endblock %}

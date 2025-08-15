@@ -35,8 +35,7 @@
 							<ul class="list-group list-group-horizontal d-flex justify-content-center">
 
 				        		<li class="list-group-item">		
-	          						<form method="POST" action="{% url 'firesimulation' simulation.id %}">
-	            					{% csrf_token %}
+	          						<form action="{% url 'runsimulation' simulation.id %}">
 	              						<button type="submit" class="btn btn-success">Run</button>
 	          						</form>
 	          					</li>

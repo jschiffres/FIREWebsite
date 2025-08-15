@@ -19,15 +19,26 @@ from django.urls import include, path
 from FIRE import views
 
 urlpatterns = [
+    #Authentication: signup, signup + save, logout, login
     path("signup/", views.signupuser, name="signupuser"),
     path("signup/<str:simulation_id>", views.signupsave, name="signupsave"),
     path('logout/', views.logoutuser, name='logoutuser'),
     path('login/', views.loginuser, name='loginuser'),
-    path("firesimulation/<str:simulation_id>", views.firesimulation, name="firesimulation"),
+
+    #Simulation: new, run, edit, delete, user's
+    path("", views.newsimulation, name="newsimulation"),
+    path("firesimulation/<str:simulation_id>", views.runsimulation, name="runsimulation"),
     path("editsimulation/<str:simulation_id>", views.editsimulation, name="editsimulation"),
     path("deletesimulation/<str:simulation_id>", views.deletesimulation, name="deletesimulation"),
-    path("", views.newsimulation, name="newsimulation"),
-    path('newsimulation/', views.create_lumpsum, name="create-lumpsum"),
     path("mysimulations/", views.usersimulations, name="usersimulations"),
+
+    #HTMX: lumpsum,
+    path('newlumpsum/', views.create_lumpsum, name="create-lumpsum"),
+    path('newasset/', views.create_asset, name="create-asset"),
+    path('newfixedcostadjustment/', views.create_fixedcost_adjustment, name="create-fixedcost-adjustment"),
+    path('hsaoptin/', views.hsa_opt_in, name="hsa-opt-in"),
+    path('coastfireoptin/', views.coastfire_opt_in, name="coastfire-opt-in"),
+
+    #Admin
     path("admin/", admin.site.urls),
 ]

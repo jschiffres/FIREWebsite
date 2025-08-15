@@ -11,13 +11,15 @@
 
   <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.6/dist/htmx.min.js"></script>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <link rel="stylesheet" type="text/css" href="{% static '/main.css' %}">  
 
   <title>FIRE Simulator</title>
 
 </head>
 
-<body>
+<body hx-headers='{"x-csrftoken": "{{ csrf_token }}"}'>
 
 <div class="container">
 

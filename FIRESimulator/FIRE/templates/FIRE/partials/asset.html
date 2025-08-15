@@ -1,0 +1,21 @@
+<div id="asset-entry" class="row justify-content-start" >
+    <div class="col-5">
+        <div class="form-floating mb-3">
+            <input type="number" class="form-control" id="current_asset_values" name="current_asset_values" min="0" max="10000000" value="10000" required>
+            <label for="current_asset_values">Current Asset Value ($)</label>
+            <div id="current_asset_valuesHelp" class="form-text">Do you currently own any appreciating assets?</i></div>
+        </div>
+    </div>
+    <div class="col-6">
+        <div class="form-floating mb-3">
+            <input type="number" class="form-control" id="estimated_asset_value_growths" name="estimated_asset_value_growths" min="0" max="99.9" value="3" step=".1" required>
+            <label for="estimated_asset_value_growths">Estimated Asset Value Growth (%)</label>
+            <div id="estimated_asset_value_growthsHelp" class="form-text">On average, how much do you anticipate this asset's value to grow each year?</div>
+        </div>
+    </div>
+    <div class="col-1">
+        <button type="button" class="btn btn-danger" hx-delete hx-target="#asset-entry" hx-swap="delete">-</button>
+    </div>
+    <hr>
+
+</div>

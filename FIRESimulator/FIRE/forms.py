@@ -23,10 +23,10 @@ class SimulationForm(ModelForm):
                 'estimated_health_insurance_inflation',
                 'estimated_tax_rate',
 		'hsa_enrollment_opt_out',
-                'current_hsa_balance',
-                'current_hsa_yearly_contribution_limit',
-		'estimated_hsa_yearly_contribution_limit_step',
-                'esitmated_hsa_yearly_return', 
+                # 'current_hsa_balance',
+                # 'current_hsa_yearly_contribution_limit',
+		# 'estimated_hsa_yearly_contribution_limit_step',
+                # 'esitmated_hsa_yearly_return', 
                 'current_401k_balance', 
                 'current_401k_yearly_contribution_limit',
 		'estimated_401k_yearly_contribution_limit_step',
@@ -38,6 +38,13 @@ class SimulationForm(ModelForm):
                 'esitmated_ira_yearly_return', 
                 'current_iba_balance', 
                 'esitmated_iba_yearly_return']
+		
+class EditSimulationForm(ModelForm):
+	class Meta:
+		model = Simulation
+		fields = ['estimated_retirement_age',
+			'estimated_salary_raise',
+			'estimated_bonus']
 		
 class CreateUserForm(UserCreationForm):
 	email = forms.EmailField(required=True)
