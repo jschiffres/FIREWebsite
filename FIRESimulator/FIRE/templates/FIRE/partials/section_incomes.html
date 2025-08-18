@@ -1,0 +1,68 @@
+<!-- INCOME -->
+<section id="income" class="mb-5">
+    <h3 class="section-title"><i class="bi bi-cash-stack"></i> Income</h3>
+    <div class="row g-4">
+        <!-- INCOME INSTRUCTIONS -->
+        <div class="col-lg-7">
+            <div class="tip-card shadow-sm rounded mb-3">
+                <h5>How much money do you make?</h5>
+                <p><i>When determining your budget, step 1 is knowing how much money you earn. Pretty simple right...</i></p>
+                <hr>
+                <p><b>Salary: </b>Presuming you are employed and your income is stable, review compensation statements provided by your employer(s) to derive your current <u>gross salary</u> amount. For those with variable income or working as independent contractors, utilize prior year amounts as fit to inform your current amount.</p>
+                <p><b>Raises: </b>Estimating your yearly salary raises might involve many factors some within your control such as frequent job hopping and some out of your control such as tight labor markets and recessions. An <u>annual raise of 3-5% is a safe estimate</u> but depending on your industry it could be higher or lower.</p>
+                <p><b>Bonuses: </b>Yearly bonuses are not a given and may not happen at all depending on your line of work. Utilize prior year amounts or employment offer letters, if possible, to derive your bonus payments as an estimated percentage of your salary. Be conservative as there are many factors out of your control that may reduce this percentage.</p>
+                <hr>
+                <p><b>Other Income: </b>Income earned outside of your normal salary(s) should be included if it is <u>currently a consistent factor</u> within your monthly/yearly budget. Some sources of income might be easy to predict annual increases such as rental income or trust annuities while some might be just a fixed amount.</p>
+                <p><small><i>Note: For those receiving stock as compensation along with their normal salary, include that within the this section as a dollar amount or within the Bonus section as a percentage of your gross salary.</i></small></p>
+                <hr>
+                <p><b>Lump Sum Payments:</b>If you have any anticipated large inheritances of money in the future (prior to your retirement age) that you believe will factor into your retirement savings, detail their amounts and anticipated age upon receival.</p>
+            </div>
+        </div>
+        <!-- INCOME FIELDS -->
+        <div class="col-lg-5">
+            <h5 class="fw-bold">Salary & Bonus</h5>
+            <div class="form-floating mb-3">
+                <input type="number" class="form-control" id="current_yearly_salary" name="current_yearly_salary" min="1000" max="1000000" value="75000" required>
+                <label for="current_yearly_salary">Current Yearly Gross Salary ($)</label>
+                <div id="current_yearly_salaryHelp" class="form-text"><small>What is your current yearly gross salary prior to any deductions <i>i.e., Taxes, Retirement Contributions, Health Insurance?</i></small></div>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="number" class="form-control" id="estimated_salary_raise" name="estimated_salary_raise" min="0" max="99.9" value="3.0" step=".1" required>
+                <label for="estimated_salary_raise">Estimated Yearly Salary Raise (%)</label>
+                <div id="estimated_salary_raiseHelp" class="form-text"><small>On average, how much do you anticipate your salary to increase each year?</small></div>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="number" class="form-control" id="estimated_bonus" name="estimated_bonus" min="0" max="99.9" value="1.5" step=".1" required>
+                <label for="estimated_bonus">Estimated Yearly Bonus (%)</label>
+                <div id="estimated_bonusHelp" class="form-text"><small>On average, what percentage of your yearly salary do you anticipate to recieve as a bonus each year?</small></div>
+            </div>
+            <h5 class="fw-bold">Other Income</h5>   
+            <div class="form-floating mb-3">
+                <input type="number" class="form-control" id="current_yearly_other_income" name="current_yearly_other_income" min="0" max="1000000" value="0" required>
+                <label for="current_yearly_other_income">Current Other Income ($)</label>
+                <div id="current_yearly_other_incomeHelp" class="form-text"><small>Do you currently receive any addtional income on a yearly basis? <i>i.e., Rental Properties, Trusts, Side Hustles</i></small></div>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="number" class="form-control" id="estimated_other_income_increase" name="estimated_other_income_increase" min="0" max="99.9" value="0.0" step=".1" required>
+                <label for="estimated_other_income_increase">Estimated Yearly Other Income Increase (%)</label>
+                <div id="estimated_other_income_increaseHelp" class="form-text"><small>On average, how much do you anticipate your other income to increase each year?</small></div>
+            </div>
+            <h5 class="fw-bold">Lump Sum Income</h5>
+            <div id="lumpsumincome-div">
+            </div>
+            <div>
+                <button type="button" class="btn btn-success" hx-get="{% url 'create-lumpsum-income' %}" hx-vals="js:{max_age: document.getElementById('estimated_retirement_age').value, min_age: document.getElementById('current_age').value}" hx-target="#lumpsumincome-div" hx-swap="beforeend">+ Add Lump Sum</button>
+                <p class="form-text"><small><i>*One entry per year before retirement age</i></small></p>
+            </div>
+        </div>
+    </div>
+</section>
+<hr>
+<!-- EXPENSES HTML -->
+<div id="expenses-div" class="text-center mt-3 mb-3">
+    <button type="button" class="btn btn-success" hx-get="{% url 'create-expenses-section' %}" hx-target="#expenses-div" hx-swap="outerHTML">Next</button>
+</div>
+
+<script>
+    FIREscrollspy.refresh()
+</script>

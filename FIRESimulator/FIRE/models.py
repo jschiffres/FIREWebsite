@@ -1,14 +1,15 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import MaxValueValidator, MinValueValidator
 import uuid
 
 # Create your models here.
 class Simulation(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=50)
-    current_age = models.PositiveSmallIntegerField()
-    estimated_retirement_age = models.PositiveSmallIntegerField()
-    estimated_coastfire_age = models.PositiveSmallIntegerField()
+    current_age = models.PositiveSmallIntegerField(validators=[MaxValueValidator(100), MinValueValidator(1)])
+    estimated_retirement_age = models.PositiveSmallIntegerField(validators=[MaxValueValidator(101), MinValueValidator(2)])
+    estimated_coastfire_age = models.PositiveSmallIntegerField(null=True, validators=[MaxValueValidator(100), MinValueValidator(1)])
     current_yearly_salary = models.PositiveBigIntegerField()
     estimated_salary_raise = models.FloatField()
     estimated_bonus = models.FloatField()
@@ -18,8 +19,12 @@ class Simulation(models.Model):
     estimated_lumpsum_payment_ages = models.JSONField(null=True)
     current_yearly_fixed_costs = models.PositiveBigIntegerField()
     estimated_fixed_costs_inflation = models.FloatField()
+    estimated_fixed_cost_adjustments = models.JSONField(null=True)
+    estimated_fixed_cost_adjustment_ages = models.JSONField(null=True)
     current_yearly_cost_of_living = models.PositiveBigIntegerField()
     estimated_cost_of_living_inflation = models.FloatField()
+    estimated_variable_cost_adjustments = models.JSONField(null=True)
+    estimated_variable_cost_adjustment_ages = models.JSONField(null=True)
     current_yearly_health_insurance_cost = models.PositiveBigIntegerField()
     estimated_health_insurance_inflation = models.FloatField()
     estimated_tax_rate = models.FloatField()

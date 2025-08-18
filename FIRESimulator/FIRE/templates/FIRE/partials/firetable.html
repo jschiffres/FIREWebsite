@@ -63,7 +63,7 @@
                         <th style="white-space:nowrap; color:#ffffff; background-color:#70AD47;">SALARY</th>
                         <th style="white-space:nowrap; color:#ffffff; background-color:#70AD47;">BONUS</th>
                         <th style="white-space:nowrap; color:#ffffff; background-color:#70AD47;">OTHER INCOME</th>
-                        <th style="white-space:nowrap; color:#ffffff; background-color:#70AD47;">ONE-TIME PAYMENTS</th>
+                        <th style="white-space:nowrap; color:#ffffff; background-color:#70AD47;">LUMP SUM PAYMENTS <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">+</button></th>
                         <th style="white-space:nowrap; color:#ffffff; background-color:#FF0000;">FIXED COSTS</th>
                         <th style="white-space:nowrap; color:#ffffff; background-color:#FF0000;">VARIABLE COSTS</th>
                         <th style="white-space:nowrap; color:#ffffff; background-color:#FF0000;">HEALTH INSURANCE</th>
@@ -99,29 +99,29 @@
                         <td style="background-color:#E2EFDA;">{{ d.salary }}</td>
                         <td style="background-color:#E2EFDA;">{{ d.bonus }}</td>
                         <td style="background-color:#E2EFDA;">{{ d.other_income }}</td>
-                        <td style="background-color:#E2EFDA;">{{ d.lump_sum_payment_amounts }}</td>
-                        <td style="background-color:#FFCCCC;">{{ d.fixed_costs }}</td>
-                        <td style="background-color:#FFCCCC;">{{ d.cost_of_living }}</td>
+                        <td style="background-color:#E2EFDA;">{{ d.lump_sum_payment }}</td>
+                        <td style="background-color:#FFCCCC;">{{ d.fixed_cost }}</td>
+                        <td style="background-color:#FFCCCC;">{{ d.variable_cost }}</td>
                         <td style="background-color:#FFCCCC;">{{ d.health_insurance }}</td>
-                        <td style="background-color:#FFCCCC;">{{ d.taxes }}</td>
-                        <td style="background-color:#E2EFDA;">{{ d.savings }}</td>
+                        <td style="background-color:#FFCCCC;">{{ d.tax }}</td>
+                        <td style="background-color:#E2EFDA;">{{ d.saving }}</td>
                         <td style="background-color:#EDEDED;">{{ d.hsa_start }}</td>
-                        <td style="background-color:#EDEDED;">{{ d.hsa_cont_limits }}</td>
-                        <td style="background-color:#EDEDED;">{{ d.hsa_contributions }}</td>
+                        <td style="background-color:#EDEDED;">{{ d.hsa_cont_limit }}</td>
+                        <td style="background-color:#EDEDED;">{{ d.hsa_contribution }}</td>
                         <td style="background-color:#E2EFDA;">{{ d.hsa_end }}</td>
                         <td style="background-color:#EDEDED;">{{ d.retirement_start }}</td>
-                        <td style="background-color:#EDEDED;">{{ d.retirement_cont_limits }}</td>
-                        <td style="background-color:#EDEDED;">{{ d.retirement_contributions }}</td>
-                        <td style="background-color:#EDEDED;">{{ d.employer_retirement_contributions }}</td>
+                        <td style="background-color:#EDEDED;">{{ d.retirement_cont_limit }}</td>
+                        <td style="background-color:#EDEDED;">{{ d.retirement_contribution }}</td>
+                        <td style="background-color:#EDEDED;">{{ d.employer_retirement_contribution }}</td>
                         <td style="background-color:#E2EFDA;">{{ d.retirement_end }}</td>
                         <td style="background-color:#EDEDED;">{{ d.ira_start }}</td>
-                        <td style="background-color:#EDEDED;">{{ d.ira_cont_limits }}</td>
-                        <td style="background-color:#EDEDED;">{{ d.ira_contributions }}</td>
+                        <td style="background-color:#EDEDED;">{{ d.ira_cont_limit }}</td>
+                        <td style="background-color:#EDEDED;">{{ d.ira_contribution }}</td>
                         <td style="background-color:#E2EFDA;">{{ d.ira_end }}</td>
                         <td style="background-color:#EDEDED;">{{ d.iba_start }}</td>
-                        <td style="background-color:#EDEDED;">{{ d.iba_contributions }}</td>
+                        <td style="background-color:#EDEDED;">{{ d.iba_contribution }}</td>
                         <td style="background-color:#E2EFDA;">{{ d.iba_end }}</td>
-                        <td style="background-color:#E2EFDA;">{{ d.assets_value }}</td>
+                        <td style="background-color:#E2EFDA;">{{ d.asset_value }}</td>
                         <td style="background-color:#D0CECE;">{{ d.net_worth }}</td>
                         <td style="background-color:#CDACE6;">{{ d.magic_number }}</td>
                         <td style="background-color:#CDACE6;">{{ d.drawdown }}</td>
@@ -131,6 +131,52 @@
             </table>
         </div>
     </div>
+        <div class="modal" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="exampleModalLabel">Lump Sum Payments</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="lumpsumincome-div">
+                            {% if simulation.estimated_lumpsum_payment_amounts %}
+                            {% for age, payment in lump_sum_payments %}
+                            <div id="lumpsumincome-entry" class="row justify-content-start">
+                                <div class="col-5">
+                                    <div class="form-floating mb-3">
+                                        <input type="number" class="form-control" id="estimated_lumpsum_payment_amounts" name="estimated_lumpsum_payment_amounts" min="0" max="10000000" value="{{ payment }}" required>
+                                        <label for="estimated_lumpsum_payment_amounts">Amount ($)</label>
+                                        <div id="estimated_lumpsum_payment_amountsHelp" class="form-text"><small>How much  one-time payments?</small></i></div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-floating mb-3">
+                                        <input type="number" class="form-control" id="estimated_lumpsum_payment_ages" name="estimated_lumpsum_payment_ages" min="1" max="101" value="{{ age }}" step="1" required>
+                                        <label for="estimated_lumpsum_payment_ages">Age</label>
+                                        <div id="estimated_lumpsum_payment_agesHelp" class="form-text"><small>What age do you anticipate to recieve this one-time payment?</small></div>
+                                    </div>
+                                </div>
+                                <div class="col-1">
+                                    <button type="button" class="btn btn-danger" hx-delete hx-target="#lumpsumincome-entry" hx-swap="delete">-</button>
+                                </div>
+                                <hr>
+                            </div>
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-success" hx-get="{% url 'create-lumpsum-income' %}" hx-target="#lumpsumincome-div" hx-swap="beforeend">+ Add Lump Sum</button>
+                            <p class="form-text"><small><i>*One entry per year before retirement age</i></small></p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-success" data-bs-dismiss="modal" hx-post="{% url 'runsimulation' simulation.id %}" hx-target="#runsimulation-div" hx-swap="innerHTML">Save changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 </form>
 
 <div>
@@ -145,7 +191,7 @@
         labels: {{ages|safe}},
         datasets: [{
             label: 'Net Worth',
-            data: {{net_worth|safe}},
+            data: {{net_worths|safe}},
             borderWidth: 1
         }]
         },

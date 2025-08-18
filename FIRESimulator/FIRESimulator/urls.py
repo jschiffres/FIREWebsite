@@ -32,10 +32,15 @@ urlpatterns = [
     path("deletesimulation/<str:simulation_id>", views.deletesimulation, name="deletesimulation"),
     path("mysimulations/", views.usersimulations, name="usersimulations"),
 
-    #HTMX: lumpsum,
-    path('newlumpsum/', views.create_lumpsum, name="create-lumpsum"),
+    #HTMX:
+    path('incomes/', views.create_incomes_section, name="create-incomes-section"),
+    path('expenses/', views.create_expenses_section, name="create-expenses-section"),
+    path('savings/', views.create_savings_section, name="create-savings-section"),
+    path('newlumpsumincome/', views.create_lumpsum_income, name="create-lumpsum-income"),
+    path('newlumpsumexpense/', views.create_lumpsum_expense, name="create-lumpsum-expense"),
     path('newasset/', views.create_asset, name="create-asset"),
     path('newfixedcostadjustment/', views.create_fixedcost_adjustment, name="create-fixedcost-adjustment"),
+    path('newvariablecostadjustment/', views.create_variablecost_adjustment, name="create-variablecost-adjustment"),
     path('hsaoptin/', views.hsa_opt_in, name="hsa-opt-in"),
     path('coastfireoptin/', views.coastfire_opt_in, name="coastfire-opt-in"),
 

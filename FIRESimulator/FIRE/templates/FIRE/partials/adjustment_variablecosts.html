@@ -1,0 +1,20 @@
+<div id="variablecost-adjustment" class="row justify-content-start">
+    <div class="col-6">
+        <div class="form-floating mb-1">
+            <input type="number" class="form-control" id="estimated_variable_cost_adjustments" name="estimated_variable_cost_adjustments" min="0" max="99.9" value="8.0" step=".1" required>
+            <label for="estimated_variable_cost_adjustments">Adjustment (%)</label>
+            <div id="estimated_variable_cost_adjustmentsHelp" class="form-text"><small>How much will your variable costs increase on top of inflation?</small></div>
+        </div>
+    </div>
+    <div class="col-5">
+        <div class="form-floating mb-1">
+            <input type="number" class="form-control" id="estimated_variable_cost_adjustment_ages" name="estimated_variable_cost_adjustment_ages" min="{{ min_age }}" max="{{ max_age }}" value="32" required>
+            <label for="estimated_variable_cost_adjustment_ages">Age</label>
+            <div id="estimated_variable_cost_adjustment_agesHelp" class="form-text"><small>What age will this adjustment occur?</small></div>
+        </div>
+    </div>
+    <div class="col-1 align-self-center">
+        <button type="button" class="btn btn-danger" hx-delete hx-target="#variablecost-adjustment" hx-swap="delete">-</button>
+    </div>
+    <hr>
+</div>
