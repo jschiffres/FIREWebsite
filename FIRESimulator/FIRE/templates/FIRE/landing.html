@@ -1,0 +1,80 @@
+{% extends 'FIRE/base.html' %}
+{% block content %}
+
+<section class="py-5 text-center">
+  <div class="container">
+    <h1 class="display-5 fw-bold text-success">Plan your path to Financial Independence</h1>
+    <p class="lead mt-3">Answer a few questions, see your FIRE timeline, and explore scenarios to reach your goals sooner.</p>
+    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-4">
+      <a href="{% url 'newsimulation' %}" class="btn btn-success btn-lg px-4"><i class="bi bi-play-fill"></i> Start your simulation</a>
+      {% if user.is_authenticated %}
+        <a href="{% url 'usersimulations' %}" class="btn btn-outline-success btn-lg px-4"><i class="bi bi-arrow-repeat"></i> Continue my simulations</a>
+      {% endif %}
+    </div>
+  </div>
+  
+  <div class="container mt-5">
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+          <div class="card-body">
+            <h5 class="card-title"><i class="bi bi-ui-checks-grid text-success"></i> How it works</h5>
+            <ol class="mt-3 mb-0 text-start">
+              <li>Provide your current age, income, expenses, savings, and goals.</li>
+              <li>We simulate yearly cash flows, contributions, returns, and net worth.</li>
+              <li>See when you hit your FIRE number and how changes affect the timeline.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+          <div class="card-body">
+            <h5 class="card-title"><i class="bi bi-graph-up-arrow text-success"></i> Why use it</h5>
+            <ul class="mt-3 mb-0 text-start">
+              <li>Turn assumptions into a concrete plan.</li>
+              <li>Understand tradeoffs between spending, saving, and retiring earlier.</li>
+              <li>Experiment safely with scenarios before changing your life.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+          <div class="card-body">
+            <h5 class="card-title"><i class="bi bi-shield-check text-success"></i> What you get</h5>
+            <ul class="mt-3 mb-0 text-start">
+              <li>An interactive questionnaire and live-updating results table.</li>
+              <li>Your FIRE age estimate and net worth projections.</li>
+              <li>Clear inputs to revisit and refine over time.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-5 bg-light">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <h2 class="section-title"><i class="bi bi-lightbulb"></i> Tips for a great simulation</h2>
+        <ul class="mt-3">
+          <li>Use averages for income, expenses, and savings up to your target retirement age.</li>
+          <li>Start simple. You can add lump sums, asset growth, and adjustments later.</li>
+          <li>Revisit your plan quarterly as numbers and goals evolve.</li>
+        </ul>
+        <a href="{% url 'newsimulation' %}" class="btn btn-success mt-3">Get started</a>
+      </div>
+      <div class="col-lg-6">
+        <div class="tip-card shadow-sm">
+          <p class="mb-0"><em>“Small, consistent decisions compound. This tool shows your compounding path so you can act with confidence.”</em></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+

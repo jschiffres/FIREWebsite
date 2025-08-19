@@ -17,6 +17,9 @@ import pandas as pd
 from datetime import date
 import json
 
+def landing(request):
+    return render(request, 'FIRE/landing.html')
+
 # AUTHENTICATION: Signup
 def signupuser(request):
     if request.method == "GET":
@@ -80,7 +83,7 @@ def logoutuser(request):
     if request.method == "POST":
         logout(request)
         messages.success(request, "Logged out successfully!")
-        return redirect('newsimulation')
+        return redirect('landing')
 
 # SIMULATIONS: Display User's Simulations
 def usersimulations(request):
