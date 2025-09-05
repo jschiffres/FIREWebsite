@@ -1,0 +1,96 @@
+<!-- EXPENSES -->
+<section id="expenses" class="mb-5">
+    <h3 class="section-title"><i class="bi bi-receipt"></i> Expenses</h3>
+    <div class="row g-4">
+        <!-- EXPENSES INSTRUCTIONS -->
+        <div class="col-lg-7">
+            <div class="tip-card shadow-sm rounded">
+                <h5>How much money do you spend?</h5>
+                <p><i>The next step to determining your budget is to understand where your money is being spent. A little bit more complicated...</i></p>
+                <hr>
+                <p><b>Fixed Costs: </b> Generally are your monthly bills that reoccur and tend to be <u>very predictable.</u> These expenses usually can not be controlled or altered without making a drastic change such as moving. Think of these costs as your needs that must be paid prior to thinking about any discretionary spending. Include any debt payments within this category as well.</p>
+                <p><b>Variable Costs: </b> Should be a targeted value within the remainder after subtracting your mandatory bills from your <u>net salary.</u> As an example, someone earning a net salary of $50k a year with $20k in Fixed Costs should target their Variable Costs to be less than or equal to $30k. After paying your bills you are left with, hopefuly, money for shopping, travel, food etc. Food is, of course, a need but as it could vary drastically from month to month and be controlled by things such as reducing how much you eat out/lifestyle.</p>
+                <p><small><i>Note: Reviewing your credit card and or bank statements will be helpful to gain insight if you are unaware of your reoccuring bills and spending habits. If needed, download those statements and go line-by-line assigning each one a category such as Bill or Food and even a subcategory such as Rent or Groceries.</i></small></p>
+                <p><small><i>Note: There are two scenarios after subtracting your fixed and targeted variable spend amounts from your net salary - one, you have surplus money to save or two, you are in the negative and have gone into debt. The second scenario can certainly be a reality but the hope is that it can be avoided and that developing a budget will highlight the need to spend more cautiously, reduce your bills, find a more high paying job etc.</i></small></p>
+                <hr>
+                <p><b>Inflation: </b> Your recurring bills and variable spend very rarely will decrease over the years and there are two main factors to this, the first being inflation and the second is a change in one's lifestyle. Inflation can not be controlled or really avoided - rent, energy and food cost is going to increase with or without you and should be accounted for at the very least. <u>An average annual inflation rate of 2-4% is a safe estimate</u> but may vary based on a number of factors including where you live. If you anticipate your lifestyle to change as your salary increases it is wise to factor that into this estimate as well.</p>
+                <p><b>Adjustments: </b> While accounting for inflation is needed, assuming your expenses will stay consistent up until your retirement is hard to imagine given potential events such as having a child. The simulation will calculate your fixed and variable costs to grow at the provided increase percentage unless adjusted for during a given year at presumably a higher rate. After the adjustment year, costs will continue to grow at the provided increase percentage.</p>
+                <hr>
+                <p><b>Health Insurance: </b> Usually taken out of one's paycheck prior to receiving your net salary. Review your paycheck or health insurance marketplace statement, if self employeed, to determine how much you are paying for health insurance. Your health insurance cost may vary drastically throughout your career as you change jobs and have different coverage options and as your heath needs potentially start to increase as you get older.</p>
+                <hr>
+                <p><b>Taxes: </b> Usually taken out of one's paycheck prior to receiving your net salary as well. Your tax rate is quite difficult to estimate as there are many factors out of your control but reviewing your prior W2s provided by your employer and your tax returns can give you an idea of how much <u>federal and state/local</u> tax you have paid in past years. As your income is most likely to increase, it is important to factor that into your estimate as this percentage will be utilized in future years when your tax bracket presumably will be higher.</p>
+                <p> <small><i>Note: Consider learning about how your income is taxed - understanding the current tax brackets, your state tax rate(s) or lack of and how deductions from your gross salary can reduce your taxable income and thus your tax rate will be good to understand when considering FIRE.</i></small></p>
+            </div>
+        </div>
+        <!-- EXPENSES FIELDS -->
+        <div class="col-lg-5">
+            <h5 class="fw-bold">Fixed Costs</h5>
+            <div class="form-floating mb-3">
+                <input type="number" class="form-control" id="current_yearly_fixed_costs" name="current_yearly_fixed_costs" min="1" max="100000000" value="17500" required>
+                <label for="current_yearly_fixed_costs">Current Yearly Fixed Costs ($)</label>
+                <div id="current_yearly_fixed_costsHelp" class="form-text"><small>What is your current yearly fixed costs expense amount?</small></div>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="number" class="form-control" id="estimated_fixed_costs_inflation" name="estimated_fixed_costs_inflation" min="0" max="99.9" value="3.2" step=".1" required>
+                <label for="estimated_fixed_costs_inflation">Estimated Yearly Fixed Costs Inflation (%)</label>
+                <div id="estimated_fixed_costs_inflationHelp" class="form-text"><small>On average, how much do you anticipate your fixed costs to increase each year?</small></div>
+            </div>
+            <div id="fixedcost-adjustments-div">
+            </div>
+            <div>
+                <button type="button" class="btn btn-success" hx-get="{% url 'create-fixedcost-adjustment' %}" hx-vals="js:{max_age: document.getElementById('estimated_retirement_age').value, min_age: document.getElementById('current_age').value}" hx-target="#fixedcost-adjustments-div" hx-swap="beforeend"><i class="bi bi-plus-circle-fill"></i> Fixed Cost Adjustment</button>
+                <p class="form-text"><small><i>*One entry per year before retirement age</i></small></p>
+            </div>
+            <h5 class="fw-bold">Variable Costs</h5>
+            <div class="form-floating mb-3">
+                <input type="number" class="form-control" id="current_yearly_variable_costs" name="current_yearly_variable_costs" min="1" max="100000000" value="20000" required>
+                <label for="current_yearly_variable_costs">Current Yearly Variable Costs ($)</label>
+                <div id="current_yearly_variable_costsHelp" class="form-text"><small>What is your current yearly variable costs expense amount?</small></div>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="number" class="form-control" id="estimated_variable_costs_inflation" name="estimated_variable_costs_inflation" min="0" max="99.9" value="3.2" step=".1" required>
+                <label for="estimated_variable_costs_inflation">Estimated Yearly Variable Costs Inflation (%)</label>
+                <div id="estimated_variable_costs_inflationHelp" class="form-text"><small>On average, how much do you anticipate your variable costs to increase each year?</small></div>
+            </div>
+            <div id="variablecost-adjustments-div">
+            </div>
+            <div>
+                <button type="button" class="btn btn-success" hx-get="{% url 'create-variablecost-adjustment' %}" hx-vals="js:{max_age: document.getElementById('estimated_retirement_age').value, min_age: document.getElementById('current_age').value}" hx-target="#variablecost-adjustments-div" hx-swap="beforeend"><i class="bi bi-plus-circle-fill"></i> Variable Cost Adjustment</button>
+                <p class="form-text"><small><i>*One entry per year before retirement age</i></small></p>
+            </div>
+            <h5 class="fw-bold">Health Care</h5>
+            <div class="form-floating mb-3">
+                <input type="number" class="form-control" id="current_yearly_health_insurance_cost" name="current_yearly_health_insurance_cost" min="0" max="100000000" value="2600" required>
+                <label for="current_yearly_health_insurance_cost">Current Yearly Health Insurance Cost ($)</label>
+                <div id="current_yearly_health_insurance_costHelp" class="form-text"><small>What is your current yearly health insurance cost?</small></div>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="number" class="form-control" id="estimated_health_insurance_inflation" name="estimated_health_insurance_inflation" min="0" max="99.9" value="5.0" step=".1" required>
+                <label for="estimated_health_insurance_inflation">Estimated Yearly Heath Insurance Cost Increase (%)</label>
+                <div id="estimated_health_insurance_inflationHelp" class="form-text"><small>On average, how much do you anticipate your health insurance cost to increase each year?</small></div>
+            </div>
+            <h5 class="fw-bold">Taxes</h5>
+            <div class="form-floating mb-3">
+                <input type="number" class="form-control" id="estimated_tax_rate" name="estimated_tax_rate" min="0" max="99.9" value="18.0" step=".1" required>
+                <label for="estimated_tax_rate">Estimated Tax Rate (%)</label>
+                <div id="estimated_tax_rateHelp" class="form-text"><small>On average, what do you anticipate your tax rate to be each year?</small></div>
+            </div>
+            <h5 class="fw-bold">Lump Sum Expense</h5>
+            <div id="lumpsumexpense-div">
+            </div>
+            <div>
+                <button type="button" class="btn btn-success" hx-get="{% url 'create-lumpsum-expense' %}" hx-vals="js:{max_age: document.getElementById('estimated_retirement_age').value, min_age: document.getElementById('current_age').value}" hx-target="#lumpsumexpense-div" hx-swap="beforeend"><i class="bi bi-plus-circle-fill"></i> Add Lump Sum</button>
+                <p class="form-text"><small><i>*One entry per year before retirement age</i></small></p>
+            </div>
+        </div>
+    </div>
+</section>
+<hr>
+<!-- EXPENSES HTML -->
+<div id="savings-div" class="text-center mt-3 mb-3">
+    <button type="button" class="btn btn-success btn-lg" hx-get="{% url 'create-savings-section' %}" hx-target="#savings-div" hx-swap="outerHTML">Savings <i class="bi bi-arrow-down-circle-fill"></i></button>
+</div>
+
+<script>
+    FIREscrollspy.refresh()
+</script>

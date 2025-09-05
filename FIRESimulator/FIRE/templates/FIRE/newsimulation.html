@@ -13,9 +13,53 @@
 </script>
 
 <script>
+    // Initialize Bootstrap scrollspy
     const FIREscrollspy = new bootstrap.ScrollSpy(document.body, {
-        target: '#navbar'
+        target: '#questionnaire-navbar',
     })
+</script>
+
+<script>
+    document.body.addEventListener('htmx:afterSwap', function(evt) {
+        // Limit to specific targets, if needed
+        if (evt.target.id === "lumpsumexpense-div") {
+            initializeRangeInputs(evt.target);
+        }
+
+        if (evt.target.id === "lumpsumincome-div") {
+            initializeRangeInputs(evt.target);
+        }
+
+        if (evt.target.id === "variablecost-adjustments-div") {
+            initializeRangeInputs(evt.target);
+        }
+
+        if (evt.target.id === "fixedcost-adjustments-div") {
+            initializeRangeInputs(evt.target);
+        }
+        
+    });
+
+    function initializeRangeInputs(scope) {
+    scope.querySelectorAll('input[type="range"]').forEach(function(rangeInput) {
+        const display = rangeInput.nextElementSibling; // Adjust selector as needed
+        if (display) {
+            rangeInput.addEventListener('input', function() {
+                display.textContent = this.value;
+            });
+            display.textContent = rangeInput.value; // Initialize on load
+        }
+    });
+    }  
+</script>
+
+<script>
+    FIREscrollspy.refresh()
+</script>
+
+<script>
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 </script>
 
 {% if error %}
@@ -23,76 +67,156 @@
 {% endif %}
 
 <!-- QUESTIONNAIRE NAVBAR -->
-<nav id="navbar" class="navbar sticky-top shadow-sm">
+<nav id="questionnaire-navbar" class="navbar sticky-top shadow-sm">
     <div class="container-fluid">
-        <h1 class="navbar-brand mb-0 fs-3 fw-bold text-success"><i class="bi bi-cash-coin"></i> FIRE Questionnaire</h1>
+        <h1 class="navbar-brand mb-0 fs-3 fw-bold" id="nav-header"><i class="bi bi-cash-coin"></i> FIRE Questionnaire</h1>
         <ul class="nav nav-pills">
-        <li class="nav-item"><a class="nav-link" href="#personalInfo">Personal Info</a></li>
-        <li class="nav-item"><a class="nav-link" href="#income">Income</a></li>
-        <li class="nav-item"><a class="nav-link" href="#expenses">Expenses</a></li>
-        <li class="nav-item"><a class="nav-link" href="#savings">Savings</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-personal" href="#personalInfo"><i class="bi bi-person-circle"></i> Personal Info</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-income" href="#income"><i class="bi bi-cash-stack"></i> Income</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-expenses" href="#expenses"><i class="bi bi-receipt"></i> Expenses</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-savings" href="#savings"><i class="bi bi-piggy-bank"></i> Savings</a></li>
         </ul>
     </div>
 </nav>
 
 <!-- NAVBAR SCOLL CONTAINER -->
-<div class="container py-4" data-bs-spy="scroll" data-bs-target="#navbar" tabindex="0">
+<div class="container py-4" data-bs-spy="scroll" data-bs-target="#questionnaire-navbar" tabindex="0">
     <form method="POST">{% csrf_token %}
 
         <!-- PERSONAL INFO -->
         <section id="personalInfo" class="mb-5">
-            <h3 class="section-title"><i class="bi bi-person-circle"></i> Personal Info</h3>
-            <div class="row g-4">
+            <h3 class="section-title-personal"><i class="bi bi-person-circle"></i> Personal Info</h3>
+            <div class="tip-card-personal shadow-sm rounded mb-3">
                 <!-- PERSONAL INSTRUCTIONS -->
-                <div class="col-lg-7">
-                    <div class="tip-card shadow-sm rounded">
-                        <h5>Welcome!</h5>
-                        <p><i>The following survey will inquire not only about your current financial sitution but also your anticipated future in areas including income, expenses and savings. At the end you'll be able to see the power of investing long term for your future!</i></p>
-                        <p>Start by answering the first section, including this question: <b>What age would you like to retire?</b> </p>
-                        <hr>
-                        <p><small><i>Note: If you are currently not budgeting on a monthly or yearly basis, take some time to understand how you are earning and spending your money as a clear grasp of your budget will be a critical baseline to create an accurate simulation.</i></small> </p>
-                        <p><small><i>Note: The estimates you provide throughout this survey should be an average over the course of today all the way up until your retirement age. Being consistent throughout with your estimates within this survey will allow you to compare various scenarios of high or low growth.</i></small> </p>
+                <div class="row g-4 mb-1">
+                    <h5>Welcome!</h5>
+                </div>
+                <div class="row g-4 mb-3">
+                    <div class="accordion" id="accordionFlushExample">
+                        <div class="accordion-item border-0">
+                            <h2 class="accordion-header" id="personal-headingOne">
+                                <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #c9890a;" type="button" data-bs-toggle="collapse" data-bs-target="#personal-collapseOne" aria-expanded="false" aria-controls="personal-collapseOne">
+                                <i class="bi bi-three-dots-vertical"></i> About
+                                </button>
+                            </h2>
+                            <div id="personal-collapseOne" class="accordion-collapse collapse" aria-labelledby="personal-headingOne">
+                                <div class="accordion-body" style="background-color: #e0bb7172;">
+                                    <p>The following survey will inquire not only about your current financial sitution but also your anticipated future in areas including income, expenses and savings. At the end you'll be able to see the power of investing long term for your future!</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item border-0">
+                            <h2 class="accordion-header" id="personal-headingTwo">
+                                <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #da9b1c;" type="button" data-bs-toggle="collapse" data-bs-target="#personal-collapseTwo" aria-expanded="false" aria-controls="personal-collapseTwo">
+                                <i class="bi bi-plus-lg"></i>  Instructions
+                                </button>
+                            </h2>
+                            <div id="personal-collapseTwo" class="accordion-collapse collapse" aria-labelledby="personal-headingTwo">
+                                <div class="accordion-body" style="background-color: #e0bb7172;">
+                                    <p><b><i class="bi bi-question-lg"></i> How: </b>An <u>annual raise of 3-5% is a safe estimate</u> but depending on your industry it could be higher or lower.</p>
+                                    <p><b><i class="bi bi-calculator-fill"></i> Why: </b>Factoring in raises will help you understand how your income may grow over time and how that can impact your savings rate and retirement timeline.</p>
+                                    <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>Understand factors within your control such as frequent job hopping and factors out of your control such as a recession.</p>
+                                    <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note....</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item border-0">
+                            <h2 class="accordion-header" id="personal-headingThree">
+                                <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #e9b040;" type="button" data-bs-toggle="collapse" data-bs-target="#personal-collapseThree" aria-expanded="false" aria-controls="personal-collapseThree">
+                                <i class="bi bi-chevron-expand"></i> Tips
+                                </button>
+                            </h2>
+                            <div id="personal-collapseThree" class="accordion-collapse collapse" aria-labelledby="personal-headingThree">
+                                <div class="accordion-body" style="background-color: #e0bb7172;">
+                                    <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>The estimates you provide throughout this survey should be an average over the course of today all the way up until your retirement age. Being consistent throughout with your estimates within this survey will allow you to compare various scenarios of high or low growth.</p>
+                                    <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>If you are currently not budgeting on a monthly or yearly basis, take some time to understand how you are earning and spending your money as a clear grasp of your budget will be a critical baseline to create an accurate simulation.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <!-- PERSONAL FIELDS -->
-                <div class="col-lg-5">
-                    <div class="form-floating mb-3">
-                        <input type="text" class="form-control" id="name" name="name" value="My Simulation" required>
-                        <label for="name">Simulation Name</label>
-                        <div id="nameHelp" class="form-text"><small>Provide a name for this simulation.</small></div>
-                    </div>                
-                    <div class="form-floating mb-3">
-                        <input type="number" class="form-control" id="current_age" name="current_age" min="1" max="100" value="25" required>
-                        <label for="current_age">Current Age</label>
-                        <div id="current_ageHelp" class="form-text"><small>How old are you?</small></div>
-                    </div>
-                    <div class="form-floating mb-3">
-                        <input type="number" class="form-control" id="estimated_retirement_age" name="estimated_retirement_age" min="2" max="101" value="40" required>
-                        <label for="estimated_retirement_age">Retirement Age</label>
-                        <div id="estimated_retirement_ageHelp" class="form-text"><small>What age would you like to retire?</small></div>
-                    </div>
-                    <div class="form-floating mb-3">  
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="coast_fire_opt_out" id="coast_fire_opt_out" value="False" checked hx-delete hx-target="#coast-fire-age" hx-swap="delete">
-                            <label class="form-check-label" for="coast_fire_opt_out">No</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="coast_fire_opt_out" id="coast_fire_opt_int" value="True" hx-get="{% url 'coastfire-opt-in' %}" hx-vals="js:{max_age: document.getElementById('estimated_retirement_age').value, min_age: document.getElementById('current_age').value}" hx-target="#coast-fire" hx-swap="innerHTML">
-                            <label class="form-check-label" for="coast_fire_opt_int">Yes</label>
-                        </div>
-                        <div id="coast_fire_opt_outHelp" class="form-text">
-                            <small>Would you like to coast FIRE at a certain age?</small>
+                <!-- <div class="row g-4">
+                    <p><i>The following survey will inquire not only about your current financial sitution but also your anticipated future in areas including income, expenses and savings. At the end you'll be able to see the power of investing long term for your future!</i></p>
+                    <p>Start by answering the first section, including this question: <b>What age would you like to retire?</b> </p>
+                    <hr>
+                    <p><small><i>Note: If you are currently not budgeting on a monthly or yearly basis, take some time to understand how you are earning and spending your money as a clear grasp of your budget will be a critical baseline to create an accurate simulation.</i></small> </p>
+                    <p><small><i>Note: The estimates you provide throughout this survey should be an average over the course of today all the way up until your retirement age. Being consistent throughout with your estimates within this survey will allow you to compare various scenarios of high or low growth.</i></small></p>
+                </div> -->
+                <div class="row g-4">
+                    <!-- PERSONAL FIELDS -->
+                    <div class="col-lg-6">
+                        <h5 class="fw-bold">Simulation Name</h5>
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="name" name="name" value="My Simulation" required>
+                            <label for="name">Simulation Name</label>
+                            <div id="nameHelp" class="form-text"><small>Provide a name for this simulation.</small></div>
                         </div>
                     </div>
-                    <div id="coast-fire">
+                    <div class="col-lg-6">
+                        <h5 class="fw-bold">Current Age</h5> 
+                        <div class="input-group">               
+                            <div class="form-floating">
+                                <input type="number" class="form-control" id="current_age" name="current_age" min="1" max="100" value="25" required>
+                                <label for="current_age">Current Age</label>
+                            </div>
+                            <span class="input-group-text">years old</span>
+                        </div>
+                        <div id="current_ageHelp" class="form-text mb-3"><small>How old are you?</small></div>
+                    </div>
+                </div>
+                <div class="row g-4">
+                    <div class="col-lg-4">
+                        <h5 class="fw-bold">Retirement Age</h5> 
+                        <div class="input-group"> 
+                            <div class="form-floating">
+                                <input type="number" class="form-control" id="estimated_retirement_age" name="estimated_retirement_age" min="2" max="101" value="40" required>
+                                <label for="estimated_retirement_age">Retirement Age</label>
+                            </div>
+                            <span class="input-group-text">years old</span>
+                        </div>
+                        <div id="estimated_retirement_ageHelp" class="form-text mb-3"><small>What age would you like to retire?</small></div>
+                    </div>
+                    <div class="col-lg-4">
+                        <h5 class="fw-bold text-center">Coast FIRE Opt-In <span class="tt" data-bs-placement="top" title="Coast FIRE tootip."><i class="bi bi-question-circle-fill text-warning"></i></span></h5>
+                        <div class="form-floating mt-4 text-center">  
+                            <div class="form-check form-check-inline mb-3">
+                                <input class="form-check-input" type="radio" name="coast_fire_opt_out" id="coast_fire_opt_int" value="True" hx-get="{% url 'coastfire-opt-in' %}" hx-vals="js:{max_age: document.getElementById('estimated_retirement_age').value, min_age: document.getElementById('current_age').value}" hx-target="#coast-fire" hx-swap="innerHTML">
+                                <label class="form-check-label" for="coast_fire_opt_int">Yes</label>
+                            </div>
+                            <div class="form-check form-check-inline mb-3">
+                                <input class="form-check-input" type="radio" name="coast_fire_opt_out" id="coast_fire_opt_out" value="False" checked hx-delete hx-target="#coast-fire-age" hx-swap="delete">
+                                <label class="form-check-label" for="coast_fire_opt_out">No</label>
+                            </div>
+                            <div id="coast_fire_opt_outHelp" class="form-text text-center">
+                                <small>Would you like to coast FIRE at a certain age?</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4" id="coast-fire">
                     </div>
                 </div>
             </div>
         </section>
-        <hr>
-        <div id="incomes-div" class="text-center mt-3 mb-3">
-            <button type="button" class="btn btn-success" hx-get="{% url 'create-incomes-section' %}" hx-target="#incomes-div" hx-swap="outerHTML">Next</button>
+        <hr class="hr-big">
+        <div id="incomes-div" class="text-center mt-3 mb-3" hx-get="{% url 'create-incomes-section' %}" hx-target="#incomes-div" hx-swap="outerHTML transition:true">
+            <button type="button" class="btn btn-primary btn-lg"><i class="bi bi-arrow-down-circle-fill"></i> Income</i></button>
         </div>
+        <style>
+            /* Fade transition for HTMX */
+            .htmx-swapping {
+                opacity: 0;
+                transition: opacity 9000ms ease;
+            }
+            .htmx-settling {
+                opacity: 0;
+            }
+            #incomes-div {
+                transition: opacity 9000ms ease;
+            }
+            #incomes-div.htmx-settling {
+                opacity: 1;
+            }
+        </style>
     </form>
 </div>
 

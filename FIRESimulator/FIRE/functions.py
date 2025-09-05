@@ -35,27 +35,34 @@ def savesimulation(self, request):
             newsimulation.estimated_hsa_yearly_contribution_limit_step = request.POST.get('estimated_hsa_yearly_contribution_limit_step')
             newsimulation.esitmated_hsa_yearly_return = request.POST.get('esitmated_hsa_yearly_return')
         
-        #Set lumpsum payment fields equal to the list of amounts and ages within the request/form
-        newsimulation.estimated_lumpsum_payment_amounts = request.POST.getlist('estimated_lumpsum_payment_amounts')
-        newsimulation.estimated_lumpsum_payment_ages = request.POST.getlist('estimated_lumpsum_payment_ages')
+        #Set lumpsum income/expense and fixed/vairable cost adjustment fields equal to the list of amounts and ages within the request/form
+        newsimulation.lumpsum_income_names = request.POST.getlist('lumpsum_income_names')
+        newsimulation.estimated_lumpsum_income_amounts = request.POST.getlist('estimated_lumpsum_income_amounts')
+        newsimulation.estimated_lumpsum_income_ages = request.POST.getlist('estimated_lumpsum_income_ages')
+        newsimulation.lumpsum_expense_names = request.POST.getlist('lumpsum_expense_names')
+        newsimulation.estimated_lumpsum_expense_amounts = request.POST.getlist('estimated_lumpsum_expense_amounts')
+        newsimulation.estimated_lumpsum_expense_ages = request.POST.getlist('estimated_lumpsum_expense_ages')
+        newsimulation.fixed_cost_adjustment_names = request.POST.getlist('fixed_cost_adjustment_names')
         newsimulation.estimated_fixed_cost_adjustments = request.POST.getlist('estimated_fixed_cost_adjustments')
         newsimulation.estimated_fixed_cost_adjustment_ages = request.POST.getlist('estimated_fixed_cost_adjustment_ages')
+        newsimulation.variable_cost_adjustment_names = request.POST.getlist('variable_cost_adjustment_names')
         newsimulation.estimated_variable_cost_adjustments = request.POST.getlist('estimated_variable_cost_adjustments')
         newsimulation.estimated_variable_cost_adjustment_ages = request.POST.getlist('estimated_variable_cost_adjustment_ages')
 
         #Check that there are no duplicate yearly entries within survey add-ons (lump sum payments, expense adjustments etc.):
-        if len(list(newsimulation.estimated_lumpsum_payment_ages)) != len(set(list(newsimulation.estimated_lumpsum_payment_ages))) or len(list(newsimulation.estimated_fixed_cost_adjustment_ages)) != len(set(list(newsimulation.estimated_fixed_cost_adjustment_ages))) or len(list(newsimulation.estimated_variable_cost_adjustment_ages)) != len(set(list(newsimulation.estimated_variable_cost_adjustment_ages))):
+        if len(list(newsimulation.estimated_lumpsum_income_ages)) != len(set(list(newsimulation.estimated_lumpsum_income_ages))) or len(list(newsimulation.estimated_lumpsum_expense_ages)) != len(set(list(newsimulation.estimated_lumpsum_expense_ages))) or len(list(newsimulation.estimated_fixed_cost_adjustment_ages)) != len(set(list(newsimulation.estimated_fixed_cost_adjustment_ages))) or len(list(newsimulation.estimated_variable_cost_adjustment_ages)) != len(set(list(newsimulation.estimated_variable_cost_adjustment_ages))):
             return "Limit of one one entry per year before retirement age."
         
         #Check that all entry ages are greater than or equal to the simulation's current age:
-        if len(list(filter(lambda age: age < newsimulation.current_age, list(map(int, newsimulation.estimated_lumpsum_payment_ages))))) > 0 or len(list(filter(lambda age: age < newsimulation.current_age, list(map(int, newsimulation.estimated_fixed_cost_adjustment_ages))))) > 0 or len(list(filter(lambda age: age < newsimulation.current_age, list(map(int, newsimulation.estimated_variable_cost_adjustment_ages))))) > 0:
+        if len(list(filter(lambda age: age < newsimulation.current_age, list(map(int, newsimulation.estimated_lumpsum_income_ages))))) > 0 or len(list(filter(lambda age: age < newsimulation.current_age, list(map(int, newsimulation.estimated_lumpsum_expense_ages))))) > 0 or len(list(filter(lambda age: age < newsimulation.current_age, list(map(int, newsimulation.estimated_fixed_cost_adjustment_ages))))) > 0 or len(list(filter(lambda age: age < newsimulation.current_age, list(map(int, newsimulation.estimated_variable_cost_adjustment_ages))))) > 0:
             return "Entries must occur after or equal to your current age."
         
         #Check that all entry ages are less than the simulation's estimated retirement age:
-        if len(list(filter(lambda age: age >= newsimulation.estimated_retirement_age, list(map(int, newsimulation.estimated_lumpsum_payment_ages))))) > 0 or len(list(filter(lambda age: age >= newsimulation.estimated_retirement_age, list(map(int, newsimulation.estimated_fixed_cost_adjustment_ages))))) > 0 or len(list(filter(lambda age: age >= newsimulation.estimated_retirement_age, list(map(int, newsimulation.estimated_variable_cost_adjustment_ages))))) > 0:
+        if len(list(filter(lambda age: age >= newsimulation.estimated_retirement_age, list(map(int, newsimulation.estimated_lumpsum_income_ages))))) > 0 or len(list(filter(lambda age: age >= newsimulation.estimated_retirement_age, list(map(int, newsimulation.estimated_lumpsum_expense_ages))))) > 0 or len(list(filter(lambda age: age >= newsimulation.estimated_retirement_age, list(map(int, newsimulation.estimated_fixed_cost_adjustment_ages))))) > 0 or len(list(filter(lambda age: age >= newsimulation.estimated_retirement_age, list(map(int, newsimulation.estimated_variable_cost_adjustment_ages))))) > 0:
             return "Entries must occur before your estimated retirement age."
         
-        #Set asset fields equal to the list of amounts and growths within the request/form 
+        #Set asset fields equal to the list of amounts and growths within the request/form
+        newsimulation.asset_names = request.POST.getlist('asset_names')
         newsimulation.current_asset_values = request.POST.getlist('current_asset_values')
         newsimulation.estimated_asset_value_growths = request.POST.getlist('estimated_asset_value_growths')
 
@@ -102,12 +109,16 @@ class FIRE:
         other_income = [math.floor(self.simulation.current_yearly_other_income * ((1 + round(self.simulation.estimated_other_income_increase/100,3)) ** year)) for year in range(0,self.years_until_retirement)]
         self.other_income = other_income
         # Lump Sum Payments
-        lump_sum_payments_dict = dict(zip(list(map(int, self.simulation.estimated_lumpsum_payment_ages)), list(map(int, self.simulation.estimated_lumpsum_payment_amounts))))
-        lump_sum_payments = [lump_sum_payments_dict[age] if age in lump_sum_payments_dict else 0 for age in [self.simulation.current_age + year for year in range(0,self.years_until_retirement)]]
-        self.lump_sum_payments = lump_sum_payments
+        lump_sum_incomes_dict = dict(zip(list(map(int, self.simulation.estimated_lumpsum_income_ages)), list(map(int, self.simulation.estimated_lumpsum_income_amounts))))
+        lump_sum_incomes = [lump_sum_incomes_dict[age] if age in lump_sum_incomes_dict else 0 for age in [self.simulation.current_age + year for year in range(0,self.years_until_retirement)]]
+        self.lump_sum_incomes = lump_sum_incomes
+
+        # Total Income
+        total_income = [salaries[year] + bonuses[year] + other_income[year] + lump_sum_incomes[year] for year in range(0,self.years_until_retirement)]
+        self.total_income = total_income
 
         # Return
-        return salaries, bonuses, other_income, lump_sum_payments
+        return total_income, salaries, bonuses, other_income, lump_sum_incomes
     
     # Function: Expenses
     def expenses(self):
@@ -118,7 +129,6 @@ class FIRE:
         idx = 0
         for age in [self.simulation.current_age + year for year in range(1,self.years_until_retirement)]:
             if age in fixed_cost_adjustments_dict:
-                print("adjustment")
                 fixed_costs.append(math.floor(fixed_costs[idx] * (1+round(self.simulation.estimated_fixed_costs_inflation/100,3)+round(fixed_cost_adjustments_dict[age]/100,3))))
                 idx += 1
             else:
@@ -127,31 +137,39 @@ class FIRE:
         self.fixed_costs = fixed_costs
         #Variable Costs
         variable_cost_adjustments_dict = dict(zip(list(map(int, self.simulation.estimated_variable_cost_adjustment_ages)), list(map(float, self.simulation.estimated_variable_cost_adjustments))))
-        variable_costs = [self.simulation.current_yearly_cost_of_living]
+        variable_costs = [self.simulation.current_yearly_variable_costs]
         idx = 0
         for age in [self.simulation.current_age + year for year in range(1,self.years_until_retirement)]:
             if age in variable_cost_adjustments_dict:
-                variable_costs.append(math.floor(variable_costs[idx] * (1+round(self.simulation.estimated_cost_of_living_inflation/100,3)+round(variable_cost_adjustments_dict[age]/100,3))))
+                variable_costs.append(math.floor(variable_costs[idx] * (1+round(self.simulation.estimated_variable_costs_inflation/100,3)+round(variable_cost_adjustments_dict[age]/100,3))))
                 idx += 1
             else:
-                variable_costs.append(math.floor(variable_costs[idx] * (1+round(self.simulation.estimated_cost_of_living_inflation/100,3))))
+                variable_costs.append(math.floor(variable_costs[idx] * (1+round(self.simulation.estimated_variable_costs_inflation/100,3))))
                 idx += 1
         self.variable_costs = variable_costs
         # Health Insurance
         health_insurance = [math.floor(self.simulation.current_yearly_health_insurance_cost * ((1 + round(self.simulation.estimated_health_insurance_inflation/100,3)) ** year)) for year in range(0,self.years_until_retirement)]
         self.health_insurance = health_insurance
-        lump_sum_expenses = []      
+        # Lump Sum Expenses
+        lump_sum_expenses_dict = dict(zip(list(map(int, self.simulation.estimated_lumpsum_expense_ages)), list(map(int, self.simulation.estimated_lumpsum_expense_amounts))))
+        lump_sum_expenses = [lump_sum_expenses_dict[age] if age in lump_sum_expenses_dict else 0 for age in [self.simulation.current_age + year for year in range(0,self.years_until_retirement)]]
+        self.lump_sum_expenses = lump_sum_expenses    
         # Taxes
-        taxes = [math.floor((self.salaries[year] + self.bonuses[year] + self.other_income[year] + self.lump_sum_payments[year]) * round(self.simulation.estimated_tax_rate/100,3)) for year in range(0,self.years_until_retirement)]
+        tax_rates = [round(((self.simulation.estimated_tax_rate) + (year * self.simulation.estimated_tax_rate_step))/100,3) for year in range(0,self.years_until_retirement)]
+        taxes = [math.floor((self.salaries[year] + self.bonuses[year] + self.other_income[year] + self.lump_sum_incomes[year]) * tax_rates[year]) for year in range(0,self.years_until_retirement)]
         self.taxes = taxes
 
+        # Total Expenses
+        total_expenses = [fixed_costs[year] + variable_costs[year] + health_insurance[year] + lump_sum_expenses[year] + taxes[year] for year in range(0,self.years_until_retirement)]
+        self.total_expenses = total_expenses
+
         # Return
-        return fixed_costs, variable_costs, health_insurance, lump_sum_expenses, taxes
+        return total_expenses, fixed_costs, variable_costs, health_insurance, lump_sum_expenses, taxes
     
     # Function: Savings
     def savings(self):
-        #incorporate impact of a negative savings year
-        savings = [math.floor(self.salaries[year] + self.bonuses[year] + self.other_income[year] + self.lump_sum_payments[year] - self.fixed_costs[year] - self.variable_costs[year] - self.health_insurance[year] - self.taxes[year]) if year < self.years_until_coast_fire else 0 for year in range(0,self.years_until_retirement)]
+        #incorporate impact of a negative savings year - see contributions function for more details
+        savings = [math.floor(self.salaries[year] + self.bonuses[year] + self.other_income[year] + self.lump_sum_incomes[year] - self.fixed_costs[year] - self.variable_costs[year] - self.health_insurance[year] - self.lump_sum_expenses[year] - self.taxes[year]) if year < self.years_until_coast_fire else 0 for year in range(0,self.years_until_retirement)]
         self.savings = savings
 
         # Return
@@ -183,7 +201,7 @@ class FIRE:
         iba_contributions = []
         for year in range(0,self.years_until_retirement):
             employer_contribution_amount = math.floor(round(self.simulation.current_401k_employer_contribution/100,3) * self.salaries[year])
-            # IF SAVINGS IS LESS THAN 0: contribute nothing
+            # IF SAVINGS IS LESS THAN 0: contribute nothing - update to withdrawals later
             if self.savings[year] < 0:
                 hsa_contributions.append(0)
                 retirement_contributions.append(0)
@@ -353,12 +371,12 @@ class FIRE:
             year_dict['salary'] = '${:,}'.format(self.salaries[year])
             year_dict['bonus'] = '${:,}'.format(self.bonuses[year])
             year_dict['other_income'] = '${:,}'.format(self.other_income[year])
-            year_dict['lump_sum_payment'] = '${:,}'.format(self.lump_sum_payments[year])
+            year_dict['lump_sum_income'] = '${:,}'.format(self.lump_sum_incomes[year])
             year_dict['fixed_cost'] = '${:,}'.format(self.fixed_costs[year])
             year_dict['variable_cost'] = '${:,}'.format(self.variable_costs[year])
             year_dict['health_insurance'] = '${:,}'.format(self.health_insurance[year])
+            year_dict['lump_sum_expense'] = '${:,}'.format(self.lump_sum_expenses[year])
             year_dict['tax'] = '${:,}'.format(self.taxes[year])
-            print("x")
             year_dict['saving'] = '${:,}'.format(self.savings[year])
             year_dict['hsa_start'] = '${:,}'.format(self.hsa_start[year])
             year_dict['hsa_cont_limit'] = '${:,}'.format(self.hsa_cont_limits[year])
@@ -370,8 +388,7 @@ class FIRE:
             year_dict['employer_retirement_contribution'] = '${:,}'.format(self.employer_retirement_contributions[year])
             year_dict['retirement_end'] = '${:,}'.format(self.retirement_end[year])
             year_dict['ira_start'] = '${:,}'.format(self.ira_start[year])
-            print("x2")
-            year_dict['ira_cont_limits'] = '${:,}'.format(self.ira_cont_limits[year])
+            year_dict['ira_cont_limit'] = '${:,}'.format(self.ira_cont_limits[year])
             year_dict['ira_contribution'] = '${:,}'.format(self.ira_contributions[year])
             year_dict['ira_end'] = '${:,}'.format(self.ira_end[year])
             year_dict['iba_start'] = '${:,}'.format(self.iba_start[year])
@@ -379,7 +396,6 @@ class FIRE:
             year_dict['iba_end'] = '${:,}'.format(self.iba_end[year])
             year_dict['asset_value'] = '${:,}'.format(self.assets[year])
             year_dict['net_worth'] = '${:,}'.format(self.net_worths[year])
-            print("x3")
             year_dict['magic_number'] = '${:,}'.format(self.magic_numbers[year])
             year_dict['drawdown'] = self.drawdowns[year]
             simulation_data.append(year_dict)

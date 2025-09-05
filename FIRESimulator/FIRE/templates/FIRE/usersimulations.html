@@ -3,25 +3,26 @@
 {% block content %}
 
 {% if simulations %}
-<div class="container">
-	{% if user.username|last == "s" or user.username|last == "S" %}
-	<h1><b>{{ user.username }}'</b> Simulations</h1>
-	{% else %}
-	<h1><b>{{ user.username }}'s</b> Simulations</h1>
-	{% endif %}
+	<div>
+		{% if user.username|last == "s" or user.username|last == "S" %}
+		<h1 class="text text-center">{{ user.username }}' Simulations</h1>
+		{% else %}
+		<h1 class="text text-center">{{ user.username }}'s Simulations</h1>
+		{% endif %}
+	</div>
 
 	<div>
 
-		<hr class="rounded">
+		<hr class="hr-small">
 
 			<table class="table table-hover">
 				<thead class="table-dark">
 					<tr>
-						<th style="text-align: center;">Name</th>
-						<th style="text-align: center;">Date Created</th>
-						<th style="text-align: center;">Retirement Age</th>
-						<th style="text-align: center;">Net Worth</th>
-						<th style="text-align: center;">Actions</th>
+						<th class="th-special" style="text-align: center;">Name</th>
+						<th class="th-special" style="text-align: center;">Date Created</th>
+						<th class="th-special" style="text-align: center;">Retirement Age</th>
+						<th class="th-special" style="text-align: center;">Net Worth</th>
+						<th class="th-special" style="text-align: center;">Actions</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -36,20 +37,26 @@
 
 				        		<li class="list-group-item">		
 	          						<form action="{% url 'runsimulation' simulation.id %}">
-	              						<button type="submit" class="btn btn-success">Run</button>
+	              						<button type="submit" class="btn btn-success"><i class="bi bi-play-circle-fill"></i> Run</button>
 	          						</form>
 	          					</li>
 								
 								<li class="list-group-item">
 					        	    <form action="{% url 'editsimulation' simulation.id %}">
-	              						<button type="submit" class="btn btn-secondary">Edit</button>
+	              						<button type="submit" class="btn btn-secondary"><i class="bi bi-sliders"></i> Edit</button>
+	          						</form>
+		          				</li>
+
+								<li class="list-group-item">
+					        	    <form action="{% url 'downloadsimulation' simulation.id %}">
+	              						<button type="submit" class="btn btn-warning"><i class="bi bi-filetype-csv"></i> Download</button>
 	          						</form>
 		          				</li>
 
 								<li class="list-group-item">		
 	          						<form method="POST" action="{% url 'deletesimulation' simulation.id %}">
 									{% csrf_token %}
-										<button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteBackdrop">Delete</button>
+										<button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteBackdrop"><i class="bi bi-x-circle-fill"></i> Delete</button>
 										<div class="modal fade" id="deleteBackdrop" data-bs-backdrop="delete" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
 											<div class="modal-dialog modal-dialog-centered">
 												<div class="modal-content">
@@ -61,7 +68,7 @@
 													Are you sure you want to <b style="color:red">DELETE</b> this simulation?
 												</div>
 												<div class="modal-footer">
-													<button type="submit" class="btn btn-danger" data-bs-dismiss="modal">Delete</button>
+													<button type="submit" class="btn btn-danger" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill"> </i>Delete</i></button>
 												</div>
 												</div>
 											</div>
@@ -81,7 +88,7 @@
 	        <div class="text-center">
 	            <h2>Looks like you don't have any simulations!</h2>
 	        	<br>
-	        	<a role="button" class="btn btn-outline-success" href="{% url 'newsimulation' %}">New Simulation</a>
+	        	<a role="button" class="btn btn-success" href="{% url 'newsimulation' %}">New Simulation</a>
 	        </div>
 	{% endif %}
 	</div>

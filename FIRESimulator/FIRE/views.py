@@ -17,6 +17,9 @@ import pandas as pd
 from datetime import date
 import json
 
+def landing(request):
+    return render(request, 'FIRE/landing.html')
+
 # AUTHENTICATION: Signup
 def signupuser(request):
     if request.method == "GET":
@@ -80,7 +83,7 @@ def logoutuser(request):
     if request.method == "POST":
         logout(request)
         messages.success(request, "Logged out successfully!")
-        return redirect('newsimulation')
+        return redirect('landing')
 
 # SIMULATIONS: Display User's Simulations
 def usersimulations(request):
@@ -88,24 +91,18 @@ def usersimulations(request):
         simulations = Simulation.objects.filter(user=request.user)
         return render(request, 'FIRE/usersimulations.html', {'simulations' : simulations})
     else:
+        messages.warning(request, "You must be logged in to view your simulations.")
         return redirect('loginuser')
 
 # SIMULATIONS: Run Simulation / Live Edit
 def runsimulation(request, simulation_id):
     #TO DO:
-    # try centering vertically
-    # fix scrollsby
+    # update navbar
+    # move retirement age to same row as coastfire age 
+    # WHEN SOMEONE REMOVES ALL ASSETS/LUMPSUMS, IT BREAKS
     # POST RETIREMENT EXPENSE ADJUSTMENT
-    # ASSETS - ADD NAME TOO
     # GAP YEARS YAY!, 
-    # CHANGE SAVINGS/EXPENSES TO "N/A" DURING COASTFIRE YEARS  
-    # ADJUSTMENTS IN EXPENSES (CHILD), 
-    # LUMP SUM EXPENSES (HOUSE INCLUDE NAME OF EXPENSE ON TABLE),
-    # LUMP SUM PAYMENTS (INCLUDE NAME ON TABLE) 
-    # COASTFIRE, 
-    # CHARTS, 
-    # DOWNLOAD FIRETABLE, 
-    # ADJUST FIRETABLE LAYOUT (FREEZE AND FORM/HEADERS)
+    # CHANGE SAVINGS/EXPENSES TO "N/A" DURING COASTFIRE YEARS   
     
     # Retrieve simulation object from Django model
     simulation = get_object_or_404(Simulation, pk=simulation_id)
@@ -120,8 +117,26 @@ def runsimulation(request, simulation_id):
         form = EditSimulationForm(request.POST, instance=simulation)
         try:
             form.save()
-            simulation.estimated_lumpsum_payment_amounts = request.POST.getlist('estimated_lumpsum_payment_amounts')
-            simulation.estimated_lumpsum_payment_ages = request.POST.getlist('estimated_lumpsum_payment_ages')
+            print("here")
+            print(request.POST.get("tableDetailedViewSwitch"))
+            print("her2")
+            if request.POST.get("tableDetailedViewSwitch"):
+                toggle = True
+            else:
+                toggle = False
+            if request.POST.get('estimated_coastfire_age'):
+                if int(request.POST.get('estimated_coastfire_age')) >= simulation.estimated_retirement_age or int(request.POST.get('estimated_coastfire_age')) <= simulation.current_age:
+                    return "Coast FIRE age must be less than estimated retirement age and greater than your current age."
+                else:
+                    simulation.estimated_coastfire_age = int(request.POST.get('estimated_coastfire_age'))
+            else:
+                simulation.estimated_coastfire_age = None
+            simulation.lumpsum_income_names = request.POST.getlist('lumpsum_income_names')
+            simulation.estimated_lumpsum_income_amounts = request.POST.getlist('estimated_lumpsum_income_amounts')
+            simulation.estimated_lumpsum_income_ages = request.POST.getlist('estimated_lumpsum_income_ages')
+            simulation.asset_names = request.POST.getlist('asset_names')
+            simulation.current_asset_values = request.POST.getlist('current_asset_values')
+            simulation.estimated_asset_value_growths = request.POST.getlist('estimated_asset_value_growths')            
         except Exception as e:
             print(e)
             form_save_error = True
@@ -135,8 +150,8 @@ def runsimulation(request, simulation_id):
         ages, years = FIREObject.personal_infos()
 
         # Calculate yearly amounts for income, expenses and savings
-        salaries, bonuses, other_income, lump_sum_payments = FIREObject.incomes()
-        fixed_costs, variable_costs, health_insurance, lump_sum_expenses, taxes = FIREObject.expenses()
+        total_income, salaries, bonuses, other_income, lump_sum_incomes = FIREObject.incomes()
+        total_expenses, fixed_costs, variable_costs, health_insurance, lump_sum_expenses, taxes = FIREObject.expenses()
         savings = FIREObject.savings()
 
         # Caluclate yearly contribution limits for retirement accounts based on current limits, step and years until retirement
@@ -154,6 +169,8 @@ def runsimulation(request, simulation_id):
         # Calculate net worth based on ending balances of each investment account
         net_worths, magic_numbers, drawdowns = FIREObject.fire_indicators()
 
+
+
         # Store all simulation data in a list of dictionaires
         simulation_data = FIREObject.simulation_data()
 
@@ -161,7 +178,8 @@ def runsimulation(request, simulation_id):
         simulation.final_net_worth = (simulation_data[-1]['net_worth'])
         simulation.save()
 
-        lump_sum_payments = zip(simulation.estimated_lumpsum_payment_ages, simulation.estimated_lumpsum_payment_amounts)
+        lump_sum_incomes = zip(simulation.lumpsum_income_names ,simulation.estimated_lumpsum_income_ages, simulation.estimated_lumpsum_income_amounts)
+        assets = zip(simulation.asset_names ,simulation.current_asset_values, simulation.estimated_asset_value_growths)        
 
     # If simulation logic fails, return user to the new simulation screen with error message
     except Exception as e:
@@ -172,12 +190,13 @@ def runsimulation(request, simulation_id):
     # If post reuqest only, return the partial HTML template 
     if request.method == "POST":
         if form_save_error:
-            return render(request, 'FIRE/partials/firetable.html', {'simulation': simulation, "data": simulation_data, 'form' : form, 'ages': json.dumps(ages), 'net_worths': json.dumps(net_worths), 'lump_sum_payments': lump_sum_payments, 'error': "There was an error updating your simulation, please try again."})
+            return render(request, 'FIRE/partials/firetable.html', {'toggle': toggle, 'simulation': simulation, "data": simulation_data, 'form' : form, 'ages': json.dumps(ages), 'net_worths': json.dumps(net_worths), 'magic_numbers': json.dumps(magic_numbers), 'total_income': json.dumps(total_income), 'total_expenses': json.dumps(total_expenses), 'savings': json.dumps(savings), 'lump_sum_incomes': lump_sum_incomes, 'assets': assets, 'error': "There was an error updating your simulation, please try again."})
         else:
-           return render(request, 'FIRE/partials/firetable.html', {'simulation': simulation, "data": simulation_data, 'form' : form, 'ages': json.dumps(ages), 'net_worths': json.dumps(net_worths), 'lump_sum_payments': lump_sum_payments}) 
+           messages.success(request, f"{simulation.name} updated successfully!")
+           return render(request, 'FIRE/partials/firetable.html', {'toggle': toggle, 'simulation': simulation, "data": simulation_data, 'form' : form, 'ages': json.dumps(ages), 'net_worths': json.dumps(net_worths), 'magic_numbers': json.dumps(magic_numbers), 'total_income': json.dumps(total_income), 'total_expenses': json.dumps(total_expenses), 'savings': json.dumps(savings), 'lump_sum_incomes': lump_sum_incomes, 'assets': assets}) 
     # If get request, return the whole runsimulation HTML template
     else:
-        return render(request, "FIRE/runsimulation.html", {"simulation": simulation, "data": simulation_data, 'form': EditSimulationForm(), 'ages': json.dumps(ages), 'net_worths': json.dumps(net_worths), 'lump_sum_payments': lump_sum_payments})
+        return render(request, "FIRE/runsimulation.html", {'toggle': True, "simulation": simulation, "data": simulation_data, 'form': EditSimulationForm(), 'ages': json.dumps(ages), 'net_worths': json.dumps(net_worths), 'magic_numbers': json.dumps(magic_numbers), 'total_income': json.dumps(total_income), 'total_expenses': json.dumps(total_expenses), 'savings': json.dumps(savings), 'lump_sum_incomes': lump_sum_incomes, 'assets': assets})
 
 # SIMULATIONS: Create New
 def newsimulation(request):
@@ -272,6 +291,78 @@ def coastfire_opt_in(request):
     min_age = int(request.GET.get("min_age")) + 1
     print(min_age)
     return render(request, 'FIRE/partials/opt_in_coastfire.html', {'max_age' : max_age, 'min_age' : min_age})
+
+import csv
+from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def downloadsimulation(request, simulation_id):
+    # Fetch your simulation and data as you do in your template
+    simulation = get_object_or_404(Simulation, id=simulation_id)
+
+    try:
+        # Initialize FIRE object
+        FIREObject = FIRE(simulation)
+
+        # Generate ages and years
+        ages, years = FIREObject.personal_infos()
+
+        # Calculate yearly amounts for income, expenses and savings
+        salaries, bonuses, other_income, lump_sum_incomes = FIREObject.incomes()
+        fixed_costs, variable_costs, health_insurance, lump_sum_expenses, taxes = FIREObject.expenses()
+        savings = FIREObject.savings()
+
+        # Caluclate yearly contribution limits for retirement accounts based on current limits, step and years until retirement
+        hsa_cont_limits, ira_cont_limits, retirement_cont_limits = FIREObject.yearly_contribution_limits()
+
+        # Calculate actual contributions based on yearly savings and contribution limit amounts
+        hsa_contributions,retirement_contributions,employer_retirement_contributions,ira_contributions,iba_contributions = FIREObject.yearly_contributions()
+
+        # Calculate investment account start and end balances based on current balances, contributions and estimated returns
+        hsa_start, hsa_end, retirement_start, retirement_end, ira_start, ira_end, iba_start, iba_end = FIREObject.start_end_balances()
+
+        # Calculate total asset values
+        assets = FIREObject.assets()
+    
+        # Calculate net worth based on ending balances of each investment account
+        net_worths, magic_numbers, drawdowns = FIREObject.fire_indicators()
+
+    except Exception as e:
+        print(e)
+        return redirect('runsimulation', simulation_id=simulation_id)
+
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="simulation_{simulation_id}.csv"'
+
+    writer = csv.writer(response)
+    # Write header row
+    writer.writerow([
+        'AGE', 'YEAR', 
+        'SALARY', 'BONUS', 'OTHER INCOME', 'LUMP SUM INCOME',
+        'FIXED COST', 'VARIABLE COST', 'HEALTH INSURANCE', 'LUMP SUM EXPENSE',
+        'TAX', 'SAVING', 
+        'HSA START', 'HSA CONT LIMIT', 'HSA CONTRIBUTION', 'HSA END',
+        'RETIREMENT START', 'RETIREMENT CONT LIMIT', 'RETIREMENT CONTRIBUTION','EMPLOYER RETIREMENT CONTRIBUTION', 'RETIREMENT END', 
+        'IRA START', 'IRA CONT LIMIT', 'IRA CONTRIBUTION', 'IRA END', 
+        'IBA START', 'IBA CONTRIBUTION', 'IBA END', 
+        'ASSET VALUE', 'NET WORTH', 'MAGIC NUMBER', 'DRAWDOWN'
+    ])
+    # Write data rows
+    for year in range(len(ages)):
+        writer.writerow([
+            ages[year], years[year],
+            salaries[year], bonuses[year], other_income[year], lump_sum_incomes[year],
+            fixed_costs[year], variable_costs[year], health_insurance[year], lump_sum_expenses[year],
+            taxes[year], savings[year],
+            hsa_start[year], hsa_cont_limits[year], hsa_contributions[year], hsa_end[year],
+            retirement_start[year], retirement_cont_limits[year], retirement_contributions[year], employer_retirement_contributions[year], retirement_end[year],
+            ira_start[year], ira_cont_limits[year], ira_contributions[year], ira_end[year],
+            iba_start[year], iba_contributions[year], iba_end[year],
+            assets[year], net_worths[year], magic_numbers[year], drawdowns[year]
+        ])
+    return response
     
 # # Create dictionary for dataframe containing the yealry amounts, contribution limits, contributions and start/end balances 
 # simulation_data = {'AGE': [year+simulation.current_age for year in range(0,years_until_retirement)],

@@ -1,145 +1,307 @@
+<style>
+    .custom-tooltip {
+  --bs-tooltip-bg: var(--bd-violet-bg);
+  --bs-tooltip-color: var(--bs-white);
+}
+</style>
+
+<!-- SAVINGS -->
 <section id="savings" class="mb-5">
-    <h3 class="section-title"><i class="bi bi-piggy-bank"></i> 4. Savings</h3>
-    <div class="row g-4">
+    <h3 class="section-title-savings"><i class="bi bi-piggy-bank"></i> Savings</h3>
+    <div class="tip-card-savings shadow-sm rounded mb-3">
         <!-- SAVINGS INSTRUCTIONS -->
-        <div class="col-lg-7">
-            <div class="tip-card shadow-sm rounded">
-                <h5>How much money do you save?</h5>
-                <p>
-                    <i>Lets run through a hypothetical before diving into saving your money:</i> 
-                    <ul>
-                        <li><u>Gross Salary/Bonus:</u> $100,000</li>
-                        <li><u>Fixed Costs:</u> ($15,000)</li>
-                        <li><u>Variable Costs:</u> ($20,000)</li>
-                        <li><u>Health Insurance:</u> ($2,500)</li>
-                        <li><u>Taxes:</u> ($12,500)</li>
-                        <li><b>Savings:</b> $50,000</li>
-                    </ul>
-                    <i>What is the most optimal way to put that $50k to work for your retirement when striving for FIRE?</i>
-                </p>
-                <hr>
-                <p><b>Health Savings Accounts:</b> Offers a triple tax advantage by reducing your taxable income, growing tax-free and providing tax-free withdrawals for qualified expenses. </p>
-                <p><small><i>Note: To qualify for HSA contributions, you will need to be enrolled in a High Deductible Health Plan (HDHP). It is important to evaluate which kind of medical insurance is suited for your well-being and fequency of helath-related benefits.</i></small></p>
-                <hr>
-                <p><b>Employer Sponsored Retirement Accounts:</b> Most common types include 401k and 403b plans. Contributions to these accounts can be made such that your taxable income is reduced (Traditional) or such that your money invested grows tax-free (Roth).</p>
-                <p><small><i>Note: Understanding the difference and between a <u>Traditional (Tax-Deferred) and Roth (Tax-Exempt)</u> accounts will be important for FIRE planning.</i></small></p>
-                <p><small><i>Note: For those with mutiple employer sponsored retirement accounts from changing jobs, be sure to add up the total of all of those accounts.</i></small></p>
-                <p><b>Employer Contributions: </b>For some, their employer may also contribute to these accounts at a certain percentage of one's salary provided they make contributions themselves. As an example an employer might match $0.50 for every $1 up to 6% of your salary. This essentially equates to 3% of one's salary. Employer matches are a risk free way to grow your retirement account and not leave part of your compensation on the table. </p>
-                <hr>
-                <p><b>Individual Retirement Accounts:</b> Another tax advantaged retirement account, similar to a 401k with various types including Traditional and Roth. Traditional IRAs allow for tax deductible contributions to reduce your taxable income while Roth IRAs provide tax-free distributions aka tax-free growth. It is important to understand that unlike employer sponsored retirement accounts, IRAs have income limitations to be able to contribute. It is best to do your research or consult a tax professional if unsure about contribution implications given your financial situation.</p>
-                <hr>
-                <p><b>Taxable Bokerage Accounts:</b> These accounts do not offer any tax advantages but do not have any limtations on how much your can contribute or when you can withdraw your money. There are many different types with varying levels of investment decision making required by you such as Full Service Brokerage Accounts, Robo-Advisor Accounts and Online Accounts. Depending on your choice, your return may be impacted as financial advisors or investment platforms will charge a fee to manage your money. If is best to do your research to determine what might be best for you and your financial situation.</p>
-                <hr>
-                <p><b>Annual Returns and Investment Options:</b> There are many factors to consider when estimating the average return of each of your accounts including historical market returns and your investment strategy. It is important to remember this is just an estimate, actual returns can vary drastically from year to year and are never guaranteed. How should you invest your savings? Start by asking yourself a few basic questions such as how many years do I have to invest? what is my risk tolerance? how diversified do I want my portfolio to be? When planning for FIRE, it is best to plan for long-term growth with moderate risk. Investing in broad market index funds related to US Stocks, International Stocks and Bonds is usually recommended to diversify your portfolio. Lastly, it is reccomended to invest reguraly, avoid trying to time the market and to rebalance your portfolio peridoically.</p>
-                <hr>
-                <p><b>Appreciating Assets: </b> Owning ...</p>
-                <hr>
-                <p><small><i>Note: This is general education and not financial advice. Everyone's sitution is different - consider speaking with a financial professional to learn more.</i></small></p>
+        <div class="row g-4 mb-1">
+            <h5>How much money have you saved?</h5>
+            <!-- <p><i>The next step to determining your budget is to understand where your money is being spent...</i></p> -->
+        </div>
+        <div class="row g-4 mb-3">
+            <div class="accordion" id="savings-accordion">
+                <div class="accordion-item border-0">
+                    <h2 class="accordion-header" id="savings-headingOne">
+                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #384394;" type="button" data-bs-toggle="collapse" data-bs-target="#savings-collapseOne" aria-expanded="false" aria-controls="savings-collapseOne">
+                        Health Savings Accounts (HSA)
+                        </button>
+                    </h2>
+                    <div id="savings-collapseOne" class="accordion-collapse collapse" aria-labelledby="savings-headingOne">
+                        <div class="accordion-body" style="background-color: #c2c7e6;">
+                            <p><b><i class="bi bi-question-lg"></i> How: </b>This is how...</p>
+                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
+                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
+                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note...
+                        </div>
+                    </div>                
+                </div>
             </div>
         </div>
-        <div class="col-lg-5">
-            <h5 class="fw-bold">Health Savings Account (HSA)</h5>
-            <div class="form-floating mb-3">
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="hsa_enrollment_opt_out" id="hsa_enrollment_opt_out" value="False" checked hx-get="{% url 'hsa-opt-in' %}" hx-target="#hsa-fields" hx-swap="innerHTML">
-                    <label class="form-check-label" for="hsa_enrollment_opt_out">Yes</label>
+        <div class="row g-4">
+            <!-- SAVINGS FIELDS -->
+            <div class="col-lg-4">
+                <h5 class="fw-bold">HSA Opt-In <i class="bi bi-question-circle-fill text-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="TBD Tooltip" data-bs-custom-class="custom-tooltip"></i></h5>
+                <div class="form-floating mb-3">  
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="hsa_enrollment_opt_out" id="hsa_enrollment_opt_out" value="False" checked hx-get="{% url 'hsa-opt-in' %}" hx-target="#hsa-fields" hx-swap="innerHTML">
+                        <label class="form-check-label" for="hsa_enrollment_opt_out">Yes</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="hsa_enrollment_opt_out" id="hsa_enrollment_opt_in" value="True" hx-delete hx-target="#hsa-inputs" hx-swap="delete">
+                        <label class="form-check-label" for="hsa_enrollment_opt_in">No</label>
+                    </div>
+                    <div id="hsa_enrollment_opt_outHelp" class="form-text">
+                        <small>Do you plan to contribute to an HSA?</small>
+                    </div>  
                 </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="hsa_enrollment_opt_out" id="hsa_enrollment_opt_in" value="True" hx-delete hx-target="#hsa-inputs" hx-swap="delete">
-                    <label class="form-check-label" for="hsa_enrollment_opt_in">No</label>
+            </div>
+        </div>
+        <div id="hsa-fields">
+            {% include 'FIRE/partials/opt_in_hsa.html' %}
+        </div>
+        <div class="row g-4 mb-3">
+        <!-- SAVINGS INSTRUCTIONS -->
+            <div class="accordion" id="savings-accordion">
+                <div class="accordion-item border-0">
+                    <h2 class="accordion-header" id="savings-headingTwo">
+                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #384394;" type="button" data-bs-toggle="collapse" data-bs-target="#savings-collapseTwo" aria-expanded="false" aria-controls="savings-collapseTwo">
+                        Employer Sponsored Retirement Accounts (401k/403b/TSP)
+                        </button>
+                    </h2>
+                    <div id="savings-collapseTwo" class="accordion-collapse collapse" aria-labelledby="savings-headingTwo">
+                        <div class="accordion-body" style="background-color: #c2c7e6;">
+                            <p><b><i class="bi bi-question-lg"></i> How: </b>This is how...</p>
+                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
+                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
+                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note...
+                        </div>
+                    </div>
                 </div>
-                <div id="hsa_enrollment_opt_outHelp" class="form-text">
-                    <small>Do you plan to contribute to an HSA?</small>
-                </div>                
             </div>
-            <div id="hsa-fields">
-                {% include 'FIRE/partials/opt_in_hsa.html' %}
+        </div>
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <h5 class="fw-bold">Current Balance</h5>
+                <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <div class="form-floating">
+                        <input type="number" class="form-control" id="current_401k_balance" name="current_401k_balance" min="0" max="100000000" value="50000" required>
+                        <label for="current_401k_balance">Current Retirement Plan Balance</label>
+                    </div>
+                </div>
+                <div id="current_401k_balanceHelp" class="form-text mb-3">How much money is currently in your employer sponsored retirement plan(s)?</div>
             </div>
-            <h5 class="fw-bold">Employer Sponsored Retirement Plan (401k, 403b, etc.)</h5>
-            <div class="form-floating mb-3">
-                <input type="number" class="form-control" id="current_401k_balance" name="current_401k_balance" min="0" max="100000000" value="25000" required>
-                <label for="current_401k_balance">Current Retirement Plan Balance ($)</label>
-                <div id="current_401k_balanceHelp" class="form-text"><small>How much money is currently in your employer sponsored retirement plan(s)?</small></div>
+            <div class="col-lg-4">
+                <h5 class="fw-bold">Estimated Yearly Return</h5>
+                <div class="input-group">
+                    <div class="form-floating">
+                        <input type="number" class="form-control" id="esitmated_401k_yearly_return" name="esitmated_401k_yearly_return" min="0" max="99.9" value="5.0" step=".1" required>
+                        <label for="esitmated_401k_yearly_return">Estimated Retirement Plan Yearly Return</label>
+                    </div>
+                    <span class="input-group-text">%</span>
+                </div>
+                <div id="esitmated_401k_yearly_returnHelp" class="form-text mb-3">On average, how much do you expect your retirement plan investments to grow annually?</div>
             </div>
-            <div class="form-floating mb-3">
-                <input type="number" class="form-control" id="esitmated_401k_yearly_return" name="esitmated_401k_yearly_return" min="0" max="99.9" value="5.0" step=".1" required>
-                <label for="esitmated_401k_yearly_return">Estimated Retirement Plan Yearly Return (%)</label>
-                <div id="esitmated_401k_yearly_returnHelp" class="form-text"><small>On average, how much do you expect your retirement plan investments to grow annually?</small></div>
+            <div class="col-lg-4">
+                <h5 class="fw-bold">Employer Contribution</h5>
+                <div class="input-group">
+                    <div class="form-floating">
+                        <input type="number" class="form-control" id="current_401k_employer_contribution" name="current_401k_employer_contribution" min="0" max="99.9" value="3.0" step=".1" required>
+                        <label for="current_401k_employer_contribution">Current Retirement Plan Employer Contribution</label>
+                    </div>
+                    <span class="input-group-text">%</span>
+                </div>
+                <div id="current_401k_employer_contributionHelp" class="form-text mb-3">On average, what percentage of your yearly salary do you anticipate your employer to contribute to your retirement plan each year?</div>
             </div>
-            <div class="form-floating mb-3">
-                <input type="number" class="form-control" id="current_401k_employer_contribution" name="current_401k_employer_contribution" min="0" max="99.9" value="3.0" step=".1" required>
-                <label for="current_401k_employer_contribution">Current Retirement Plan Employer Contribution (%)</label>
-                <div id="current_401k_employer_contributionHelp" class="form-text"><small>On average, what percentage of your yearly salary do you anticipate your employer to contribute to your retirement plan each year?</small></div>
+        </div>
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <h5 class="fw-bold">Contribution Limit</h5>
+                <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <div class="form-floating">
+                        <input type="number" class="form-control" id="current_401k_yearly_contribution_limit" name="current_401k_yearly_contribution_limit" min="1" max="100000000" value="23500" required>
+                        <label for="current_401k_yearly_contribution_limit">Current Retirement Plan Yearly Contribution Limit</label>
+                    </div>
+                </div>
+                <div id="current_401k_yearly_contribution_limitHelp" class="form-text mb-3">The current contribution limit for a 401k/403b is $23,500.</div>
             </div>
-            <div class="form-floating mb-3">
-                <input type="number" class="form-control" id="current_401k_yearly_contribution_limit" name="current_401k_yearly_contribution_limit" min="1" max="100000000" value="23500" required>
-                <label for="current_401k_yearly_contribution_limit">Current Retirement Plan Yearly Contribution Limit ($)</label>
-                <div id="current_401k_yearly_contribution_limitHelp" class="form-text"><small>The current contribution limit for a 401k/403b is $23,500.</small></div>
+            <div class="col-lg-6">
+                <h5 class="fw-bold">Future Contribution Limit</h5>
+                <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <div class="form-floating">
+                        <input type="number" class="form-control" id="401k_yearly_contribution_limit_step" name="estimated_401k_yearly_contribution_limit_step" min="0" max="10000" value="500" step="1" required>
+                        <label for="401k_yearly_contribution_limit_step">Estimated Retirement Plan Yearly Contribution Limit Increase</label>
+                    </div>
+                </div>
+                <div id="401k_yearly_contribution_limit_stepHelp" class="form-text mb-3">On average, how much do you expect the 401k/403b contribution limit to increase each year?</div>
             </div>
-            <div class="form-floating mb-3">
-                <input type="number" class="form-control" id="401k_yearly_contribution_limit_step" name="estimated_401k_yearly_contribution_limit_step" min="0" max="10000" value="500" step="1" required>
-                <label for="401k_yearly_contribution_limit_step">Estimated Retirement Plan Yearly Contribution Limit Increase ($)</label>
-                <div id="401k_yearly_contribution_limit_stepHelp" class="form-text"><small>On average, how much do you expect the 401k/403b contribution limit to increase each year?</small></div>
+        </div>
+        <div class="row g-4 mb-3">
+            <!-- SAVINGS INSTRUCTIONS -->
+            <div class="accordion" id="savings-accordion">
+                <div class="accordion-item border-0">
+                    <h2 class="accordion-header" id="savings-headingThree">
+                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #384394;" type="button" data-bs-toggle="collapse" data-bs-target="#savings-collapseThree" aria-expanded="false" aria-controls="savings-collapseThree">
+                        Individual Retirement Accounts (IRA)
+                        </button>
+                    </h2>
+                    <div id="savings-collapseThree" class="accordion-collapse collapse" aria-labelledby="savings-headingThree">
+                        <div class="accordion-body" style="background-color: #c2c7e6">
+                            <p><b><i class="bi bi-question-lg"></i> How: </b>This is how...</p>
+                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
+                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
+                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note...
+                        </div>
+                    </div>
+                </div>
             </div>
-            <h5 class="fw-bold">Individual Retirement Account (IRA)</h5>    
-            <div class="form-floating mb-3">
-                <input type="number" class="form-control" id="current_ira_balance" name="current_ira_balance" min="0" max="100000000" value="5000" required>
-                <label for="current_ira_balance">Current IRA Balance ($)</label>
-                <div id="current_ira_balanceHelp" class="form-text"><small>How much money is currently in your IRA(s)?</small></div>
+        </div>
+        <!-- SAVINGS FIELDS -->
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <h5 class="fw-bold">Current Balance</h5>
+                <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <div class="form-floating">
+                        <input type="number" class="form-control" id="current_ira_balance" name="current_ira_balance" min="0" max="100000000" value="10000" required>
+                        <label for="current_ira_balance">Current IRA Balance</label>
+                    </div>
+                </div>
+                <div id="current_ira_balanceHelp" class="form-text mb-3">How much money is currently in your IRA(s)?</div>
             </div>
-            <div class="form-floating mb-3">
-                <input type="number" class="form-control" id="esitmated_ira_yearly_return" name="esitmated_ira_yearly_return" min="0" max="99.9" value="5.0" step=".1" required>
-                <label for="esitmated_ira_yearly_return">Estimated IRA Yearly Return (%)</label>
-                <div id="esitmated_ira_yearly_returnHelp" class="form-text"><small>On average, how much do you expect your IRA investments to grow annually?</small></div>
+            <div class="col-lg-6">
+                <h5 class="fw-bold">Estimated Yearly Return</h5>
+                <div class="input-group">
+                    <div class="form-floating">
+                        <input type="number" class="form-control" id="esitmated_ira_yearly_return" name="esitmated_ira_yearly_return" min="0" max="99.9" value="5.0" step=".1" required>
+                        <label for="esitmated_ira_yearly_return">Estimated IRA Yearly Return</label>
+                    </div>
+                    <span class="input-group-text">%</span>
+                </div>
+                <div id="esitmated_ira_yearly_returnHelp" class="form-text mb-3">On average, how much do you expect your IRA investments to grow annually?</div>
             </div>
-            <div class="form-floating mb-3">
-                <input type="number" class="form-control" id="current_ira_yearly_contribution_limit" name="current_ira_yearly_contribution_limit" min="1" max="100000000" value="7000" required>
-                <label for="current_ira_yearly_contribution_limit">Current IRA Yearly Contribution Limit ($)</label>
-                <div id="current_ira_yearly_contribution_limitHelp" class="form-text"><small>The current contribution limit for an IRA is $7,000.</small></div>
+        </div>
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <h5 class="fw-bold">Contribution Limit</h5>
+                <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <div class="form-floating">
+                        <input type="number" class="form-control" id="current_ira_yearly_contribution_limit" name="current_ira_yearly_contribution_limit" min="1" max="100000000" value="7000" required>
+                        <label for="current_ira_yearly_contribution_limit">Current IRA Yearly Contribution Limit</label>
+                    </div>
+                </div>
+                <div id="current_ira_yearly_contribution_limitHelp" class="form-text mb-3">The current contribution limit for an IRA is $7,000.</div>
             </div>
-            <div class="form-floating mb-3">
-                <input type="number" class="form-control" id="ira_yearly_contribution_limit_step" name="estimated_ira_yearly_contribution_limit_step" min="0" max="10000" value="300" step="1" required>
-                <label for="ira_yearly_contribution_limit_step">Estimated IRA Yearly Contribution Limit Increase ($)</label>
-                <div id="ira_yearly_contribution_limit_stepHelp" class="form-text"><small>On average, how much do you expect the IRA contribution limit to increase each year?</small></div>
+            <div class="col-lg-6">
+                <h5 class="fw-bold">Future Contribution Limit</h5>
+                <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <div class="form-floating">
+                        <input type="number" class="form-control" id="ira_yearly_contribution_limit_step" name="estimated_ira_yearly_contribution_limit_step" min="0" max="10000" value="300" step="1" required>
+                        <label for="ira_yearly_contribution_limit_step">Estimated IRA Yearly Contribution Limit Increase</label>
+                    </div>
+                </div>
+                <div id="ira_yearly_contribution_limit_stepHelp" class="form-text mb-3">On average, how much do you expect the IRA contribution limit to increase each year?</div>
             </div>
-            <h5 class="fw-bold">Taxable Brokerage Account (TBA)</h5> 
-            <div class="form-floating mb-3">
-                <input type="number" class="form-control" id="current_iba_balance" name="current_iba_balance" min="0" max="100000000" value="15000" required>
-                <label for="current_iba_balance">Current TBA Balance ($)</label>
-                <div id="current_iba_balanceHelp" class="form-text"><small>How much money is currently in your TBA(s)?</small></div>
+        </div>
+        <div class="row g-4 mb-3">
+            <!-- SAVINGS INSTRUCTIONS -->
+            <div class="accordion" id="savings-accordion">
+                <div class="accordion-item border-0">
+                    <h2 class="accordion-header" id="savings-headingFour">
+                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #384394;" type="button" data-bs-toggle="collapse" data-bs-target="#savings-collapseFour" aria-expanded="false" aria-controls="savings-collapseFour">
+                        Taxable Brokerage Accounts (TBA)
+                        </button>
+                    </h2>
+                    <div id="savings-collapseFour" class="accordion-collapse collapse" aria-labelledby="savings-headingFour">
+                        <div class="accordion-body" style="background-color: #c2c7e6">
+                            <p><b><i class="bi bi-question-lg"></i> How: </b>This is how...</p>
+                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
+                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
+                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note...
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="form-floating mb-3">
-                <input type="number" class="form-control" id="esitmated_iba_yearly_return" name="esitmated_iba_yearly_return" min="0" max="99.9" value="5.0" step=".1" required>
-                <label for="esitmated_iba_yearly_return">Estimated TBA Yearly Return (%)</label>
-                <div id="esitmated_iba_yearly_returnHelp" class="form-text"><small>On average, how much do you expect your TBA investments to grow annually?</small></div>
+        </div>
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <h5 class="fw-bold">Current Balance</h5>
+                <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <div class="form-floating">
+                        <input type="number" class="form-control" id="current_iba_balance" name="current_iba_balance" min="0" max="100000000" value="20000" required>
+                        <label for="current_iba_balance">Current TBA Balance</label>
+                    </div>
+                </div>
+                <div id="current_iba_balanceHelp" class="form-text mb-3">How much money is currently in your TBA(s)?</div>
             </div>
-            <h5 class="fw-bold">Appreciating Assets</h5>
-            <div id="assets-div">
+            <div class="col-lg-6">
+                <h5 class="fw-bold">Estimated Yearly Return</h5>
+                <div class="input-group">
+                    <div class="form-floating">
+                        <input type="number" class="form-control" id="esitmated_iba_yearly_return" name="esitmated_iba_yearly_return" min="0" max="99.9" value="5.0" step=".1" required>
+                        <label for="esitmated_iba_yearly_return">Estimated IRA Yearly Return</label>
+                    </div>
+                    <span class="input-group-text">%</span>
+                </div>
+                <div id="esitmated_iba_yearly_returnHelp" class="form-text mb-3">On average, how much do you expect your TBA investments to grow annually?</div>
             </div>
-            <div>
-                <button type="button" class="btn btn-success" hx-get="{% url 'create-asset' %}" hx-target="#assets-div" hx-swap="beforeend">+ Add Asset</button>
+        </div>
+        <div class="row g-4 mb-3">
+            <!-- SAVINGS INSTRUCTIONS -->
+            <div class="accordion" id="savings-accordion">
+                <div class="accordion-item border-0">
+                    <h2 class="accordion-header" id="savings-headingFive">
+                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #384394;" type="button" data-bs-toggle="collapse" data-bs-target="#savings-collapseFive" aria-expanded="false" aria-controls="savings-collapseFive">
+                        Appreciating Assets
+                        </button>
+                    </h2>
+                    <div id="savings-collapseFive" class="accordion-collapse collapse rounded-bottom" aria-labelledby="savings-headingFive">
+                        <div class="accordion-body" style="background-color: #c2c7e6">
+                            <p><b><i class="bi bi-question-lg"></i> How: </b>This is how...</p>
+                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
+                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
+                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row g-4">
+            <!-- SAVINGS FIELDS -->
+            <div class="col-12">
+                <h5 class="fw-bold">Appreicating Assets</h5>
+                <div id="assets-div">
+                </div>
+                <div>
+                    <button type="button" class="btn btn-primary" hx-get="{% url 'create-asset' %}" hx-target="#assets-div" hx-swap="beforeend"><i class="bi bi-plus-circle-fill"></i> Add Asset</button>
+                </div>
             </div>
         </div>
     </div>
 </section>
-<hr>
-<!-- SIMULATION LOGIC -->
-<section class="mb-5">
-    <h3 class="section-title"><i class="bi bi-gear"></i> Simulation Logic</h3>
-    <div class="tip-card shadow-sm rounded">
-        <h5>Congrats!</h5>
-        <p><i>After providing so many details, hopefully you have learned a thing or two about your financial situation and are ready to create your simulation!</i></p>
-        <p><b>Simulation Logic:</b> The simulation logic is fairly straight forward - Your total income minus your total expenses will derive your savings. From there, your savings will then be allocated in the following order:<br>1. Contribute to your Employer Sponsored Retirement Account to recive the employer match<br>2. Contribute the max amount to your HSA*<br>3. Contribute the max amount to your Employer Sponsored Retirement Plan<br>4. Contribute the max amount to your IRA<br>5. Contribute the remainder to your TBA<br><small><i>*If HSA account has not be opted-out</i></small></p>
-        <p>Facotring in 1. your yearly income growth, 2. yearly inflation of expenses and 3. yearly growth of your savings accounts/assets - amounts will be calculated for the years until your desired retirement age allowing you to project your future net worth and determine if you are on the right path to FIRE!</p>
-    </div>
-</section>
+<hr class="hr-big">
 <!-- SUBMIT BUTTON -->
 <div class="text-center mt-5">
-    <button type="submit" class="btn btn-success btn-lg"><i class="bi bi-graph-up"></i> Create Simulation</button>
+    <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-play-circle-fill"></i> Create Simulation</button>
 </div>
 
 <script>
     FIREscrollspy.refresh()
+    // Initialize Bootstrap tooltips
+    document.addEventListener('DOMContentLoaded', function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+            new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    });
+</script>
+
+<script>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+})
 </script>
 
 <script>

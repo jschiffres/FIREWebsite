@@ -1,21 +1,36 @@
-<div id="asset-entry" class="row justify-content-start" >
-    <div class="col-5">
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="current_asset_values" name="current_asset_values" min="0" max="10000000" value="10000" required>
-            <label for="current_asset_values">Current Value ($)</label>
-            <div id="current_asset_valuesHelp" class="form-text"><small>What is the current value of this asset?</small></div>
+<div id="asset-entry" class="row justify-content-start">
+    <div class="col-lg-1 align-self-center">
+        <button type="button" class="btn btn-sm btn-danger mb-1" hx-delete hx-target="#asset-entry" hx-swap="delete"><i class="bi bi-x-circle-fill"></i></button>
+    </div>
+    <div class="col-lg-3">
+        <h6 class="fw-bold">Name</h6>
+        <div class="form-floating mb-1">
+            <input type="text" class="form-control" id="asset_names" name="asset_names" value="My Asset" required>
+            <label for="asset_names">Asset Name</label>
+            <div id="asset_namesHelp" class="form-text"><small>Provide a name for this asset.</small></div>
         </div>
     </div>
-    <div class="col-6">
-        <div class="form-floating mb-3">
-            <input type="number" class="form-control" id="estimated_asset_value_growths" name="estimated_asset_value_growths" min="0" max="99.9" value="3.0" step=".1" required>
-            <label for="estimated_asset_value_growths">Estimated Growth (%)</label>
-            <div id="estimated_asset_value_growthsHelp" class="form-text"><small>On average, how much do you anticipate this asset's value to grow each year?</small></div>
+    <div class="col-lg-4">
+        <h6 class="fw-bold">Value</h6>
+        <div class="input-group">
+            <span class="input-group-text">$</span>
+            <div class="form-floating">
+                <input type="number" class="form-control" id="current_asset_values" name="current_asset_values" min="0" max="10000000" value="10000" required>
+                <label for="current_asset_values">Current Value ($)</label>
+            </div>
         </div>
+        <div id="current_asset_valuesHelp" class="form-text mb-1"><small>What is the current value of this asset?</small></div>
     </div>
-    <div class="col-1">
-        <button type="button" class="btn btn-danger" hx-delete hx-target="#asset-entry" hx-swap="delete">-</button>
+    <div class="col-lg-4">
+        <h6 class="fw-bold">Growth</h6>
+        <div class="input-group">
+            <div class="form-floating">
+                <input type="number" class="form-control" id="estimated_asset_value_growths" name="estimated_asset_value_growths" min="0" max="99.9" value="3.0" step=".1" required>
+                <label for="estimated_asset_value_growths">Estimated Growth (%)</label>
+            </div>
+            <span class="input-group-text">%</span>
+        </div>
+        <div id="estimated_asset_value_growthsHelp" class="form-text mb-1"><small>On average, how much do you anticipate this asset's value to grow each year?</small></div>
     </div>
-    <hr>
-
+    <hr class="hr-small">
 </div>

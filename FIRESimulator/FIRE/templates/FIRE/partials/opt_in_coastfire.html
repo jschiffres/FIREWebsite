@@ -1,7 +1,11 @@
 <div id="coast-fire-age">
-    <div class="form-floating mb-3">
-        <input type="number" class="form-control" id="estimated_coastfire_age" name="estimated_coastfire_age" min="{{ min_age }}" max="{{ max_age }}" value="35" required>
-        <label for="estimated_coastfire_age">Coast FIRE Age</label>
-        <div id="estimated_coastfire_ageHelp" class="form-text"><small>What age would you like to Coast FIRE? (Must be less than your estimated retirement age)</small></div>
+    <h5 class="fw-bold">Coast FIRE Age</h5>
+    <div class="input-group">  
+        <div class="form-floating">
+            <input type="number" class="form-control" id="estimated_coastfire_age" name="estimated_coastfire_age" min="{{ min_age }}" max="{{ max_age }}" value="35" required>
+            <label for="estimated_coastfire_age">Coast FIRE Age</label>
+        </div>
+        <span class="input-group-text">years old</span>
     </div>
+    <div id="estimated_coastfire_ageHelp" class="form-text mb-3"><small>What age would you like to Coast FIRE? (Must be less than your estimated retirement age)</small></div>
 </div>

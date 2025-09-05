@@ -2,8 +2,6 @@
 
 {% block content %}
 
-<div class="container">
-
     {% if error %}
 
         <div class="alert alert-danger" role="alert">
@@ -12,7 +10,7 @@
 
     {% endif %}
 
-    <div class="col-4 mx-auto">
+    <div class="col-4 mx-auto mt-3">
 
         <h1 class="text-center">Login</h1>
 
@@ -29,15 +27,14 @@
             </div>
 
             <div class="d-flex justify-content-center">
-                <button type="submit" class="btn btn-success">Login</button>
+                <button type="submit" class="btn btn-secondary"><i class="bi bi-person-fill-check"></i> Login</button>
             </div>
 
         </form>
 
         <br>
-        <br>
 
-        <p class="text-center">Don't have an account? <a  class="link-success" href="{% url 'signupuser' %}">Sign-up here</a></p>
+        <p class="text-center">Don't have an account? <a  class="link-success" href="{% url 'signupuser' %}">Sign-up</a></p>
 
     </div>
 

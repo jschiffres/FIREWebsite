@@ -1,24 +1,33 @@
 <div id="lumpsumexpense-entry" class="row justify-content-start">
-    <div class="col-11">
+    <div class="col-lg-1 align-self-center">
+        <button type="button" class="btn btn-sm btn-danger mb-1" hx-delete hx-target="#lumpsumexpense-entry" hx-swap="delete"><i class="bi bi-x-circle-fill"></i></button>
+    </div>
+    <div class="col-lg-3">
+        <h6 class="fw-bold">Name</h6>
         <div class="form-floating mb-1">
-            <input type="text" class="form-control" id="estimated_lumpsum_payment_ages" name="estimated_lumpsum_payment_ages" value="My Lump Sum Expense" required>
-            <label for="estimated_lumpsum_payment_ages">Expense Name</label>
-            <div id="estimated_lumpsum_payment_agesHelp" class="form-text"><small>Provide a name for this expense.</small></div>
-        </div>
-        <div class="form-floating mb-1">
-            <input type="number" class="form-control" id="estimated_lumpsum_payment_amounts" name="estimated_lumpsum_payment_amounts" min="0" max="10000000" value="10000" required>
-            <label for="estimated_lumpsum_payment_amounts">Amount ($)</label>
-            <div id="estimated_lumpsum_payment_amountsHelp" class="form-text"><small>How much will this lump sum expense be?</small></i></div>
-        </div>
-        <div class="form-floating mb-1">
-            <input type="number" class="form-control" id="estimated_lumpsum_payment_ages" name="estimated_lumpsum_payment_ages" min="{{ min_age }}" max="{{ max_age }}" value="30" step="1" required>
-            <label for="estimated_lumpsum_payment_ages">Age</label>
-            <div id="estimated_lumpsum_payment_agesHelp" class="form-text"><small>What age will you incur this lump sum expense?</small></div>
+            <input type="text" class="form-control" id="lumpsum_expense_names" name="lumpsum_expense_names" value="My Lump Sum Expense" required>
+            <label for="lumpsum_expense_names">Name</label>
+            <div id="lumpsum_expense_namesHelp" class="form-text"><small>Provide a name for this expense.</small></i></div>
         </div>
     </div>
-    <div class="col-1 align-self-center">
-        <button type="button" class="btn btn-danger" hx-delete hx-target="#lumpsumexpense-entry" hx-swap="delete">-</button>
+    <div class="col-lg-4">
+        <h6 class="fw-bold">Amount</h6>
+        <div class="input-group">
+            <span class="input-group-text">$</span>
+            <div class="form-floating">
+                <input type="number" class="form-control" id="estimated_lumpsum_expense_amounts" name="estimated_lumpsum_expense_amounts" min="0" max="10000000" value="10000" required>
+                <label for="estimated_lumpsum_expense_amounts">Amount</label>
+            </div>
+        </div>
+        <div id="estimated_lumpsum_expense_amountsHelp" class="form-text mb-1"><small>How much will this lump sum expense be?</small></i></div>
     </div>
-    <hr>
-
+    <div class="col-lg-4">
+        <h6 class="fw-bold">Age</h6>
+        <div class="">
+            <input type="range" class="form-range slider" max="{{ max_age }}" min="{{ min_age }}" step="1" id="estimated_lumpsum_expense_ages" name="estimated_lumpsum_expense_ages">
+            <output for="rangeValue" id="rangeValue" aria-hidden="true"></output>
+        </div>
+        <div id="estimated_lumpsum_expense_agesHelp" class="form-text"><small>What age will you incur this lump sum expense?</small></div>
+    </div>
+    <hr class="hr-small">
 </div>

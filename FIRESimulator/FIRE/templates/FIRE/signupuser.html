@@ -19,37 +19,36 @@
         <div class="form-floating mb-3">
             <input type="text" class="form-control" id="username" name="username" placeholder="username">
             <label for="username">Username</label>
-            <div id="usernameHelp" class="form-text">Username must be unique</div>
+            <div id="usernameHelp" class="form-text">Username must be unique.</div>
         </div>
 
         <div class="form-floating mb-3">
             <input type="email" class="form-control" id="email" name="email" placeholder="email@email.com">
             <label for="email">Email</label>
-            <div id="emailHelp" class="form-text">Provide valid email</div>
+            <div id="emailHelp" class="form-text">Provide a valid email address.</div>
         </div>
 
         <div class="form-floating mb-3">
             <input type="password" class="form-control" id="password1" name="password1"placeholder="Password">
             <label for="password1">Password</label>
-            <div id="password1Help" class="form-text">Choose a secure password</div>
+            <div id="password1Help" class="form-text">Choose a secure password.</div>
         </div>
 
         <div class="form-floating mb-3">
             <input type="password" class="form-control" id="password2" name="password2" placeholder="Password">
             <label for="password2">Password</label>
-            <div id="password2Help" class="form-text">Ensure passwords match</div>
+            <div id="password2Help" class="form-text">Ensure passwords match.</div>
         </div>
 
         <div class="d-flex justify-content-center">
-            <button type="submit" class="btn btn-success">Sign Up</button>
+            <button type="submit" class="btn btn-warning"><i class="bi bi-person-fill-add"></i> Sign-up</i></button>
         </div>
 
     </form>
 
     <br>
-    <br>
     
-    <p class="text-center">Already have an account? <a class="link-success" href="{% url 'loginuser' %}">Login here</a></p>
+    <p class="text-center">Already have an account? <a class="link-success" href="{% url 'loginuser' %}">Login</a></p>
 
 </div>
 

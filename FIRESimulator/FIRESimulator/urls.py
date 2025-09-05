@@ -26,9 +26,11 @@ urlpatterns = [
     path('login/', views.loginuser, name='loginuser'),
 
     #Simulation: new, run, edit, delete, user's
-    path("", views.newsimulation, name="newsimulation"),
+    path("", views.landing, name="landing"),
+    path("new/", views.newsimulation, name="newsimulation"),
     path("firesimulation/<str:simulation_id>", views.runsimulation, name="runsimulation"),
     path("editsimulation/<str:simulation_id>", views.editsimulation, name="editsimulation"),
+    path("downloadsimulation/<str:simulation_id>", views.downloadsimulation, name="downloadsimulation"),
     path("deletesimulation/<str:simulation_id>", views.deletesimulation, name="deletesimulation"),
     path("mysimulations/", views.usersimulations, name="usersimulations"),
 

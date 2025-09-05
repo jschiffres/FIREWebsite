@@ -1,0 +1,278 @@
+<!-- EXPENSES -->
+<section id="expenses" class="mb-5">
+    <h3 class="section-title-expense"><i class="bi bi-receipt"></i> Expenses</h3>
+    <div class="row g-4">
+        <!-- EXPENSES INSTRUCTIONS -->
+        <div class="tip-card-expense shadow-sm rounded mb-3">
+            <h5>How much money do you spend?</h5>
+            <p><i>The next step to determining your budget is to understand where your money is being spent...</i></p>
+            <div class="accordion" id="expenses-accordion">
+                <div class="accordion-item border-0">
+                    <h2 class="accordion-header" id="expenses-headingOne">
+                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: rgb(143, 20, 20);" type="button" data-bs-toggle="collapse" data-bs-target="#expenses-collapseOne" aria-expanded="false" aria-controls="expenses-collapseOne">
+                        Fixed Costs
+                        </button>
+                    </h2>
+                    <div id="expenses-collapseOne" class="accordion-collapse collapse" aria-labelledby="expenses-headingOne">
+                        <div class="accordion-body" style="background-color: rgb(255, 175, 175);">
+                            <p><b><i class="bi bi-question-lg"></i> How: </b>This is how...</p>
+                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
+                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
+                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note...
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item border-0">
+                    <h2 class="accordion-header" id="expenses-headingTwo">
+                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: rgb(168, 35, 35);" type="button" data-bs-toggle="collapse" data-bs-target="#expenses-collapseTwo" aria-expanded="false" aria-controls="expenses-collapseTwo">
+                        Variable Costs
+                        </button>
+                    </h2>
+                    <div id="expenses-collapseTwo" class="accordion-collapse collapse" aria-labelledby="expenses-headingTwo">
+                        <div class="accordion-body" style="background-color: rgb(255, 175, 175);">
+                            <p><b><i class="bi bi-question-lg"></i> How: </b>This is how...</p>
+                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
+                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
+                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note...
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item border-0">
+                    <h2 class="accordion-header" id="expenses-headingThree">
+                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: rgb(202, 60, 60);" type="button" data-bs-toggle="collapse" data-bs-target="#expenses-collapseThree" aria-expanded="false" aria-controls="expenses-collapseThree">
+                        Inflation
+                        </button>
+                    </h2>
+                    <div id="expenses-collapseThree" class="accordion-collapse collapse" aria-labelledby="expenses-headingThree">
+                        <div class="accordion-body" style="background-color: rgb(255, 175, 175);">
+                            <p><b><i class="bi bi-question-lg"></i> How: </b>This is how...</p>
+                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
+                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
+                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row g-4">
+        <!-- EXPENSES FIELDS -->
+        <div class="col-lg-6">
+            <h5 class="fw-bold">Fixed Costs <i class="bi bi-question-circle-fill text-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="TBD Tooltip"></i></h5>
+            <div class="input-group">
+                <span class="input-group-text">$</span>
+                <div class="form-floating">
+                    <input type="number" class="form-control" id="current_yearly_fixed_costs" name="current_yearly_fixed_costs" min="1" max="100000000" value="17500" required>
+                    <label for="current_yearly_fixed_costs">Current Yearly Fixed Costs</label>
+                </div>
+            </div>
+            <div id="current_yearly_fixed_costsHelp" class="form-text"><small>What is your current yearly fixed costs expense amount?</small></div>
+        </div>
+        <div class="col-lg-6">
+            <h5 class="fw-bold">Inflation <i class="bi bi-question-circle-fill text-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="TBD Tooltip"></i></h5>
+            <div class="input-group">
+                <div class="form-floating">
+                    <input type="number" class="form-control" id="estimated_fixed_costs_inflation" name="estimated_fixed_costs_inflation" min="0" max="99.9" value="3.2" step=".1" required>
+                    <label for="estimated_fixed_costs_inflation">Estimated Yearly Fixed Costs Inflation</label>
+                </div>
+                <span class="input-group-text">%</span>
+            </div>
+            <div id="estimated_fixed_costs_inflationHelp" class="form-text mb-3"><small>On average, how much do you anticipate your fixed costs to increase each year?</small></div>
+        </div>
+    </div>
+    <div class="row g-4">
+        <div id="fixedcost-adjustments-div">
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary" hx-get="{% url 'create-fixedcost-adjustment' %}" hx-vals="js:{max_age: document.getElementById('estimated_retirement_age').value, min_age: document.getElementById('current_age').value}" hx-target="#fixedcost-adjustments-div" hx-swap="beforeend"><i class="bi bi-plus-circle-fill"></i> Fixed Cost Adjustment</button>
+            <p class="form-text"><small><i>*One entry per year before retirement age</i></small></p>
+        </div>
+    </div>
+    <div class="row g-4">
+        <!-- EXPENSES FIELDS -->
+        <div class="col-lg-6">
+            <h5 class="fw-bold">Variable Costs <i class="bi bi-question-circle-fill text-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="TBD Tooltip"></i></h5>
+            <div class="input-group">
+                <span class="input-group-text">$</span>
+                <div class="form-floating">
+                    <input type="number" class="form-control" id="current_yearly_variable_costs" name="current_yearly_variable_costs" min="1" max="100000000" value="20000" required>
+                    <label for="current_yearly_variable_costs">Current Yearly Variable Costs</label>
+                </div>
+            </div>
+            <div id="current_yearly_variable_costsHelp" class="form-text mb-3"><small>What is your current yearly variable costs expense amount?</small></div>
+        </div>
+        <div class="col-lg-6">
+            <h5 class="fw-bold">Inflation <i class="bi bi-question-circle-fill text-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="TBD Tooltip"></i></h5>
+            <div class="input-group">
+                <div class="form-floating">
+                    <input type="number" class="form-control" id="estimated_variable_costs_inflation" name="estimated_variable_costs_inflation" min="0" max="99.9" value="3.2" step=".1" required>
+                    <label for="estimated_variable_costs_inflation">Estimated Yearly Variable Costs Inflation</label>
+                </div>
+                <span class="input-group-text">%</span>
+            </div>
+            <div id="estimated_variable_costs_inflationHelp" class="form-text mb-3"><small>On average, how much do you anticipate your variable costs to increase each year?</small></div>
+        </div>
+    </div>
+    <div class="row g-4">
+        <div id="variablecost-adjustments-div">
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary" hx-get="{% url 'create-variablecost-adjustment' %}" hx-vals="js:{max_age: document.getElementById('estimated_retirement_age').value, min_age: document.getElementById('current_age').value}" hx-target="#variablecost-adjustments-div" hx-swap="beforeend"><i class="bi bi-plus-circle-fill"></i> Variable Cost Adjustment</button>
+            <p class="form-text"><small><i>*One entry per year before retirement age</i></small></p>
+        </div>
+    </div>
+    <div class="row g-4">
+        <!-- EXPENSES INSTRUCTIONS -->
+        <div class="tip-card-expense shadow-sm rounded mb-3">
+            <div class="accordion" id="expenses-accordion">
+                <div class="accordion-item border-0">
+                    <h2 class="accordion-header" id="expenses-headingFour">
+                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: rgb(143, 20, 20);" type="button" data-bs-toggle="collapse" data-bs-target="#expenses-collapseFour" aria-expanded="false" aria-controls="expenses-collapseFour">
+                        Health Insurance
+                        </button>
+                    </h2>
+                    <div id="expenses-collapseFour" class="accordion-collapse collapse" aria-labelledby="expenses-headingFour">
+                        <div class="accordion-body" style="background-color: rgb(255, 175, 175);">
+                            <p><b><i class="bi bi-question-lg"></i> How: </b>This is how...</p>
+                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
+                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
+                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row g-4">
+        <!-- EXPENSES FIELDS -->
+        <div class="col-lg-6">
+            <h5 class="fw-bold">Health Insurance</h5>
+            <div class="input-group">
+                <span class="input-group-text">$</span>
+                <div class="form-floating">
+                    <input type="number" class="form-control" id="current_yearly_health_insurance_cost" name="current_yearly_health_insurance_cost" min="0" max="100000000" value="2600" required>
+                    <label for="current_yearly_health_insurance_cost">Current Yearly Health Insurance Cost</label>
+                </div>
+            </div>
+            <div id="current_yearly_health_insurance_costHelp" class="form-text mb-3"><small>What is your current yearly health insurance cost?</small></div>
+        </div>
+        <div class="col-lg-6">
+            <h5 class="fw-bold">Inflation</h5>
+            <div class="input-group">
+                <div class="form-floating">
+                    <input type="number" class="form-control" id="estimated_health_insurance_inflation" name="estimated_health_insurance_inflation" min="0" max="99.9" value="5.0" step=".1" required>
+                    <label for="estimated_health_insurance_inflation">Estimated Yearly Heath Insurance Inflation</label>
+                </div>
+                <span class="input-group-text">%</span>
+            </div>
+            <div id="estimated_health_insurance_inflationHelp" class="form-text mb-3"><small>On average, how much do you anticipate your health insurance cost to increase each year?</small></div>
+        </div>
+    </div>
+    <div class="row g-4">
+        <!-- EXPENSES INSTRUCTIONS -->
+        <div class="tip-card-expense shadow-sm rounded mb-3">
+            <div class="accordion" id="expenses-accordion">
+                <div class="accordion-item border-0">
+                    <h2 class="accordion-header" id="expenses-headingFive">
+                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: rgb(143, 20, 20);" type="button" data-bs-toggle="collapse" data-bs-target="#expenses-collapseFive" aria-expanded="false" aria-controls="expenses-collapseFive">
+                        Taxes
+                        </button>
+                    </h2>
+                    <div id="expenses-collapseFive" class="accordion-collapse collapse" aria-labelledby="expenses-headingFive">
+                        <div class="accordion-body" style="background-color: rgb(255, 175, 175);">
+                            <p><b><i class="bi bi-question-lg"></i> How: </b>This is how...</p>
+                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
+                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
+                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row g-4">
+        <!-- EXPENSES FIELDS -->
+        <div class="col-lg-6">
+            <h5 class="fw-bold">Taxes</h5>
+            <div class="input-group">
+                <div class="form-floating">
+                    <input type="number" class="form-control" id="estimated_tax_rate" name="estimated_tax_rate" min="0" max="99.9" value="18.0" step=".1" required>
+                    <label for="estimated_tax_rate">Estimated Current Tax Rate</label>
+                </div>
+                <span class="input-group-text">%</span>
+            </div>
+            <div id="estimated_tax_rateHelp" class="form-text mb-3"><small>What is your current estimated tax rate?</small></div>
+        </div>
+        <div class="col-lg-6">
+            <h5 class="fw-bold">Future Taxes</h5>
+            <div class="input-group">
+                <div class="form-floating">
+                    <input type="number" class="form-control" id="estimated_tax_rate_step" name="estimated_tax_rate_step" min="0" max="99.9" value="0.5" step=".1" required>
+                    <label for="estimated_tax_rate_step">Estimated Tax Rate Yearly Increase</label>
+                </div>
+                <span class="input-group-text">%</span>
+            </div>
+            <div id="estimated_tax_rate_stepHelp" class="form-text mb-3"><small>On average, how much do you anticipate your tax rate to increase each year?</small></div>
+        </div>
+    </div>
+    <div class="row g-4">
+        <!-- EXPENSES INSTRUCTIONS -->
+        <div class="tip-card-expense shadow-sm rounded mb-3">
+            <div class="accordion" id="expenses-accordion">
+                <div class="accordion-item border-0">
+                    <h2 class="accordion-header" id="expenses-headingSix">
+                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: rgb(143, 20, 20);" type="button" data-bs-toggle="collapse" data-bs-target="#expenses-collapseSix" aria-expanded="false" aria-controls="expenses-collapseSix">
+                        Lump Sum Expenses
+                        </button>
+                    </h2>
+                    <div id="expenses-collapseSix" class="accordion-collapse collapse" aria-labelledby="expenses-headingSix">
+                        <div class="accordion-body" style="background-color: rgb(255, 175, 175);">
+                            <p><b><i class="bi bi-question-lg"></i> How: </b>This is how...</p>
+                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
+                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
+                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row g-4">
+        <!-- EXPENSES FIELDS -->
+        <div class="col-12">
+            <h5 class="fw-bold">Lump Sum Expense</h5>
+            <div id="lumpsumexpense-div">
+            </div>
+            <div>
+                <button type="button" class="btn btn-primary" hx-get="{% url 'create-lumpsum-expense' %}" hx-vals="js:{max_age: document.getElementById('estimated_retirement_age').value, min_age: document.getElementById('current_age').value}" hx-target="#lumpsumexpense-div" hx-swap="beforeend"><i class="bi bi-plus-circle-fill"></i> Add Lump Sum</button>
+                <p class="form-text"><small><i>*One entry per year before retirement age</i></small></p>
+            </div>
+        </div>
+    </div>
+</section>
+<hr class="hr-big">
+<!-- SAVINGS HTML -->
+<div id="savings-div" class="text-center mt-3 mb-3">
+    <button type="button" class="btn btn-primary btn-lg" hx-get="{% url 'create-savings-section' %}" hx-target="#savings-div" hx-swap="outerHTML transition:true">Savings <i class="bi bi-arrow-down-circle-fill"></i></button>
+</div>
+
+<style>
+    /* Fade transition for HTMX */
+    .htmx-swapping {
+        opacity: 0;
+        transition: opacity 9000ms ease;
+    }
+    .htmx-settling {
+        opacity: 0;
+    }
+    #savings-div {
+        transition: opacity 9000ms ease;
+    }
+    #savings-div.htmx-settling {
+        opacity: 1;
+    }
+</style>
+
+<script>
+    FIREscrollspy.refresh()
+</script>
