@@ -1,18 +1,19 @@
 <!-- EXPENSES -->
 <section id="expenses" class="mb-5">
+    <!-- TITLE -->
     <h3 class="section-title-expense"><i class="bi bi-receipt"></i> Expenses</h3>
     <div class="tip-card-expense shadow-sm rounded mb-3">
-        <!-- EXPENSES INSTRUCTIONS -->
+        <!-- QUESTION -->
         <div class="row g-4 mb-1">
             <h5>How much money do you spend?</h5>
-            <!-- <p><i>The next step to determining your budget is to understand where your money is being spent...</i></p> -->
         </div>
+        <!-- EXPENSES INSTRUCTIONS -->
         <div class="row g-4 mb-3">
             <div class="accordion" id="expenses-accordion">
                 <div class="accordion-item border-0">
                     <h2 class="accordion-header" id="expenses-headingOne">
                         <button class="accordion-button collapsed fw-bold" style="color: white; background-color: rgb(143, 20, 20);" type="button" data-bs-toggle="collapse" data-bs-target="#expenses-collapseOne" aria-expanded="false" aria-controls="expenses-collapseOne">
-                        Fixed Costs
+                        <i class="bi bi-three-dots-vertical"></i> Fixed Costs
                         </button>
                     </h2>
                     <div id="expenses-collapseOne" class="accordion-collapse collapse" aria-labelledby="expenses-headingOne">
@@ -27,7 +28,7 @@
                 <div class="accordion-item border-0">
                     <h2 class="accordion-header" id="expenses-headingTwo">
                         <button class="accordion-button collapsed fw-bold" style="color: white; background-color: rgb(168, 35, 35);" type="button" data-bs-toggle="collapse" data-bs-target="#expenses-collapseTwo" aria-expanded="false" aria-controls="expenses-collapseTwo">
-                        Variable Costs
+                        <i class="bi bi-three-dots-vertical"></i> Variable Costs
                         </button>
                     </h2>
                     <div id="expenses-collapseTwo" class="accordion-collapse collapse" aria-labelledby="expenses-headingTwo">
@@ -42,7 +43,7 @@
                 <div class="accordion-item border-0">
                     <h2 class="accordion-header" id="expenses-headingThree">
                         <button class="accordion-button collapsed fw-bold" style="color: white; background-color: rgb(202, 60, 60);" type="button" data-bs-toggle="collapse" data-bs-target="#expenses-collapseThree" aria-expanded="false" aria-controls="expenses-collapseThree">
-                        Inflation & Lifestyle Adjustments
+                        <i class="bi bi-three-dots-vertical"></i> Inflation & Lifestyle Adjustments
                         </button>
                     </h2>
                     <div id="expenses-collapseThree" class="accordion-collapse collapse" aria-labelledby="expenses-headingThree">
@@ -56,8 +57,8 @@
                 </div>
             </div>
         </div>
+        <!-- EXPENSES FIELDS -->
         <div class="row g-4">
-            <!-- EXPENSES FIELDS -->
             <div class="col-lg-6">
                 <h5 class="fw-bold">Fixed Costs <i class="bi bi-question-circle-fill text-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="TBD Tooltip"></i></h5>
                 <div class="input-group">
@@ -90,10 +91,10 @@
                     <button type="button" class="btn btn-primary" hx-get="{% url 'create-fixedcost-adjustment' %}" hx-vals="js:{max_age: document.getElementById('estimated_retirement_age').value, min_age: document.getElementById('current_age').value}" hx-target="#fixedcost-adjustments-div" hx-swap="beforeend"><i class="bi bi-plus-circle-fill"></i> Fixed Cost Adjustment</button>
                     <p class="form-text"><small><i>*One entry per year before retirement age</i></small></p>
                 </div>
-            <div>
+            </div>
         </div>
+        <!-- EXPENSES FIELDS -->
         <div class="row g-4">
-            <!-- EXPENSES FIELDS -->
             <div class="col-lg-6">
                 <h5 class="fw-bold">Variable Costs <i class="bi bi-question-circle-fill text-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="TBD Tooltip"></i></h5>
                 <div class="input-group">
@@ -128,13 +129,13 @@
                 </div>
             </div>
         </div>
+        <!-- EXPENSES INSTRUCTIONS -->
         <div class="row g-4 mb-3">
-            <!-- EXPENSES INSTRUCTIONS -->
             <div class="accordion" id="expenses-accordion">
                 <div class="accordion-item border-0">
                     <h2 class="accordion-header" id="expenses-headingFour">
                         <button class="accordion-button collapsed fw-bold" style="color: white; background-color: rgb(143, 20, 20);" type="button" data-bs-toggle="collapse" data-bs-target="#expenses-collapseFour" aria-expanded="false" aria-controls="expenses-collapseFour">
-                        Health Insurance
+                        <i class="bi bi-three-dots-vertical"></i> Health Insurance
                         </button>
                     </h2>
                     <div id="expenses-collapseFour" class="accordion-collapse collapse" aria-labelledby="expenses-headingFour">
@@ -148,8 +149,8 @@
                 </div>
             </div>
         </div>
+        <!-- EXPENSES FIELDS -->
         <div class="row g-4">
-            <!-- EXPENSES FIELDS -->
             <div class="col-lg-6">
                 <h5 class="fw-bold">Health Insurance</h5>
                 <div class="input-group">
@@ -173,13 +174,13 @@
                 <div id="estimated_health_insurance_inflationHelp" class="form-text mb-3"><small>On average, how much do you anticipate your health insurance cost to increase each year?</small></div>
             </div>
         </div>
+        <!-- EXPENSES INSTRUCTIONS -->
         <div class="row g-4 mb-3">
-            <!-- EXPENSES INSTRUCTIONS -->
             <div class="accordion" id="expenses-accordion">
                 <div class="accordion-item border-0">
                     <h2 class="accordion-header" id="expenses-headingFive">
                         <button class="accordion-button collapsed fw-bold" style="color: white; background-color: rgb(143, 20, 20);" type="button" data-bs-toggle="collapse" data-bs-target="#expenses-collapseFive" aria-expanded="false" aria-controls="expenses-collapseFive">
-                        Taxes
+                        <i class="bi bi-three-dots-vertical"></i> Taxes
                         </button>
                     </h2>
                     <div id="expenses-collapseFive" class="accordion-collapse collapse" aria-labelledby="expenses-headingFive">
@@ -193,8 +194,8 @@
                 </div>
             </div>
         </div>
+        <!-- EXPENSES FIELDS -->
         <div class="row g-4">
-            <!-- EXPENSES FIELDS -->
             <div class="col-lg-6">
                 <h5 class="fw-bold">Taxes</h5>
                 <div class="input-group">
@@ -218,13 +219,13 @@
                 <div id="estimated_tax_rate_stepHelp" class="form-text mb-3"><small>On average, how much do you anticipate your tax rate to increase each year?</small></div>
             </div>
         </div>
+        <!-- EXPENSES INSTRUCTIONS -->
         <div class="row g-4 mb-3">
-            <!-- EXPENSES INSTRUCTIONS -->
             <div class="accordion" id="expenses-accordion">
                 <div class="accordion-item border-0">
                     <h2 class="accordion-header" id="expenses-headingSix">
                         <button class="accordion-button collapsed fw-bold" style="color: white; background-color: rgb(143, 20, 20);" type="button" data-bs-toggle="collapse" data-bs-target="#expenses-collapseSix" aria-expanded="false" aria-controls="expenses-collapseSix">
-                        Lump Sum Expenses
+                        <i class="bi bi-three-dots-vertical"></i> Lump Sum Expenses
                         </button>
                     </h2>
                     <div id="expenses-collapseSix" class="accordion-collapse collapse" aria-labelledby="expenses-headingSix">
@@ -238,8 +239,8 @@
                 </div>
             </div>
         </div>
+        <!-- EXPENSES FIELDS -->
         <div class="row g-4">
-            <!-- EXPENSES FIELDS -->
             <div class="col-12">
                 <h5 class="fw-bold">Lump Sum Expense</h5>
                 <div id="lumpsumexpense-div">

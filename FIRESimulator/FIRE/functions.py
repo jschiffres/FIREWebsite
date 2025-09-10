@@ -17,7 +17,9 @@ def savesimulation(self, request):
             if int(request.POST.get('estimated_coastfire_age')) >= newsimulation.estimated_retirement_age or int(request.POST.get('estimated_coastfire_age')) <= newsimulation.current_age:
                 return "Coast FIRE age must be less than estimated retirement age and greater than your current age."
             else:
-                newsimulation.estimated_coastfire_age = request.POST.get('estimated_coastfire_age')
+                newsimulation.estimated_coastfire_age = int(request.POST.get('estimated_coastfire_age'))
+        else:
+            newsimulation.estimated_coastfire_age = None
         
         #Set user equal to request user if logged in
         if str(request.user) != "AnonymousUser":
@@ -30,10 +32,10 @@ def savesimulation(self, request):
             newsimulation.estimated_hsa_yearly_contribution_limit_step = 0
             newsimulation.esitmated_hsa_yearly_return = 0
         else:
-            newsimulation.current_hsa_balance = request.POST.get('current_hsa_balance')
-            newsimulation.current_hsa_yearly_contribution_limit = request.POST.get('current_hsa_yearly_contribution_limit')
-            newsimulation.estimated_hsa_yearly_contribution_limit_step = request.POST.get('estimated_hsa_yearly_contribution_limit_step')
-            newsimulation.esitmated_hsa_yearly_return = request.POST.get('esitmated_hsa_yearly_return')
+            newsimulation.current_hsa_balance = int(request.POST.get('current_hsa_balance'))
+            newsimulation.current_hsa_yearly_contribution_limit = int(request.POST.get('current_hsa_yearly_contribution_limit'))
+            newsimulation.estimated_hsa_yearly_contribution_limit_step = int(request.POST.get('estimated_hsa_yearly_contribution_limit_step'))
+            newsimulation.esitmated_hsa_yearly_return = float(request.POST.get('esitmated_hsa_yearly_return'))
         
         #Set lumpsum income/expense and fixed/vairable cost adjustment fields equal to the list of amounts and ages within the request/form
         newsimulation.lumpsum_income_names = request.POST.getlist('lumpsum_income_names')
@@ -75,6 +77,7 @@ def savesimulation(self, request):
         return "Error creating simulation, please try again."
 
 class FIRE:
+    # Function: __init__
     def __init__(self, simulation):
         self.simulation = simulation
         self.years_until_retirement = self.simulation.estimated_retirement_age - self.simulation.current_age
@@ -403,66 +406,21 @@ class FIRE:
         self.simulation_data = simulation_data
 
         return simulation_data
+    
+    def zip_objects(self):
+        lump_sum_incomes = zip(self.simulation.lumpsum_income_names, self.simulation.estimated_lumpsum_income_ages, self.simulation.estimated_lumpsum_income_amounts)
+        lump_sum_expenses = zip(self.simulation.lumpsum_expense_names, self.simulation.estimated_lumpsum_expense_ages, self.simulation.estimated_lumpsum_expense_amounts)
+        variable_cost_adjustments = zip(self.simulation.variable_cost_adjustment_names, self.simulation.estimated_variable_cost_adjustment_ages, self.simulation.estimated_variable_cost_adjustments)
+        fixed_cost_adjustments = zip(self.simulation.fixed_cost_adjustment_names, self.simulation.estimated_fixed_cost_adjustment_ages, self.simulation.estimated_fixed_cost_adjustments)
+        assets = zip(self.simulation.asset_names, self.simulation.current_asset_values, self.simulation.estimated_asset_value_growths)
 
-
-
-
-
-
-
-
-
-def DFtoHTML(df):
-    HTMLdf = df.to_html(index=False)
-    edit1 = HTMLdf.replace('dataframe','table table-striped table-hover')
-    edit2 = edit1.replace('thead','thead class="table-dark"')
-    edit3 = edit2.replace('''<th>SALARY</th>
-      <th>BONUS</th>
-      <th>OTHER INCOME</th>
-      <th>BILLS</th>
-      <th>COST OF LIVING</th>
-      <th>TAXES</th>
-      <th>HEALTH INSURANCE</th>
-      <th>SAVINGS</th>
-      <th>HSA START</th>
-      <th>HSA CONTRIBUTION LIMIT</th>
-      <th>HSA CONTRIBUTIONS</th>
-      <th>HSA END</th>
-      <th>401K START</th>
-      <th>401K CONTRIBUTION LIMIT</th>
-      <th>401K CONTRIBUTIONS</th>
-      <th>401K END</th>
-      <th>IRA START</th>
-      <th>IRA CONTRIBUTION LIMIT</th>
-      <th>IRA CONTRIBUTIONS</th>
-      <th>IRA END</th>
-      <th>INDIVIDUAL START</th>
-      <th>INDIVIDUAL CONTRIBUTIONS</th>
-      <th>INDIVIDUAL END</th>
-      <th>NET WORTH</th>''','''<th style="white-space:nowrap;" class="table-success">SALARY</th>
-      <th style="white-space:nowrap;" class="table-success">BONUS</th>
-      <th style="white-space:nowrap;" class="table-success">OTHER INCOME</th>
-      <th style="white-space:nowrap;" class="table-danger">BILLS</th>
-      <th style="white-space:nowrap;" class="table-danger">COST OF LIVING</th>
-      <th style="white-space:nowrap;" class="table-danger">TAXES</th>
-      <th style="white-space:nowrap;" class="table-danger">HEALTH INSURANCE</th>
-      <th style="white-space:nowrap;" class="table-success">SAVINGS</th>
-      <th style="white-space:nowrap;">HSA START</th>
-      <th style="white-space:nowrap;" class="table-secondary">HSA CONTRIBUTION LIMIT</th>
-      <th style="white-space:nowrap;" class="table-info">HSA CONTRIBUTIONS</th>
-      <th style="white-space:nowrap;" class="table-success">HSA END</th>
-      <th style="white-space:nowrap;">401K START</th>
-      <th style="white-space:nowrap;" class="table-secondary">401K CONTRIBUTION LIMIT</th>
-      <th style="white-space:nowrap;" class="table-info">401K CONTRIBUTIONS</th>
-      <th style="white-space:nowrap;" class="table-success">401K END</th>
-      <th style="white-space:nowrap;">IRA START</th>
-      <th style="white-space:nowrap;" class="table-secondary">IRA CONTRIBUTION LIMIT</th>
-      <th style="white-space:nowrap;" class="table-info">IRA CONTRIBUTIONS</th>
-      <th style="white-space:nowrap;" class="table-success">IRA END</th>
-      <th style="white-space:nowrap;">INDIVIDUAL START</th>
-      <th style="white-space:nowrap;" class="table-info">INDIVIDUAL CONTRIBUTIONS</th>
-      <th style="white-space:nowrap;" class="table-success">INDIVIDUAL END</th>
-      <th style="white-space:nowrap;">NET WORTH</th>''')
-    final = edit3.replace('tr style="text-align: right;"','tr style="text-align: center;"')
-    # print(final)
-    return final
+        return lump_sum_incomes, lump_sum_expenses, variable_cost_adjustments, fixed_cost_adjustments, assets
+    
+    def financial_independence_age(self):
+        x = 0
+        for net_worth in self.net_worths:
+            if net_worth > self.magic_numbers[x]:
+                return self.ages[x]
+            else:
+                x += 1
+        return "N/A"

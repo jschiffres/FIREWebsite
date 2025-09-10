@@ -6,7 +6,7 @@
     <h1 class="display-5 fw-bold text-success">Plan your path to Financial Independence</h1>
     <p class="lead mt-3">Answer a few questions, see your FIRE timeline, and explore scenarios to reach your goals sooner.</p>
     <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-4">
-      <a href="{% url 'newsimulation' %}" class="btn btn-success btn-lg px-4"><i class="bi bi-play-fill"></i> Start your simulation</a>
+      <a href="{% url 'newsimulation' %}" class="btn btn-success btn-lg px-4"><i class="bi bi-play-circle-fill"></i> Start your simulation</a>
       {% if user.is_authenticated %}
         <a href="{% url 'usersimulations' %}" class="btn btn-outline-success btn-lg px-4"><i class="bi bi-arrow-repeat"></i> Continue my simulations</a>
       {% endif %}

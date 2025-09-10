@@ -63,18 +63,26 @@
 </script>
 
 {% if error %}
-    <div class="alert alert-danger" role="alert">{{ error }}</div>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-circle-fill"></i> {{ error }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 {% endif %}
 
+<div>
+    <h1 class="text text-center">New Simulation</h1>
+    <hr class="hr-small">
+</div>
+
 <!-- QUESTIONNAIRE NAVBAR -->
-<nav id="questionnaire-navbar" class="navbar sticky-top shadow-sm">
+<nav id="questionnaire-navbar" class="navbar sticky-top shadow-sm rounded">
     <div class="container-fluid">
-        <h1 class="navbar-brand mb-0 fs-3 fw-bold" id="nav-header"><i class="bi bi-cash-coin"></i> FIRE Questionnaire</h1>
+        <h1 class="navbar-brand mb-0 fs-3 fw-bold" id="nav-header" style="color: white;;"><i class="bi bi-ui-radios"></i> Questionnaire</h1>
         <ul class="nav nav-pills">
-        <li class="nav-item"><a class="nav-link nav-link-personal" href="#personalInfo"><i class="bi bi-person-circle"></i> Personal Info</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-income" href="#income"><i class="bi bi-cash-stack"></i> Income</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-expenses" href="#expenses"><i class="bi bi-receipt"></i> Expenses</a></li>
-        <li class="nav-item"><a class="nav-link nav-link-savings" href="#savings"><i class="bi bi-piggy-bank"></i> Savings</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-personal" style="color:white;" href="#personalInfo"><i class="bi bi-person-circle"></i> Personal Info</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-income" style="color:white;" href="#income"><i class="bi bi-cash-stack"></i> Income</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-expenses" style="color:white;" href="#expenses"><i class="bi bi-receipt"></i> Expenses</a></li>
+        <li class="nav-item"><a class="nav-link nav-link-savings" style="color:white;" href="#savings"><i class="bi bi-piggy-bank"></i> Savings</a></li>
         </ul>
     </div>
 </nav>
@@ -108,7 +116,7 @@
                         <div class="accordion-item border-0">
                             <h2 class="accordion-header" id="personal-headingTwo">
                                 <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #da9b1c;" type="button" data-bs-toggle="collapse" data-bs-target="#personal-collapseTwo" aria-expanded="false" aria-controls="personal-collapseTwo">
-                                <i class="bi bi-plus-lg"></i>  Instructions
+                                <i class="bi bi-three-dots-vertical"></i> Instructions
                                 </button>
                             </h2>
                             <div id="personal-collapseTwo" class="accordion-collapse collapse" aria-labelledby="personal-headingTwo">
@@ -123,7 +131,7 @@
                         <div class="accordion-item border-0">
                             <h2 class="accordion-header" id="personal-headingThree">
                                 <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #e9b040;" type="button" data-bs-toggle="collapse" data-bs-target="#personal-collapseThree" aria-expanded="false" aria-controls="personal-collapseThree">
-                                <i class="bi bi-chevron-expand"></i> Tips
+                                <i class="bi bi-three-dots-vertical"></i> Tips
                                 </button>
                             </h2>
                             <div id="personal-collapseThree" class="accordion-collapse collapse" aria-labelledby="personal-headingThree">
@@ -161,7 +169,7 @@
                             </div>
                             <span class="input-group-text">years old</span>
                         </div>
-                        <div id="current_ageHelp" class="form-text mb-3"><small>How old are you?</small></div>
+                        <div id="current_ageHelp" class="form-text mb-3"><small>What is your current age?</small></div>
                     </div>
                 </div>
                 <div class="row g-4">

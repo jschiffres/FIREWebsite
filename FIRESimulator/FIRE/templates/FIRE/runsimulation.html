@@ -2,243 +2,34 @@
 
 {% block content %}
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        initializeCharts(document);
-    });
-
-    document.body.addEventListener('htmx:afterSwap', function(evt) {
-        // Ensure the swap affected the runsimulation-div
-        if (evt.target.id === 'runsimulation-div') {
-            initializeCharts(document.getElementById('runsimulation-div'));
-        }
-    });
-
-    // Store chart instances to allow proper destruction
-    const chartInstances = {};
-
-    function initializeCharts(scope) {
-        if (!scope) return;
-        scope.querySelectorAll('canvas[id="NetWorthChart"]').forEach(function(canvas) {
-            // Destroy previous chart instance if it exists
-            if (chartInstances[canvas.id]) {
-            chartInstances[canvas.id].destroy();
-            }
-            // Get data from data attributes
-            const ages = JSON.parse(canvas.getAttribute('data-ages') || '[]');
-            const net_worths = JSON.parse(canvas.getAttribute('data-net-worths') || '[]');
-            const magic_numbers = JSON.parse(canvas.getAttribute('data-magic-numbers') || '[]');
-            const ctx = canvas.getContext('2d');
-            chartInstances[canvas.id] = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ages,
-                datasets: [
-                {
-                    label: 'Net Worth',
-                    data: net_worths,
-                    borderColor: '#50a772',
-                    backgroundColor: 'rgb(148, 201, 169, 0.1)',
-                    borderWidth: 3,
-                    pointRadius: 3,
-                    pointBackgroundColor: '#50a772',
-                    tension: 0.3,
-                    fill: true,
-                },
-                {
-                    label: 'Magic Number',
-                    data: magic_numbers,
-                    borderColor: '#1d1919',
-                    backgroundColor: 'rgba(0, 0, 0, 0.08)',
-                    borderDash: [8, 4],
-                    borderWidth: 2,
-                    pointRadius: 2,
-                    pointBackgroundColor: '#1d1919',
-                    tension: 0.2,
-                    fill: false,
-                }
-                ]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                legend: {
-                    display: true,
-                    labels: {
-                    // color: '#222',
-                    // font: {
-                    //     size: 15,
-                    //     weight: 'bold',
-                    //     family: 'Segoe UI, Arial, sans-serif'
-                    // }
-                    }
-                },
-                title: {
-                    display: true,
-                    text: 'Net Worth vs. Magic Number',
-                    // color: '#222',
-                    // font: {
-                    // size: 20,
-                    // weight: 'bold',
-                    // family: 'Segoe UI, Arial, sans-serif'
-                    // }
-                },
-                tooltip: {
-                    callbacks: {
-                    label: function(context) {
-                        let label = context.dataset.label || '';
-                        if (label) label += ': ';
-                        if (context.parsed.y !== null) {
-                        label += '$' + context.parsed.y.toLocaleString();
-                        }
-                        return label;
-                    }
-                    }
-                }
-                },
-                scales: {
-                x: {
-                    title: {
-                    display: true,
-                    text: 'Age',
-                    // color: '#333',
-                    // font: {
-                    //     size: 14,
-                    //     weight: 'bold'
-                    // }
-                    },
-                    // ticks: {
-                    // color: '#333'
-                    // },
-                    // grid: {
-                    // color: '#e1e1e1'
-                    // }
-                },
-                y: {
-                    title: {
-                    display: true,
-                    text: 'Amount ($)',
-                    // color: '#333',
-                    // font: {
-                    //     size: 14,
-                    //     weight: 'bold'
-                    // }
-                    },
-                    ticks: {
-                    // color: '#333',
-                    callback: function(value) {
-                        return '$' + value.toLocaleString();
-                    }
-                    },
-                    // grid: {
-                    // color: '#e1e1e1'
-                    // }
-                }
-                },
-                // animation: {
-                // duration: 0 // Disable animation for performance
-                // }
-            }
-            });
-            chartInstances[canvas.id].update();
-        });
-    }
-
-    document.body.addEventListener('htmx:afterSwap', function(evt) {
-        // Limit to specific targets, if needed
-        if (evt.target.id === "lumpsumexpense-div") {
-            initializeRangeInputs(evt.target);
-        }
-
-        if (evt.target.id === "lumpsumincome-div") {
-            initializeRangeInputs(evt.target);
-        }
-
-        if (evt.target.id === "variablecost-adjustments-div") {
-            initializeRangeInputs(evt.target);
-        }
-
-        if (evt.target.id === "fixedcost-adjustments-div") {
-            initializeRangeInputs(evt.target);
-        }
-        
-    });
-
-    function initializeRangeInputs(scope) {
-    scope.querySelectorAll('input[type="range"]').forEach(function(rangeInput) {
-        const display = rangeInput.nextElementSibling; // Adjust selector as needed
-        if (display) {
-            rangeInput.addEventListener('input', function() {
-                display.textContent = this.value;
-            });
-            display.textContent = rangeInput.value; // Initialize on load
-        }
-    });
-    }   
-</script>
-
 <style>
     table {
         border-collapse: collapse;
         position: relative;
     }
-    /* Sticky header rows */
-    thead tr.first th {
-        position: sticky;
-        top: 165px;
-        z-index: 3;
-        background: #fff;
-    }
-    thead tr.second th {
-        position: sticky;
-        top: 110px;
-        z-index: 3;
-        background: #fff;
-    }
-    thead tr.third th {
-        position: sticky;
-        top: 55px;
-        z-index: 3;
-        background: #fff;
-    }
-    thead tr.fourth th {
-        position: sticky;
-        top: 0;
-        z-index: 3;
-        background: #fff;
-    }
-
-    /* Sticky first two columns for all rows */
-    th:first-child,
-    td:first-child {
-        position: sticky;
-        left: 0;
-        z-index: 2;
-        background: #fff;
-    }
-    th:nth-child(2),
-    td:nth-child(2) {
-        position: sticky;
-        left: 165px; /* Adjust to your first column width */
-        z-index: 2;
-        background: #fff;
-    }
-
-    /* Ensure header cells above sticky columns are above others */
-    thead tr.first th:first-child,
-    thead tr.second th:first-child,
-    thead tr.third th:first-child,
-    thead tr.fourth th:first-child,
-    thead tr.first th:nth-child(2),
-    thead tr.second th:nth-child(2),
-    thead tr.third th:nth-child(2),
-    thead tr.fourth th:nth-child(2) {
-        z-index: 4;
-    }
+    
     .tbl-container
     {
         max-width: fit-content;
         max-height: fit-content;
+    }
+    table th {
+        position: sticky;
+        top: -1px;
+        z-index: 2;
+    }
+    td:first-child, th:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 1;
+    }
+    td:nth-child(2), th:nth-child(2) {
+        position: sticky;
+        left: 50px;
+        z-index: 1;
+    }
+    th:first-child, th:nth-child(2) {
+        z-index: 3;
     }
     .tbl-fixed
     {
@@ -253,28 +44,25 @@
     }
 </style>
 
-<div class="container">
-
-    <div>
-        <h1 class="text text-center">{{ simulation.name }}</h1>
-        {% if user.is_authenticated %}
-        <div class="col-lg-12 text-center mb-3">
-            <table>
-                <form action="{% url 'editsimulation' simulation.id %}">
-                    <button type="submit" class="btn btn-secondary me-2"><i class="bi bi-sliders"></i> Edit</i></button>
-                </form>
-                <form action="{% url 'downloadsimulation' simulation.id %}">
-                    <button type="submit" class="btn btn-warning me-2"><i class="bi bi-filetype-csv"></i> Download</i></button>
-                </form>
-            </table>
-        </div>
-        {% else %}
-            <p class="text text-center">Want to save, edit and download this simulation? <a class="link-success" href="{% url 'signupsave' simulation.id %}">Sign-up to gain access!</a></p>
-        {% endif %}
-        <hr class="hr-small">
+<div>
+    <h1 class="text text-center">{{ simulation.name }}</h1>
+    {% if user.is_authenticated %}
+    <div class="col-lg-12 text-center mb-3">
+        <table>
+            <form action="{% url 'editsimulation' simulation.id %}">
+                <button type="submit" class="btn btn-secondary btn-sm me-2"><i class="bi bi-sliders"></i> Edit</i></button>
+            </form>
+            <form action="{% url 'downloadsimulation' simulation.id %}">
+                <button type="submit" class="btn btn-warning btn-sm"><i class="bi bi-filetype-csv"></i> Download</i></button>
+            </form>
+        </table>
     </div>
-    
+    {% else %}
+        <p class="text text-center">Want to save, edit and download this simulation? <a class="link-success" href="{% url 'signupsave' simulation.id %}">Sign-up to gain access!</a></p>
+    {% endif %}
+    <hr class="hr-small">
 </div>
+
 
 <div id="runsimulation-div">
     {% include 'FIRE/partials/firetable.html' %}

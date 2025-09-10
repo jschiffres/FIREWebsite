@@ -1,7 +1,5 @@
+<!-- MAKE INPUTS NOT EDITABLE IF USER IS NOT LOGGED IN -->
 {% if user.is_authenticated %}
-<style>
-
-</style>
 {% else %}
 <style>
     input {
@@ -9,309 +7,858 @@
     }
 </style>
 {% endif %}
+
 <form>
-    <div class="row g-4 mb-3 sticky-top">
-        <div class="col-lg-3 text-center">
-            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#exampleModal"><i class="bi bi-person-circle"></i> Personal Info</button>
+    <!-- DASHBOARD NAVBAR -->
+    <nav id="questionnaire-navbar" class="navbar sticky-top shadow-sm mb-3 rounded">
+        <div class="container-fluid">
+            <h1 class="navbar-brand mb-0 fs-3 fw-bold" id="nav-header" style="color:white;"><i class="bi bi-speedometer"></i> Dashboard</h1>
+            
+            <ul class="nav nav-pills">
+                <!-- <li class="nav-item"><button type="button" class="btn btn-warning me-2" data-bs-toggle="modal" data-bs-target="#personalinfo-Modal"><i class="bi bi-pencil-square"></i> Personal Info</button></li> -->
+                <li class="nav-item"><button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#income-Modal"><i class="bi bi-pencil-square"></i> Income</button></li>
+                <li class="nav-item"><button type="button" class="btn btn-danger me-2" data-bs-toggle="modal" data-bs-target="#expenses-Modal"><i class="bi bi-pencil-square"></i> Expenses</button></li>
+                <li class="nav-item"><button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#savings-Modal"><i class="bi bi-pencil-square"></i> Savings</button></li>
+            </ul>
         </div>
-        <div class="col-lg-3 text-center">
-            <button class="btn btn-success"><i class="bi bi-cash-stack"></i> Income</button>
-        </div>
-        <div class="col-lg-3 text-center">
-            <button class="btn btn-danger"><i class="bi bi-receipt"></i> Expenses</button>
-        </div>
-        <div class="col-lg-3 text-center">
-            <button class="btn btn-secondary"><i class="bi bi-piggy-bank"></i> Savings</button>
-        </div>
-    </div>
-<div class="modal fade modal-lg" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        ...
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Save changes</button>
-      </div>
-    </div>
-  </div>
-</div>
+    </nav>
+    <!-- MESSAGES -->
     <div class="mb-3">
         {% if error %}
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                {{ error }}
+                <i class="bi bi-exclamation-circle-fill"></i> {{ error }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         {% endif %}
         {% if messages %}
             {% for message in messages %}
-                <div class="alert alert-info alert-dismissible fade show" role="alert">
-                    {{ message }}
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill"></i> {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
         {% endfor %}
         {% endif %}   
     </div>
-    <div class="row mb-3">
-        <div class="col-lg-6">
-            <canvas id="NetWorthChart" data-ages='{{ ages|safe }}' data-net-worths='{{ net_worths|safe }}' data-magic-numbers='{{ magic_numbers|safe }}'></canvas>
+    <!-- PERSONAL AGE INPUTS -->
+    <div class="row g-4 mb-3">
+        <div class="col-lg-3"> 
+            <div class="input-group">  
+                <div class="form-floating">
+                    <input type="number" class="form-control form-control-sm" id="current_age" name="current_age" min="1" max="100" value="{{ simulation.current_age }}" required>
+                    <label for="current_age">Current Age</label>
+                </div>
+                <span class="input-group-text">years old</span>
+            </div>
+            <!-- <div id="current_ageHelp" class="form-text mb-3"><small>How old are you?</small></div> -->
         </div>
+        <div class="col-lg-3">
+            <div class="input-group"> 
+                <div class="form-floating">
+                    <input type="number" class="form-control form-control-sm" id="estimated_retirement_age" name="estimated_retirement_age" min="{{ simulation.current_age|add:'1' }}" max="101" value="{{ simulation.estimated_retirement_age }}" required>
+                    <label for="estimated_retirement_age">Retirement Age</label>
+                </div>
+                <span class="input-group-text">years old</span>
+            </div>
+            <!-- <div id="estimated_retirement_ageHelp" class="form-text mb-3"><small>What age would you like to retire?</small></div> -->
+        </div>
+        <div class="col-lg-3">
+            <div class="input-group">  
+                <div class="form-floating">
+                    <input type="number" class="form-control form-control-sm" id="estimated_coastfire_age" name="estimated_coastfire_age" min="{{ simulation.current_age|add:'1' }}" max="{{ simulation.estimated_retirement_age|add:'-1' }}" value="{{ simulation.estimated_coastfire_age }}" required>
+                    <label for="estimated_coastfire_age">Coast FIRE Age</label>
+                </div>
+                <span class="input-group-text">years old</span>
+            </div>
+            <!-- <div id="estimated_coastfire_ageHelp" class="form-text mb-3"><small>What age would you like to Coast FIRE? (Must be less than your estimated retirement age)</small></div> -->
+        </div>
+        <div class="col-lg-3 align-self-center text-center">
+            <button type="submit" class="btn btn-warning text-center" hx-post="{% url 'runsimulation' simulation.id %}" hx-target="#runsimulation-div" hx-swap="innerHTML" {% if user.is_authenticated %} {% else %} disabled {% endif %}><i class="bi bi-pencil-square"></i> Personal Info</button>
+        </div>
+    </div>
+    <!-- INCOME MODAL -->
+    <div class="modal fade modal-xl" id="income-Modal" tabindex="-1" aria-labelledby="income-Modal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header modal-header-income">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel"><i class="bi bi-cash-stack"></i> Income</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body modal-body-income">
+                    <!-- INCOME FIELDS -->
+                    <div class="rounded modal-subheader-income mb-3">
+                        <h5 class="p-3">Salary, Raises & Bonuses</h5>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-lg-4">
+                            <h5 class="fw-bold">Salary <i class="bi bi-question-circle-fill text-success" data-bs-toggle="tooltip" data-bs-placement="top" title="TBD Tooltip"></i></h5>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="current_yearly_salary" name="current_yearly_salary" min="1000" max="1000000" value="{{ simulation.current_yearly_salary }}" required>
+                                    <label for="current_yearly_salary">Current Yearly Gross Salary</label>
+                                </div>
+                            </div>
+                            <div id="current_yearly_salaryHelp" class="form-text mb-3"><small>What is your current yearly gross salary prior to any deductions <i>i.e., Taxes, Retirement Contributions, Health Insurance?</i></small></div>
+                        </div>
+                        <div class="col-lg-4">
+                            <h5 class="fw-bold">Raises <i class="bi bi-question-circle-fill text-success" data-bs-toggle="tooltip" data-bs-placement="top" title="TBD Tooltip"></i></h5>
+                            <div class="input-group">
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="estimated_salary_raise" name="estimated_salary_raise" min="0" max="99.9" value="{{ simulation.estimated_salary_raise }}" step=".1" required>
+                                    <label for="estimated_salary_raise">Estimated Yearly Salary Raise</label>
+                                </div>
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <div id="estimated_salary_raiseHelp" class="form-text mb-3"><small>On average, how much do you anticipate your salary to increase each year?</small></div>
+                        </div>
+                        <div class="col-lg-4">
+                            <h5 class="fw-bold">Bonuses <i class="bi bi-question-circle-fill text-success" data-bs-toggle="tooltip" data-bs-placement="top" title="TBD Tooltip"></i></h5>
+                            <div class="input-group">
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="estimated_bonus" name="estimated_bonus" min="0" max="999.9" value="{{ simulation.estimated_bonus }}" step=".1" required>
+                                    <label for="estimated_bonus">Estimated Yearly Bonus</label>
+                                </div>
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <div id="estimated_bonusHelp" class="form-text mb-3"><small>On average, what percentage of your yearly salary do you anticipate to recieve as a bonus each year?</small></div>
+                        </div>
+                    </div>
+                    <hr class="hr-small">
+                    <!-- INCOME FIELDS -->
+                    <div class="rounded modal-subheader-income mb-3">
+                        <h5 class="p-3">Other Income</h5>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-lg-6">
+                            <h5 class="fw-bold">Other Income</h5>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="current_yearly_other_income" name="current_yearly_other_income" min="0" max="1000000" value="{{ simulation.current_yearly_other_income }}" required>
+                                    <label for="current_yearly_other_income">Current Other Income</label>
+                                </div>
+                            </div>
+                            <div id="current_yearly_other_incomeHelp" class="form-text mb-3"><small>Do you currently receive any addtional income on a yearly basis? <i>i.e., Rental Properties, Trusts, Side Hustles</i></small></div>
+                        </div>
+                        <div class="col-lg-6">
+                            <h5 class="fw-bold">Future Other Income</h5>
+                            <div class="input-group">
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="estimated_other_income_increase" name="estimated_other_income_increase" min="0" max="99.9" value="{{ simulation.estimated_other_income_increase }}" step=".1" required>
+                                    <label for="estimated_other_income_increase">Estimated Yearly Other Income Increase</label>
+                                </div>
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <div id="estimated_other_income_increaseHelp" class="form-text mb-3"><small>On average, how much do you anticipate your other income to increase each year?</small></div>
+                        </div>
+                    </div>
+                    <hr class="hr-small">
+                    <!-- INCOME FIELDS -->
+                    <div class="rounded modal-subheader-income mb-3">
+                        <h5 class="p-3">Lump Sum Income</h5>
+                    </div>
+                    <div id="lumpsumincome-div">
+                        {% if simulation.estimated_lumpsum_income_amounts %}
+                        {% for name, age, amount in lump_sum_incomes %}
+                        <div id="lumpsumincome-entry" class="row justify-content-start">
+                            <div class="col-lg-1 align-self-center">
+                                <button type="button" class="btn btn-sm btn-danger mb-1" hx-delete hx-target="#lumpsumincome-entry" hx-swap="delete"><i class="bi bi-x-circle-fill"></i></button>
+                            </div>
+                            <div class="col-lg-3">
+                                <h6 class="fw-bold">Name</h6>
+                                <div class="form-floating mb-1">
+                                    <input type="text" class="form-control" id="lumpsum_income_names" name="lumpsum_income_names" value="{{ name }}" required>
+                                    <label for="lumpsum_income_names">Name</label>
+                                    <div id="lumpsum_income_namesHelp" class="form-text"><small>Provide a name for this income.</small></i></div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <h6 class="fw-bold">Amount</h6>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <div class="form-floating">
+                                        <input type="number" class="form-control" id="estimated_lumpsum_income_amounts" name="estimated_lumpsum_income_amounts" min="0" max="10000000" value="{{ amount }}" required>
+                                        <label for="estimated_lumpsum_income_amounts">Amount</label>
+                                    </div>
+                                </div>
+                                <div id="estimated_lumpsum_income_amountsHelp" class="form-text mb-1"><small>How much will this lump sum income be?</small></i></div>
+                            </div>
+                            <div class="col-lg-4">
+                                <h6 class="fw-bold">Age</h6>
+                                <div class="input-group">
+                                    <div class="form-floating">
+                                        <input type="number" class="form-control" max="{{ simulation.estimated_retirement_age|add:'-1' }}" min="{{ simulation.current_age }}" step="1" id="estimated_lumpsum_income_ages" name="estimated_lumpsum_income_ages" value="{{ age }}" required>
+                                        <label for="estimated_lumpsum_income_ages">Age</label>
+                                    </div>
+                                </div>
+                                <div id="estimated_lumpsum_income_agesHelp" class="form-text"><small>What age will you recieve this lump sum income?</small></div>
+                            </div>
+                            <hr class="hr-small">
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-primary bt-sm" hx-get="{% url 'create-lumpsum-income' %}" hx-target="#lumpsumincome-div" hx-vals="js:{max_age: document.getElementById('estimated_retirement_age').value, min_age: document.getElementById('current_age').value}" hx-swap="beforeend"><i class="bi bi-plus-circle-fill"></i> Add Lump Sum</button>
+                        <p class="form-text"><small><i>*One entry per year before retirement age</i></small></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-success" data-bs-dismiss="modal" hx-post="{% url 'runsimulation' simulation.id %}" hx-target="#runsimulation-div" hx-swap="innerHTML" {% if user.is_authenticated %} {% else %} disabled {% endif %}>Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- EXPENSES MODAL -->
+    <div class="modal fade modal-xl" id="expenses-Modal" tabindex="-1" aria-labelledby="expenses-Modal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header modal-header-expenses">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel"><i class="bi bi-receipt"></i> Expenses</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body modal-body-expenses">
+                    <!-- EXPENSES FIELDS -->
+                     <div class="rounded modal-subheader-expenses mb-3">
+                        <h5 class="p-3">Fixed Costs</h5>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-lg-6">
+                            <h5 class="fw-bold">Fixed Costs <i class="bi bi-question-circle-fill text-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="TBD Tooltip"></i></h5>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="current_yearly_fixed_costs" name="current_yearly_fixed_costs" min="1" max="100000000" value="{{ simulation.current_yearly_fixed_costs }}" required>
+                                    <label for="current_yearly_fixed_costs">Current Yearly Fixed Costs</label>
+                                </div>
+                            </div>
+                            <div id="current_yearly_fixed_costsHelp" class="form-text mb-3"><small>What is your current yearly fixed costs expense amount?</small></div>
+                        </div>
+                        <div class="col-lg-6">
+                            <h5 class="fw-bold">Inflation <i class="bi bi-question-circle-fill text-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="TBD Tooltip"></i></h5>
+                            <div class="input-group">
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="estimated_fixed_costs_inflation" name="estimated_fixed_costs_inflation" min="0" max="99.9" value="{{ simulation.estimated_fixed_costs_inflation }}" step=".1" required>
+                                    <label for="estimated_fixed_costs_inflation">Estimated Yearly Fixed Costs Inflation</label>
+                                </div>
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <div id="estimated_fixed_costs_inflationHelp" class="form-text mb-3"><small>On average, how much do you anticipate your fixed costs to increase each year?</small></div>
+                        </div>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <h5 class="fw-bold">Adjustment</h5>
+                            <div id="fixedcost-adjustments-div">
+                                {% if simulation.estimated_fixed_cost_adjustments %}
+                                {% for name, age, amount in fixed_cost_adjustments %}
+                                <div id="fixedcost-adjustment" class="row justify-content-start">
+                                    <div class="col-lg-1 align-self-center">
+                                        <button type="button" class="btn btn-sm btn-danger mb-1" hx-delete hx-target="#fixedcost-adjustment" hx-swap="delete"><i class="bi bi-x-circle-fill"></i></button>
+                                    </div>
+                                    <div class="col-lg-3">
+                                        <h6 class="fw-bold">Name</h6>
+                                        <div class="form-floating mb-1">
+                                            <input type="text" class="form-control" id="fixed_cost_adjustment_names" name="fixed_cost_adjustment_names" value="{{ name }}" required>
+                                            <label for="fixed_cost_adjustment_names">Name</label>
+                                            <div id="fixed_cost_adjustment_namesHelp" class="form-text"><small>Provide a name for this adjustment.</small></i></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <h6 class="fw-bold">Amount</h6>
+                                        <div class="input-group">
+                                            <div class="form-floating">
+                                                <input type="number" class="form-control" id="estimated_fixed_cost_adjustments" name="estimated_fixed_cost_adjustments" min="-99.9" max="99.9" step="0.1" value="{{ amount }}" required>
+                                                <label for="estimated_fixed_cost_adjustments">Amount</label>
+                                            </div>
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                        <div id="estimated_fixed_cost_adjustmentsHelp" class="form-text mb-1"><small>How much will your fixed costs increase on top of inflation?</small></i></div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <h6 class="fw-bold">Age</h6>
+                                        <div class="input-group">
+                                            <div class="form-floating">
+                                                <input type="number" class="form-control" max="{{ simulation.estimated_retirement_age|add:'-1' }}" min="{{ simulation.current_age|add:'1' }}" step="1" id="estimated_fixed_cost_adjustment_ages" name="estimated_fixed_cost_adjustment_ages" value="{{ age }}" required>
+                                                <label for="estimated_fixed_cost_adjustments">Age</label>
+                                            </div>
+                                        </div>
+                                        <div id="estimated_fixed_cost_adjustment_agesHelp" class="form-text"><small>What age will this adjustment occur?</small></div>
+                                    </div>
+                                    <hr class="hr-small">
+                                </div>
+                                {% endfor %}
+                                {% endif %}
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-primary bt-sm" hx-get="{% url 'create-fixedcost-adjustment' %}" hx-target="#fixedcost-adjustments-div" hx-vals="js:{max_age: document.getElementById('estimated_retirement_age').value, min_age: document.getElementById('current_age').value}" hx-swap="beforeend"><i class="bi bi-plus-circle-fill"></i> Add Adjustment</button>
+                                <p class="form-text"><small><i>*One entry per year before retirement age</i></small></p>
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="hr-small">
+                    <!-- EXPENSES FIELDS -->
+                     <div class="rounded modal-subheader-expenses mb-3">
+                        <h5 class="p-3">Variable Costs</h5>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-lg-6">
+                            <h5 class="fw-bold">Variable Costs <i class="bi bi-question-circle-fill text-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="TBD Tooltip"></i></h5>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="current_yearly_variable_costs" name="current_yearly_variable_costs" min="1" max="100000000" value="{{ simulation.current_yearly_variable_costs }}" required>
+                                    <label for="current_yearly_variable_costs">Current Yearly Variable Costs</label>
+                                </div>
+                            </div>
+                            <div id="current_yearly_variable_costsHelp" class="form-text mb-3"><small>What is your current yearly variable costs expense amount?</small></div>
+                        </div>
+                        <div class="col-lg-6">
+                            <h5 class="fw-bold">Inflation <i class="bi bi-question-circle-fill text-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="TBD Tooltip"></i></h5>
+                            <div class="input-group">
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="estimated_variable_costs_inflation" name="estimated_variable_costs_inflation" min="0" max="99.9" value="{{ simulation.estimated_variable_costs_inflation }}" step=".1" value="{{ age }}" required>
+                                    <label for="estimated_variable_costs_inflation">Estimated Yearly Variable Costs Inflation</label>
+                                </div>
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <div id="estimated_variable_costs_inflationHelp" class="form-text mb-3"><small>On average, how much do you anticipate your variable costs to increase each year?</small></div>
+                        </div>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <h5 class="fw-bold">Adjustment</h5>
+                            <div id="variablecost-adjustments-div">
+                                {% if simulation.estimated_variable_cost_adjustments %}
+                                {% for name, age, amount in variable_cost_adjustments %}
+                                <div id="variablecost-adjustment" class="row justify-content-start">
+                                    <div class="col-lg-1 align-self-center">
+                                        <button type="button" class="btn btn-sm btn-danger mb-1" hx-delete hx-target="#variablecost-adjustment" hx-swap="delete"><i class="bi bi-x-circle-fill"></i></button>
+                                    </div>
+                                    <div class="col-lg-3">
+                                        <h6 class="fw-bold">Name</h6>
+                                        <div class="form-floating mb-1">
+                                            <input type="text" class="form-control" id="variable_cost_adjustment_names" name="variable_cost_adjustment_names" value="{{ name }}" required>
+                                            <label for="variable_cost_adjustment_names">Name</label>
+                                            <div id="variable_cost_adjustment_namesHelp" class="form-text"><small>Provide a name for this adjustment.</small></i></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <h6 class="fw-bold">Amount</h6>
+                                        <div class="input-group">
+                                            <div class="form-floating">
+                                                <input type="number" class="form-control" id="estimated_variable_cost_adjustments" name="estimated_variable_cost_adjustments" min="-99.9" max="99.9" step="0.1" value="{{ amount }}" required>
+                                                <label for="estimated_variable_cost_adjustments">Amount</label>
+                                            </div>
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                        <div id="estimated_variable_cost_adjustmentsHelp" class="form-text mb-1"><small>How much will your variable costs increase on top of inflation?</small></i></div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <h6 class="fw-bold">Age</h6>
+                                        <div class="input-group">
+                                            <div class="form-floating">
+                                                <input type="number" class="form-control" max="{{ simulation.estimated_retirement_age|add:'-1' }}" min="{{ simulation.current_age|add:'1' }}" step="1" id="estimated_variable_cost_adjustment_ages" name="estimated_variable_cost_adjustment_ages" value="{{ age }}" required>
+                                                <label for="estimated_variable_cost_adjustment_ages">Age</label>
+                                            </div>
+                                        </div>
+                                        <div id="estimated_variable_cost_adjustment_agesHelp" class="form-text"><small>What age will this adjustment occur?</small></div>
+                                    </div>
+                                    <hr class="hr-small">
+                                </div>
+                                {% endfor %}
+                                {% endif %}
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-primary bt-sm" hx-get="{% url 'create-variablecost-adjustment' %}" hx-target="#variablecost-adjustments-div" hx-vals="js:{max_age: document.getElementById('estimated_retirement_age').value, min_age: document.getElementById('current_age').value}" hx-swap="beforeend"><i class="bi bi-plus-circle-fill"></i> Add Adjustment</button>
+                                <p class="form-text"><small><i>*One entry per year before retirement age</i></small></p>
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="hr-small">
+                    <!-- EXPENSES FIELDS -->
+                    <div class="rounded modal-subheader-expenses mb-3">
+                        <h5 class="p-3">Health Insurance</h5>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-lg-6">
+                            <h5 class="fw-bold">Health Insurance</h5>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="current_yearly_health_insurance_cost" name="current_yearly_health_insurance_cost" min="0" max="100000000" value="{{ simulation.current_yearly_health_insurance_cost }}" required>
+                                    <label for="current_yearly_health_insurance_cost">Current Yearly Health Insurance Cost</label>
+                                </div>
+                            </div>
+                            <div id="current_yearly_health_insurance_costHelp" class="form-text mb-3"><small>What is your current yearly health insurance cost?</small></div>
+                        </div>
+                        <div class="col-lg-6">
+                            <h5 class="fw-bold">Inflation</h5>
+                            <div class="input-group">
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="estimated_health_insurance_inflation" name="estimated_health_insurance_inflation" min="0" max="99.9" value="{{ simulation.estimated_health_insurance_inflation }}" step=".1" required>
+                                    <label for="estimated_health_insurance_inflation">Estimated Yearly Heath Insurance Inflation</label>
+                                </div>
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <div id="estimated_health_insurance_inflationHelp" class="form-text mb-3"><small>On average, how much do you anticipate your health insurance cost to increase each year?</small></div>
+                        </div>
+                    </div>
+                    <hr class="hr-small">
+                    <!-- EXPENSES FIELDS -->
+                    <div class="rounded modal-subheader-expenses mb-3">
+                        <h5 class="p-3">Taxes</h5>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-lg-6">
+                            <h5 class="fw-bold">Taxes</h5>
+                            <div class="input-group">
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="estimated_tax_rate" name="estimated_tax_rate" min="0" max="99.9" value="{{ simulation.estimated_tax_rate }}" step=".1" required>
+                                    <label for="estimated_tax_rate">Estimated Current Tax Rate</label>
+                                </div>
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <div id="estimated_tax_rateHelp" class="form-text mb-3"><small>What is your current estimated tax rate?</small></div>
+                        </div>
+                        <div class="col-lg-6">
+                            <h5 class="fw-bold">Future Taxes</h5>
+                            <div class="input-group">
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="estimated_tax_rate_step" name="estimated_tax_rate_step" min="0" max="99.9" value="{{ simulation.estimated_tax_rate_step }}" step=".1" required>
+                                    <label for="estimated_tax_rate_step">Estimated Tax Rate Yearly Increase</label>
+                                </div>
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <div id="estimated_tax_rate_stepHelp" class="form-text mb-3"><small>On average, how much do you anticipate your tax rate to increase each year?</small></div>
+                        </div>
+                    </div>
+                    <hr class="hr-small">
+                    <!-- EXPENSES FIELDS -->
+                    <div class="rounded modal-subheader-expenses mb-3">
+                        <h5 class="p-3">Lump Sum Expenses</h5>
+                    </div>
+                    <div id="lumpsumexpense-div">
+                        {% if simulation.estimated_lumpsum_expense_amounts %}
+                        {% for name, age, amount in lump_sum_expenses %}
+                        <div id="lumpsumexpense-entry" class="row justify-content-start">
+                            <div class="col-lg-1 align-self-center">
+                                <button type="button" class="btn btn-sm btn-danger mb-1" hx-delete hx-target="#lumpsumexpense-entry" hx-swap="delete"><i class="bi bi-x-circle-fill"></i></button>
+                            </div>
+                            <div class="col-lg-3">
+                                <h6 class="fw-bold">Name</h6>
+                                <div class="form-floating mb-1">
+                                    <input type="text" class="form-control" id="lumpsum_expense_names" name="lumpsum_expense_names" value="{{ name }}" required>
+                                    <label for="lumpsum_expense_names">Name</label>
+                                    <div id="lumpsum_expense_namesHelp" class="form-text"><small>Provide a name for this expense.</small></i></div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <h6 class="fw-bold">Amount</h6>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <div class="form-floating">
+                                        <input type="number" class="form-control" id="estimated_lumpsum_expense_amounts" name="estimated_lumpsum_expense_amounts" min="0" max="10000000" value="{{ amount }}" required>
+                                        <label for="estimated_lumpsum_expense_amounts">Amount</label>
+                                    </div>
+                                </div>
+                                <div id="estimated_lumpsum_expense_amountsHelp" class="form-text mb-1"><small>How much will this lump sum expense be?</small></i></div>
+                            </div>
+                            <div class="col-lg-4">
+                                <h6 class="fw-bold">Age</h6>
+                                <div class="input-group">
+                                    <div class="form-floating">
+                                        <input type="number" class="form-control" max="{{ simulation.estimated_retirement_age|add:'-1' }}" min="{{ simulation.current_age }}" step="1" id="estimated_lumpsum_expense_ages" name="estimated_lumpsum_expense_ages" value="{{ age }}" required>
+                                        <label for="estimated_lumpsum_expense_ages">Age</label>
+                                    </div>
+                                </div>
+                                <div id="estimated_lumpsum_expense_agesHelp" class="form-text"><small>What age will you recieve this lump sum income?</small></div>
+                            </div>
+                            <hr class="hr-small">
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-primary bt-sm" hx-get="{% url 'create-lumpsum-expense' %}" hx-target="#lumpsumexpense-div" hx-vals="js:{max_age: document.getElementById('estimated_retirement_age').value, min_age: document.getElementById('current_age').value}" hx-swap="beforeend"><i class="bi bi-plus-circle-fill"></i> Add Lump Sum</button>
+                        <p class="form-text"><small><i>*One entry per year before retirement age</i></small></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-danger" data-bs-dismiss="modal" hx-post="{% url 'runsimulation' simulation.id %}" hx-target="#runsimulation-div" hx-swap="innerHTML" {% if user.is_authenticated %} {% else %} disabled {% endif %}>Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- SAVINGS MODAL -->
+    <div class="modal fade modal-xl" id="savings-Modal" tabindex="-1" aria-labelledby="savings-Modal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header modal-header-savings">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel"><i class="bi bi-piggy-bank"></i> Savings</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body modal-body-savings">
+                    <!-- SAVINGS FIELDS -->
+                     <div class="rounded modal-subheader-savings mb-3">
+                        <h5 class="p-3">Health Savings Account (HSA)</h5>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-lg-4">
+                            <h5 class="fw-bold">HSA Opt-In <i class="bi bi-question-circle-fill text-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="TBD Tooltip" data-bs-custom-class="custom-tooltip"></i></h5>
+                            <div class="form-floating mb-3">
+                                {% if simulation.hsa_enrollment_opt_out %}
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="hsa_enrollment_opt_out" id="hsa_enrollment_opt_out" value="False" hx-get="{% url 'hsa-opt-in' %}" hx-target="#hsa-fields" hx-swap="innerHTML" hx-vals="js:{current_hsa_balance: 0, esitmated_hsa_yearly_return: 5.0, current_hsa_yearly_contribution_limit: 4300, estimated_hsa_yearly_contribution_limit_step: 150}">
+                                    <label class="form-check-label" for="hsa_enrollment_opt_out">Yes</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="hsa_enrollment_opt_out" id="hsa_enrollment_opt_in" value="True" checked hx-delete hx-target="#hsa-inputs" hx-swap="delete">
+                                    <label class="form-check-label" for="hsa_enrollment_opt_in">No</label>
+                                </div>
+                                {% else %}
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="hsa_enrollment_opt_out" id="hsa_enrollment_opt_out" value="False" checked hx-get="{% url 'hsa-opt-in' %}" hx-target="#hsa-fields" hx-swap="innerHTML" hx-vals="js:{current_hsa_balance: {{ simulation.current_hsa_balance }}, esitmated_hsa_yearly_return: {{ simulation.esitmated_hsa_yearly_return }}, current_hsa_yearly_contribution_limit: {{ simulation.current_hsa_yearly_contribution_limit }}, estimated_hsa_yearly_contribution_limit_step: {{ simulation.estimated_hsa_yearly_contribution_limit_step }}}">
+                                    <label class="form-check-label" for="hsa_enrollment_opt_out">Yes</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="hsa_enrollment_opt_out" id="hsa_enrollment_opt_in" value="True" hx-delete hx-target="#hsa-inputs" hx-swap="delete">
+                                    <label class="form-check-label" for="hsa_enrollment_opt_in">No</label>
+                                </div>
+                                {% endif %}
+                                <div id="hsa_enrollment_opt_outHelp" class="form-text">
+                                    <small>Do you plan to contribute to an HSA?</small>
+                                </div>  
+                            </div>
+                        </div>
+                    </div>
+                    <div id="hsa-fields">
+                        {% if simulation.hsa_enrollment_opt_out %}
+                        {% else %}
+                        {% include 'FIRE/partials/opt_in_hsa.html' with current_hsa_balance=simulation.current_hsa_balance esitmated_hsa_yearly_return=simulation.esitmated_hsa_yearly_return current_hsa_yearly_contribution_limit=simulation.current_hsa_yearly_contribution_limit estimated_hsa_yearly_contribution_limit_step=simulation.estimated_hsa_yearly_contribution_limit_step %}
+                        {% endif %}
+                    </div>
+                    <hr class="hr-small">
+                    <!-- SAVINGS FIELDS -->
+                     <div class="rounded modal-subheader-savings mb-3">
+                        <h5 class="p-3">Employer Sponsored Retirement Accounts (401k/403b/TSP)</h5>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-lg-4">
+                            <h5 class="fw-bold">Current Balance</h5>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="current_401k_balance" name="current_401k_balance" min="0" max="100000000" value="{{ simulation.current_401k_balance }}" required>
+                                    <label for="current_401k_balance">Current Retirement Plan Balance</label>
+                                </div>
+                            </div>
+                            <div id="current_401k_balanceHelp" class="form-text mb-3">How much money is currently in your employer sponsored retirement plan(s)?</div>
+                        </div>
+                        <div class="col-lg-4">
+                            <h5 class="fw-bold">Estimated Yearly Return</h5>
+                            <div class="input-group">
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="esitmated_401k_yearly_return" name="esitmated_401k_yearly_return" min="0" max="99.9" value="{{ simulation.esitmated_401k_yearly_return }}" step=".1" required>
+                                    <label for="esitmated_401k_yearly_return">Estimated Retirement Plan Yearly Return</label>
+                                </div>
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <div id="esitmated_401k_yearly_returnHelp" class="form-text mb-3">On average, how much do you expect your retirement plan investments to grow annually?</div>
+                        </div>
+                        <div class="col-lg-4">
+                            <h5 class="fw-bold">Employer Contribution</h5>
+                            <div class="input-group">
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="current_401k_employer_contribution" name="current_401k_employer_contribution" min="0" max="99.9" value="{{ simulation.current_401k_employer_contribution }}" step=".1" required>
+                                    <label for="current_401k_employer_contribution">Current Retirement Plan Employer Contribution</label>
+                                </div>
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <div id="current_401k_employer_contributionHelp" class="form-text mb-3">On average, what percentage of your yearly salary do you anticipate your employer to contribute to your retirement plan each year?</div>
+                        </div>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-lg-6">
+                            <h5 class="fw-bold">Contribution Limit</h5>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="current_401k_yearly_contribution_limit" name="current_401k_yearly_contribution_limit" min="1" max="100000000" value="{{ simulation.current_401k_yearly_contribution_limit }}" required>
+                                    <label for="current_401k_yearly_contribution_limit">Current Retirement Plan Yearly Contribution Limit</label>
+                                </div>
+                            </div>
+                            <div id="current_401k_yearly_contribution_limitHelp" class="form-text mb-3">The current contribution limit for a 401k/403b is $23,500.</div>
+                        </div>
+                        <div class="col-lg-6">
+                            <h5 class="fw-bold">Future Contribution Limit</h5>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="401k_yearly_contribution_limit_step" name="estimated_401k_yearly_contribution_limit_step" min="0" max="10000" value="{{ simulation.estimated_401k_yearly_contribution_limit_step }}" step="1" required>
+                                    <label for="401k_yearly_contribution_limit_step">Estimated Retirement Plan Yearly Contribution Limit Increase</label>
+                                </div>
+                            </div>
+                            <div id="401k_yearly_contribution_limit_stepHelp" class="form-text mb-3">On average, how much do you expect the 401k/403b contribution limit to increase each year?</div>
+                        </div>
+                    </div>
+                    <hr class="hr-small">
+                    <!-- SAVINGS FIELDS -->
+                     <div class="rounded modal-subheader-savings mb-3">
+                        <h5 class="p-3">Individual Retirement Accounts (IRA)</h5>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-lg-6">
+                            <h5 class="fw-bold">Current Balance</h5>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="current_ira_balance" name="current_ira_balance" min="0" max="100000000" value="{{ simulation.current_ira_balance }}" required>
+                                    <label for="current_ira_balance">Current IRA Balance</label>
+                                </div>
+                            </div>
+                            <div id="current_ira_balanceHelp" class="form-text mb-3">How much money is currently in your IRA(s)?</div>
+                        </div>
+                        <div class="col-lg-6">
+                            <h5 class="fw-bold">Estimated Yearly Return</h5>
+                            <div class="input-group">
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="esitmated_ira_yearly_return" name="esitmated_ira_yearly_return" min="0" max="99.9" value="{{ simulation.esitmated_ira_yearly_return }}" step=".1" required>
+                                    <label for="esitmated_ira_yearly_return">Estimated IRA Yearly Return</label>
+                                </div>
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <div id="esitmated_ira_yearly_returnHelp" class="form-text mb-3">On average, how much do you expect your IRA investments to grow annually?</div>
+                        </div>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-lg-6">
+                            <h5 class="fw-bold">Contribution Limit</h5>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="current_ira_yearly_contribution_limit" name="current_ira_yearly_contribution_limit" min="1" max="100000000" value="{{ simulation.current_ira_yearly_contribution_limit }}" required>
+                                    <label for="current_ira_yearly_contribution_limit">Current IRA Yearly Contribution Limit</label>
+                                </div>
+                            </div>
+                            <div id="current_ira_yearly_contribution_limitHelp" class="form-text mb-3">The current contribution limit for an IRA is $7,000.</div>
+                        </div>
+                        <div class="col-lg-6">
+                            <h5 class="fw-bold">Future Contribution Limit</h5>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="ira_yearly_contribution_limit_step" name="estimated_ira_yearly_contribution_limit_step" min="0" max="10000" value="{{ simulation.estimated_ira_yearly_contribution_limit_step }}" step="1" required>
+                                    <label for="ira_yearly_contribution_limit_step">Estimated IRA Yearly Contribution Limit Increase</label>
+                                </div>
+                            </div>
+                            <div id="ira_yearly_contribution_limit_stepHelp" class="form-text mb-3">On average, how much do you expect the IRA contribution limit to increase each year?</div>
+                        </div>
+                    </div>
+                    <hr class="hr-small">
+                    <!-- SAVINGS FIELDS -->
+                     <div class="rounded modal-subheader-savings mb-3">
+                        <h5 class="p-3">Taxable Brokerage Accounts (TBA)</h5>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-lg-6">
+                            <h5 class="fw-bold">Current Balance</h5>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="current_iba_balance" name="current_iba_balance" min="0" max="100000000" value="{{ simulation.current_iba_balance }}" required>
+                                    <label for="current_iba_balance">Current TBA Balance</label>
+                                </div>
+                            </div>
+                            <div id="current_iba_balanceHelp" class="form-text mb-3">How much money is currently in your TBA(s)?</div>
+                        </div>
+                        <div class="col-lg-6">
+                            <h5 class="fw-bold">Estimated Yearly Return</h5>
+                            <div class="input-group">
+                                <div class="form-floating">
+                                    <input type="number" class="form-control" id="esitmated_iba_yearly_return" name="esitmated_iba_yearly_return" min="0" max="99.9" value="{{ simulation.esitmated_iba_yearly_return }}" step=".1" required>
+                                    <label for="esitmated_iba_yearly_return">Estimated IRA Yearly Return</label>
+                                </div>
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <div id="esitmated_iba_yearly_returnHelp" class="form-text mb-3">On average, how much do you expect your TBA investments to grow annually?</div>
+                        </div>
+                    </div>
+                    <hr class="hr-small">
+                    <!-- SAVINGS FIELDS -->
+                     <div class="rounded modal-subheader-savings mb-3">
+                        <h5 class="p-3">Appreciating Assets</h5>
+                    </div>
+                    <div id="assets-div">
+                        {% if simulation.current_asset_values %}
+                        {% for name, value, growth in assets %}
+                        <div id="asset-entry" class="row justify-content-start">
+                            <div class="col-lg-1 align-self-center">
+                                <button type="button" class="btn btn-sm btn-danger mb-1" hx-delete hx-target="#asset-entry" hx-swap="delete"><i class="bi bi-x-circle-fill"></i></button>
+                            </div>
+                            <div class="col-lg-3">
+                                <h6 class="fw-bold">Name</h6>
+                                <div class="form-floating mb-1">
+                                    <input type="text" class="form-control" id="asset_names" name="asset_names" value="{{ name }}" required>
+                                    <label for="asset_names">Name</label>
+                                    <div id="asset_namesHelp" class="form-text"><small>Provide a name for this asset.</small></i></div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <h6 class="fw-bold">Value</h6>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <div class="form-floating">
+                                        <input type="number" class="form-control" id="current_asset_values" name="current_asset_values" min="0" max="10000000" value="{{ value }}" required>
+                                        <label for="current_asset_values">Value</label>
+                                    </div>
+                                </div>
+                                <div id="current_asset_valuesHelp" class="form-text mb-1"><small>What is the current value of this asset?</small></i></div>
+                            </div>
+                            <div class="col-lg-4">
+                                <h6 class="fw-bold">Growth</h6>
+                                <div class="input-group">
+                                    <div class="form-floating">
+                                        <input type="number" class="form-control" id="estimated_asset_value_growths" name="estimated_asset_value_growths" min="0" max="99.9" value="{{ growth }}" step=".1" required>
+                                        <label for="estimated_asset_value_growths">Estimated Growth (%)</label>
+                                    </div>
+                                    <span class="input-group-text">%</span>
+                                </div>
+                                <div id="estimated_asset_value_growthsHelp" class="form-text mb-1"><small>On average, how much do you anticipate this asset's value to grow each year?</small></div>
+                            </div>
+                            <hr class="hr-small">
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-primary bt-sm" hx-get="{% url 'create-asset' %}" hx-target="#assets-div" hx-swap="beforeend"><i class="bi bi-plus-circle-fill"></i> Add Asset</button>
+                    </div>
+                </div>
+                <div class="modal-footer modal-footer-savings">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-secondary" data-bs-dismiss="modal" hx-post="{% url 'runsimulation' simulation.id %}" hx-target="#runsimulation-div" hx-swap="innerHTML" {% if user.is_authenticated %} {% else %} disabled {% endif %}>Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- CALLOUT CARDS -->
+     <div class="row mb-3">
+        {% with data|last as last_year %}
+        <div class="col-lg-3">
+            <div class="card">
+                <div class="card-header text-center dashboard-card-header pb-0">
+                    <h5>Final Net Worth</h5>
+                </div>
+                {% if last_year.drawdown|slice:":-1" > '4.01' %}
+                <div class="card-body text-center dashboard-card-body-bad">
+                {% else %}
+                <div class="card-header text-center dashboard-card-body-good">
+                {% endif %}
+                    <h3>{{ simulation.final_net_worth }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="card">
+                <div class="card-header text-center dashboard-card-header pb-0">
+                    <h5>Magic Number</h5>
+                </div>
+                {% if last_year.drawdown|slice:":-1" > '4' %}
+                <div class="card-body text-center dashboard-card-body-bad">
+                {% else %}
+                <div class="card-header text-center dashboard-card-body-good">
+                {% endif %}
+                    <h3>{{ last_year.magic_number }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="card">
+                <div class="card-header text-center dashboard-card-header pb-0">
+                    <h5>Withdraw Rate</h5>
+                </div>
+                {% if last_year.drawdown|slice:":-1" > '4' %}
+                <div class="card-body text-center dashboard-card-body-bad">
+                {% else %}
+                <div class="card-header text-center dashboard-card-body-good">
+                {% endif %}
+                    <h3>{{ last_year.drawdown }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="card">
+                <div class="card-header text-center dashboard-card-header pb-0">
+                    <h5>FI Age</h5>
+                </div>
+                {% if last_year.drawdown|slice:":-1" > '4' %}
+                <div class="card-body text-center dashboard-card-body-bad">
+                {% else %}
+                <div class="card-header text-center dashboard-card-body-good">
+                {% endif %}
+                    <h3>{{ financial_independence_age }}</h3>
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+     </div>
+    <!-- CHARTS -->
+    <canvas id="NetWorthChart" data-ages='{{ ages|safe }}' data-networths='{{ net_worths|safe }}' data-magicnumbers='{{ magic_numbers|safe }}' height="110"></canvas>
+    <div class="row mb-3">
         <div class="col-lg-6">
             <canvas id="YearlyBreakdownChart" data-ages='{{ ages|safe }}' data-income='{{ total_income|safe }}' data-expenses='{{ total_expenses|safe }}' data-savings='{{ savings|safe }}'></canvas>
         </div>
-    </div>
-    {% if user.is_authenticated %}
-        <div class="mb-3 text-center">
-            <button type="submit" class="btn btn-primary" hx-post="{% url 'runsimulation' simulation.id %}" hx-target="#runsimulation-div" hx-swap="innerHTML">Update!</button>
+        <div class="col-lg-6">
+            <canvas id="YearlyInvestmentsChart" data-ages='{{ ages|safe }}' data-hsa='{{ hsa_end|safe }}' data-retirement='{{ retirement_end|safe }}' data-ira='{{ ira_end|safe }}' data-iba='{{ iba_end|safe }}'></canvas>
         </div>
-    {% endif %}
-    <button type="submit" class="btn btn-sm" hx-post="{% url 'runsimulation' simulation.id %}" hx-target="#runsimulation-div" hx-swap="innerHTML">
-    {% if toggle %}
-    <div class="form-check form-switch">
-        <input class="form-check-input" type="checkbox" role="switch" id="tableDetailedViewSwitch" name="tableDetailedViewSwitch" checked>
-        <label class="form-check-label" for="tableDetailedViewSwitch">Table Detailed View</label>
     </div>
+    <!-- TABLE VIEW TOGGLE -->
+    <div>
+    {% if user.is_authenticated %}
+        {% if toggle %}
+        <div class="form-check form-switch">
+            <button type="submit" class="btn btn-sm" hx-post="{% url 'runsimulation' simulation.id %}" hx-target="#runsimulation-div" hx-swap="innerHTML">
+                <input class="form-check-input" type="checkbox" role="switch" id="tableDetailedViewSwitch" name="tableDetailedViewSwitch" checked>
+            </button>
+            <label class="form-check-label" for="tableDetailedViewSwitch">Table Detailed View</label>
+        </div>
+        {% else %}
+        <div class="form-check form-switch">
+            <button type="submit" class="btn btn-sm" hx-post="{% url 'runsimulation' simulation.id %}" hx-target="#runsimulation-div" hx-swap="innerHTML">
+                <input class="form-check-input" type="checkbox" role="switch" name="tableDetailedViewSwitch" id="tableDetailedViewSwitch">
+            </button>
+            <label class="form-check-label" for="tableDetailedViewSwitch">Table Detailed View</label>
+        </div>
+        {% endif %}
     {% else %}
-    <div class="form-check form-switch">
-        <input class="form-check-input" type="checkbox" role="switch" name="tableDetailedViewSwitch" id="tableDetailedViewSwitch">
-        <label class="form-check-label" for="tableDetailedViewSwitch">Table Detailed View</label>
-    </div>
+        <div class="form-check form-switch">
+            <button type="submit" class="btn btn-sm" hx-post="{% url 'runsimulation' simulation.id %}" hx-target="#runsimulation-div" hx-swap="innerHTML">
+                <input class="form-check-input" type="checkbox" role="switch" id="tableDetailedViewSwitch" name="tableDetailedViewSwitch" checked disabled>
+            </button>
+            <label class="form-check-label" for="tableDetailedViewSwitch">Table Detailed View</label>
+        </div>     
     {% endif %}
-    </button>
+    </div>
+    <!-- TABLE -->
     <div class="container tbl-container">
         <div class="row tbl-fixed">
             <table class="table table-striped table-hover table-condensed">
                 <thead>
-                    {% if toggle %}
-                    <tr class="fourth">
-                        <th class="th-sections-personal" colspan="1">PERSONAL</th>
-                        <th class="th-sections-personal" colspan="1">INFO</th>
-                        <th class="th-sections-income" colspan="4">INCOMES</th>
-                        <th class="th-sections-expenses" colspan="5">EXPENSES</th>
-                        <th class="th-sections-special" colspan="1">SAVINGS</th>
-                        <th class="th-sections-savings" colspan="4">HEALTH SAVINGS ACCOUNT (HSA)</th>
-                        <th class="th-sections-savings" colspan="5">EMPLOYER SPONSORED RETIREMENT PLAN</th>
-                        <th class="th-sections-savings" colspan="4">INDIVIDUAL RETIREMENT ACCOUNT (IRA)</th>
-                        <th class="th-sections-savings" colspan="3">TAXABLE BROKERAGE ACCOUNT (TBA)</th>
-                        <th class="th-sections-savings" colspan="1">ASSETS</th>
-                        <th class="th-sections-special" colspan="3">FIRE INDICATORS</th>
-                    </tr>
-
-                    <tr class="third">
-                        <th class="th-input-headers-personal" colspan="1">RETIREMENT AGE</th>
-                        <th class="th-input-headers-personal" colspan="1">COAST FIRE AGE</th>
-                        <th class="th-input-headers-income" colspan="1">SALARY GROWTH</th>
-                        <th class="th-input-headers-income" colspan="1">BONUS PERCENTAGE</th>
-                        <th class="th-input-headers-income" colspan="1">OTHER INCOME</th>
-                        <th class="th-input-headers-income" colspan="1">OTHER INCOME GROWTH</th>
-                        <th class="th-input-headers-expenses" colspan="1">FIXED COSTS INFLATION</th>
-                        <th class="th-input-headers-expenses" colspan="1">VARIABLE COSTS INFLATION</th>
-                        <th class="th-input-headers-expenses" colspan="1">HEALTH INSURANCE INFLATION</th>
-                        <th class="th-input-headers-expenses" colspan="1">TAX RATE</th>
-                        <th class="th-input-headers-expenses" colspan="1">TAX RATE INCREASE</th>
-                        <th class="th-input-headers-special" colspan="1">LOGIC</th>
-                        <th class="th-input-headers-savings" colspan="1">CURRENT BALANCE</th>
-                        <th class="th-input-headers-savings" colspan="1">CONTRIBUTION LIMIT</th>
-                        <th class="th-input-headers-savings" colspan="1">YEARLY LIMIT INCREASE</th>
-                        <th class="th-input-headers-savings" colspan="1">GROWTH RATE</th>
-                        <th class="th-input-headers-savings" colspan="1">CURRENT BALANCE</th>
-                        <th class="th-input-headers-savings" colspan="1">CONTRIBUTION LIMIT</th>
-                        <th class="th-input-headers-savings" colspan="1">YEARLY LIMIT INCREASE</th>
-                        <th class="th-input-headers-savings" colspan="1">EMPLOYER MATCH</th>
-                        <th class="th-input-headers-savings" colspan="1">GROWTH RATE</th>
-                        <th class="th-input-headers-savings" colspan="1">CURRENT BALANCE</th>
-                        <th class="th-input-headers-savings" colspan="1">CONTRIBUTION LIMIT</th>
-                        <th class="th-input-headers-savings" colspan="1">YEARLY LIMIT INCREASE</th>
-                        <th class="th-input-headers-savings" colspan="1">GROWTH RATE</th>
-                        <th class="th-input-headers-savings" colspan="1">CURRENT BALANCE</th>
-                        <th class="th-input-headers-savings" colspan="1">GROWTH RATE</th>
-                        <th class="th-input-headers-savings" colspan="1">-</th>
-                        <th class="th-input-headers-savings" colspan="1">-</th>
-                        <th class="th-input-headers-special" colspan="3">LOGIC</th>
-                    </tr>
-
-                    <tr class="second">
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <input type="number" class="form-control" id="estimated_retirement_age" name="estimated_retirement_age" min="{{ simulation.current_age }}" max="101" value="{{ simulation.estimated_retirement_age }}" required>
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <input type="number" class="form-control" id="estimated_coastfire_age" name="estimated_coastfire_age" min="{{ simulation.current_age }}" max="{{ simulation.estimated_retirement_age }}" value="{{ simulation.estimated_coastfire_age }}">
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <input type="number" class="form-control" id="estimated_salary_raise" name="estimated_salary_raise" min="0" max="99.9" value="{{ simulation.estimated_salary_raise }}" step=".1" required>
-                                <span class="input-group-text">%</span>
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <input type="number" class="form-control" id="estimated_bonus" name="estimated_bonus" min="0" max="99.9" value="{{ simulation.estimated_bonus }}" step=".1" required>
-                                <span class="input-group-text">%</span>
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="current_yearly_other_income" name="current_yearly_other_income" min="0" max="10000000" value="{{ simulation.current_yearly_other_income }}" step="1" required>
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <input type="number" class="form-control" id="estimated_other_income_increase" name="estimated_other_income_increase" min="0" max="99.9" value="{{ simulation.estimated_other_income_increase }}" step=".1" required>
-                                <span class="input-group-text">%</span>
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <input type="number" class="form-control" id="estimated_fixed_costs_inflation" name="estimated_fixed_costs_inflation" min="0" max="99.9" value="{{ simulation.estimated_fixed_costs_inflation }}" step=".1" required>
-                                <span class="input-group-text">%</span>
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <input type="number" class="form-control" id="estimated_variable_costs_inflation" name="estimated_variable_costs_inflation" min="0" max="99.9" value="{{ simulation.estimated_variable_costs_inflation }}" step=".1" required>
-                                <span class="input-group-text">%</span>
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <input type="number" class="form-control" id="estimated_health_insurance_inflation" name="estimated_health_insurance_inflation" min="0" max="99.9" value="{{ simulation.estimated_health_insurance_inflation }}" step=".1" required>
-                                <span class="input-group-text">%</span>
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <input type="number" class="form-control" id="estimated_tax_rate" name="estimated_tax_rate" min="0" max="99.9" value="{{ simulation.estimated_tax_rate }}" step=".1" required>
-                                <span class="input-group-text">%</span>
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <input type="number" class="form-control" id="estimated_tax_rate_step" name="estimated_tax_rate_step" min="0" max="99.9" value="{{ simulation.estimated_tax_rate_step }}" step=".1" required>
-                                <span class="input-group-text">%</span>
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <i class="bi bi-info-circle-fill" data-bs-toggle="tooltip" data-bs-placement="top" title="Savings here refers to the amount of money left over after income minus expenses and taxes. This money is then allocated to your various savings accounts based on your contribution settings in the simulation setup."></i>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="current_hsa_balance" name="current_hsa_balance" min="0" max="10000000" value="{{ simulation.current_hsa_balance }}" step="1" required>
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="current_hsa_yearly_contribution_limit" name="current_hsa_yearly_contribution_limit" min="0" max="100000" value="{{ simulation.current_hsa_yearly_contribution_limit }}" step="1" required>
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="estimated_hsa_yearly_contribution_limit_step" name="estimated_hsa_yearly_contribution_limit_step" min="0" max="10000" value="{{ simulation.estimated_hsa_yearly_contribution_limit_step }}" step="1" required>
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <input type="number" class="form-control" id="esitmated_hsa_yearly_return" name="esitmated_hsa_yearly_return" min="0" max="99.9" value="{{ simulation.esitmated_hsa_yearly_return }}" step=".1" required>
-                                <span class="input-group-text">%</span>
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="current_401k_balance" name="current_401k_balance" min="0" max="10000000" value="{{ simulation.current_401k_balance }}" step="1" required>
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="current_401k_yearly_contribution_limit" name="current_401k_yearly_contribution_limit" min="0" max="100000" value="{{ simulation.current_401k_yearly_contribution_limit }}" step="1" required>
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="estimated_401k_yearly_contribution_limit_step" name="estimated_401k_yearly_contribution_limit_step" min="0" max="10000" value="{{ simulation.estimated_401k_yearly_contribution_limit_step }}" step="1" required>
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <input type="number" class="form-control" id="current_401k_employer_contribution" name="current_401k_employer_contribution" min="0" max="99.9" value="{{ simulation.current_401k_employer_contribution }}" step=".1" required>
-                                <span class="input-group-text">%</span>
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <input type="number" class="form-control" id="esitmated_401k_yearly_return" name="esitmated_401k_yearly_return" min="0" max="99.9" value="{{ simulation.esitmated_401k_yearly_return }}" step=".1" required>
-                                <span class="input-group-text">%</span>
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="current_ira_balance" name="current_ira_balance" min="0" max="10000000" value="{{ simulation.current_ira_balance }}" step="1" required>
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="current_ira_yearly_contribution_limit" name="current_ira_yearly_contribution_limit" min="0" max="100000" value="{{ simulation.current_ira_yearly_contribution_limit }}" step="1" required>
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="estimated_ira_yearly_contribution_limit_step" name="estimated_ira_yearly_contribution_limit_step" min="0" max="10000" value="{{ simulation.estimated_ira_yearly_contribution_limit_step }}" step="1" required>
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <input type="number" class="form-control" id="esitmated_ira_yearly_return" name="esitmated_ira_yearly_return" min="0" max="99.9" value="{{ simulation.esitmated_ira_yearly_return }}" step=".1" required>
-                                <span class="input-group-text">%</span>
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="current_iba_balance" name="current_iba_balance" min="0" max="10000000" value="{{ simulation.current_iba_balance }}" step="1" required>
-                            </div>
-                        </th>
-                        <th class="th-input-values" colspan="1">
-                            <div class="input-group mb-1">
-                                <input type="number" class="form-control" id="esitmated_iba_yearly_return" name="esitmated_iba_yearly_return" min="0" max="99.9" value="{{ simulation.esitmated_iba_yearly_return }}" step=".1" required>
-                                <span class="input-group-text">%</span>
-                            </div>
-                        <th class="th-input-values" colspan="1">-</th>
-                        <th class="th-input-values" colspan="1">-</th>
-                        <th class="th-input-values" colspan="3">
-                            <i class="bi bi-info-circle-fill" data-bs-toggle="tooltip" data-bs-placement="top" title="FIRE INDICATORS TOOLTIP"></i>
-                        </th>
-                    </tr>
                     <tr class="first">
-                    {% else %}
-                    <tr>
-                    {% endif %}
+                        {% if toggle %}
                         <th class="th-headers th-personal">AGE</th>
                         <th class="th-headers th-personal">YEAR</th>
                         <th class="th-headers th-income">SALARY</th>
                         <th class="th-headers th-income">BONUS</th>
                         <th class="th-headers th-income">OTHER INCOME</th>
-                        <th class="th-headers th-income">LUMP SUM INCOME <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#lumpsumincome-Modal"><i class="bi bi-plus-circle-fill"></i></button></th>
-                        <th class="th-headers th-expenses">FIXED COSTS <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal"><i class="bi bi-plus-circle-fill"></i></button></th>
-                        <th class="th-headers th-expenses">VARIABLE COSTS <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal"><i class="bi bi-plus-circle-fill"></i></button></th>
+                        <th class="th-headers th-income">LUMP SUM INCOME</th>
+                        <th class="th-headers th-expenses">FIXED COSTS</th>
+                        <th class="th-headers th-expenses">VARIABLE COSTS</th>
                         <th class="th-headers th-expenses">HEALTH INSURANCE</th>
-                        <th class="th-headers th-expenses">LUMP SUM EXPENSE <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal"><i class="bi bi-plus-circle-fill"></i></button></th>
+                        <th class="th-headers th-expenses">LUMP SUM EXPENSE</th>
                         <th class="th-headers th-expenses">TAXES</th>
                         <th class="th-headers th-special">SAVINGS</th>
                         <th class="th-headers th-savings-light">HSA START</th>
@@ -330,15 +877,29 @@
                         <th class="th-headers th-savings-light">TBA START</th>
                         <th class="th-headers th-savings-light">TBA CONTRIBUTION</th>
                         <th class="th-headers th-savings">TBA END</th>
-                        <th class="th-headers th-savings">TOTAL ASSETS VALUE <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#assets-Modal"><i class="bi bi-plus-circle-fill"></i></button></th>
+                        <th class="th-headers th-savings">TOTAL ASSETS VALUE</th>
                         <th class="th-headers th-special">NET WORTH</th>
                         <th class="th-headers th-special">MAGIC NUMBER</th>
                         <th class="th-headers th-special">DRAWDOWN %</th>
+                        {% else %}
+                        <th class="th-headers th-personal">AGE</th>
+                        <th class="th-headers th-personal">YEAR</th>
+                        <th class="th-headers th-special">SAVINGS</th>
+                        <th class="th-headers th-savings">HSA END</th>
+                        <th class="th-headers th-savings">RETIREMENT PLAN END</th>
+                        <th class="th-headers th-savings">IRA END</th>
+                        <th class="th-headers th-savings">TBA END</th>
+                        <th class="th-headers th-savings">TOTAL ASSETS VALUE</th>
+                        <th class="th-headers th-special">NET WORTH</th>
+                        <th class="th-headers th-special">MAGIC NUMBER</th>
+                        <th class="th-headers th-special">DRAWDOWN %</th>
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for d in data %}
                     <tr>
+                        {% if toggle %}
                         <td class="sticky-col sticky-col-1">{{ d.age }}</td>
                         <td class="sticky-col sticky-col-2">{{ d.year }}</td>
                         <td >{{ d.salary }}</td>
@@ -371,142 +932,37 @@
                         <td >{{ d.net_worth }}</td>
                         <td >{{ d.magic_number }}</td>
                         <td >{{ d.drawdown }}</td>
+                        {% else %}
+                        <td class="sticky-col sticky-col-1">{{ d.age }}</td>
+                        <td class="sticky-col sticky-col-2">{{ d.year }}</td>
+                        <td >{{ d.saving }}</td>
+                        <td >{{ d.hsa_end }}</td>
+                        <td >{{ d.retirement_end }}</td>
+                        <td >{{ d.ira_end }}</td>
+                        <td >{{ d.iba_end }}</td>
+                        <td >{{ d.asset_value }}</td>
+                        <td >{{ d.net_worth }}</td>
+                        <td >{{ d.magic_number }}</td>
+                        <td >{{ d.drawdown }}</td>
+                        {% endif %}
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
-    <div class="modal modal-lg" id="lumpsumincome-Modal" tabindex="-1" aria-labelledby="lumpsumincome-ModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="exampleModalLabel">Lump Sum Payments</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="lumpsumincome-div">
-                        {% if simulation.estimated_lumpsum_income_amounts %}
-                        {% for name, age, amount in lump_sum_incomes %}
-                        <div id="lumpsumincome-entry" class="row justify-content-start">
-                            <div class="col-lg-1 align-self-center">
-                                <button type="button" class="btn btn-sm btn-danger mb-1" hx-delete hx-target="#lumpsumincome-entry" hx-swap="delete"><i class="bi bi-x-circle-fill"></i></button>
-                            </div>
-                            <div class="col-lg-3">
-                                <h6 class="fw-bold">Name</h6>
-                                <div class="form-floating mb-1">
-                                    <input type="text" class="form-control" id="lumpsum_income_names" name="lumpsum_income_names" value="{{ name }}" required>
-                                    <label for="lumpsum_income_names">Name</label>
-                                    <div id="lumpsum_income_namesHelp" class="form-text"><small>Provide a name for this income.</small></i></div>
-                                </div>
-                            </div>
-                            <div class="col-lg-4">
-                                <h6 class="fw-bold">Amount</h6>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <div class="form-floating">
-                                        <input type="number" class="form-control" id="estimated_lumpsum_income_amounts" name="estimated_lumpsum_income_amounts" min="0" max="10000000" value="{{ amount }}" required>
-                                        <label for="estimated_lumpsum_income_amounts">Amount</label>
-                                    </div>
-                                </div>
-                                <div id="estimated_lumpsum_income_amountsHelp" class="form-text mb-1"><small>How much will this lump sum income be?</small></i></div>
-                            </div>
-                            <div class="col-lg-4">
-                                <h6 class="fw-bold">Age</h6>
-                                <div class="">
-                                    <input type="range" class="form-range slider" max="{{ max_age }}" min="{{ min_age }}" step="1" id="estimated_lumpsum_income_ages" name="estimated_lumpsum_income_ages" value="{{ age }}">
-                                    <output for="rangeValue" id="rangeValue" aria-hidden="true"></output>
-                                </div>
-                                <div id="estimated_lumpsum_income_agesHelp" class="form-text"><small>What age will you recieve this lump sum income?</small></div>
-                            </div>
-                            <hr class="hr-small">
-                        </div>
-                        {% endfor %}
-                        {% endif %}
-                    </div>
-                    <div>
-                        <button type="button" class="btn btn-primary bt-sm" hx-get="{% url 'create-lumpsum-income' %}" hx-target="#lumpsumincome-div" hx-vals="js:{max_age: document.getElementById('estimated_retirement_age').value, min_age: {{ simulation.current_age }}}" hx-swap="beforeend"><i class="bi bi-plus-circle-fill"></i> Add Lump Sum</button>
-                        <p class="form-text"><small><i>*One entry per year before retirement age</i></small></p>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-success" data-bs-dismiss="modal" hx-post="{% url 'runsimulation' simulation.id %}" hx-target="#runsimulation-div" hx-swap="innerHTML">Save changes</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal modal-lg" id="assets-Modal" tabindex="-1" aria-labelledby="assets-ModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="exampleModalLabel">Lump Sum Payments</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="assets-div">
-                        {% if simulation.current_asset_values %}
-                        {% for name, value, growth in assets %}
-                        <div id="asset-entry" class="row justify-content-start">
-                            <div class="col-lg-1 align-self-center">
-                                <button type="button" class="btn btn-sm btn-danger mb-1" hx-delete hx-target="#asset-entry" hx-swap="delete"><i class="bi bi-x-circle-fill"></i></button>
-                            </div>
-                            <div class="col-lg-3">
-                                <h6 class="fw-bold">Name</h6>
-                                <div class="form-floating mb-1">
-                                    <input type="text" class="form-control" id="asset_names" name="asset_names" value="{{ name }}" required>
-                                    <label for="asset_names">Name</label>
-                                    <div id="asset_namesHelp" class="form-text"><small>Provide a name for this asset.</small></i></div>
-                                </div>
-                            </div>
-                            <div class="col-lg-4">
-                                <h6 class="fw-bold">Value</h6>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <div class="form-floating">
-                                        <input type="number" class="form-control" id="current_asset_values" name="current_asset_values" min="0" max="10000000" value="{{ value }}" required>
-                                        <label for="current_asset_values">Value</label>
-                                    </div>
-                                </div>
-                                <div id="estimated_lumpsum_income_amountsHelp" class="form-text mb-1"><small>How much will this lump sum income be?</small></i></div>
-                            </div>
-                            <div class="col-lg-4">
-                                <h6 class="fw-bold">Growth</h6>
-                                <div class="input-group">
-                                    <div class="form-floating">
-                                        <input type="number" class="form-control" id="estimated_asset_value_growths" name="estimated_asset_value_growths" min="0" max="99.9" value="{{ growth }}" step=".1" required>
-                                        <label for="estimated_asset_value_growths">Estimated Growth (%)</label>
-                                    </div>
-                                    <span class="input-group-text">%</span>
-                                </div>
-                                <div id="estimated_asset_value_growthsHelp" class="form-text mb-1"><small>On average, how much do you anticipate this asset's value to grow each year?</small></div>
-                            </div>
-                            <hr class="hr-small">
-                        </div>
-                        {% endfor %}
-                        {% endif %}
-                    </div>
-                    <div>
-                        <button type="button" class="btn btn-primary bt-sm" hx-get="{% url 'create-asset' %}" hx-target="#assets-div" hx-swap="beforeend"><i class="bi bi-plus-circle-fill"></i> Add Asset</button>
-                        <p class="form-text"><small><i>*One entry per year before retirement age</i></small></p>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-success" data-bs-dismiss="modal" hx-post="{% url 'runsimulation' simulation.id %}" hx-target="#runsimulation-div" hx-swap="innerHTML">Save changes</button>
-                </div>
-            </div>
-        </div>
+    <div class="row mt-3 mb-3">
+        {{ sankey|safe }}
     </div>
     <script>
         (function() {
-            const ctx = document.getElementById('YearlyBreakdownChart').getContext('2d');
+            const ctx = document.getElementById('YearlyBreakdownChart');
             const ages = JSON.parse(document.getElementById('YearlyBreakdownChart').dataset.ages);
             const income = JSON.parse(document.getElementById('YearlyBreakdownChart').dataset.income);
             const expenses = JSON.parse(document.getElementById('YearlyBreakdownChart').dataset.expenses);
             const savings = JSON.parse(document.getElementById('YearlyBreakdownChart').dataset.savings);
 
-            new Chart(ctx, {
+            new Chart(ctx.getContext('2d'), {
                 type: 'bar',
                 data: {
                     labels: ages,
@@ -533,6 +989,7 @@
                 },
                 options: {
                     responsive: true,
+                    animation: false,
                     plugins: {
                         legend: { position: 'top' },
                         title: { display: true, text: 'Income, Expenses, and Savings Breakdown by Year' },
@@ -565,6 +1022,175 @@
                         }
                     }
                 }
+            });
+        })();
+    </script>
+    <script>
+        (function() {
+            const chartEl = document.getElementById('YearlyInvestmentsChart');
+            const ages = JSON.parse(chartEl.dataset.ages);
+            const hsa = JSON.parse(chartEl.dataset.hsa);
+            const retirement = JSON.parse(chartEl.dataset.retirement);
+            const ira = JSON.parse(chartEl.dataset.ira);
+            const iba = JSON.parse(chartEl.dataset.iba);
+
+            new Chart(chartEl.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ages,
+                datasets: [
+                {
+                    label: 'HSA',
+                    data: hsa,
+                    borderColor: 'rgb(80, 167, 114)',
+                    backgroundColor: 'rgba(80, 167, 114, 0.2)',
+                    fill: false,
+                    tension: 0.2
+                },
+                {
+                    label: 'Retirement',
+                    data: retirement,
+                    borderColor: 'rgb(60, 67, 121)',
+                    backgroundColor: 'rgba(60, 67, 121, 0.2)',
+                    fill: false,
+                    tension: 0.2
+                },
+                {
+                    label: 'IRA',
+                    data: ira,
+                    borderColor: 'rgb(175, 61, 35)',
+                    backgroundColor: 'rgba(175, 61, 35, 0.2)',
+                    fill: false,
+                    tension: 0.2
+                },
+                {
+                    label: 'TBA',
+                    data: iba,
+                    borderColor: 'rgb(255, 193, 7)',
+                    backgroundColor: 'rgba(255, 193, 7, 0.2)',
+                    fill: false,
+                    tension: 0.2
+                }
+                ]
+            },
+            options: {
+                responsive: true,
+                animation: false,
+                plugins: {
+                legend: { position: 'top' },
+                title: { display: true, text: 'Yearly Investment Account Balances' },
+                tooltip: {
+                    callbacks: {
+                    label: function(context) {
+                        let label = context.dataset.label || '';
+                        if (label) label += ': ';
+                        if (context.parsed.y !== null) {
+                        label += '$' + context.parsed.y.toLocaleString();
+                        }
+                        return label;
+                    }
+                    }
+                }
+                },
+                scales: {
+                x: { title: { display: true, text: 'Age' } },
+                y: { 
+                    title: { display: true, text: ' End Balance ($)' },
+                    ticks: {
+                    callback: function(value) {
+                        return '$' + value.toLocaleString();
+                    }
+                    }
+                }
+                }
+            }
+            });
+        })();
+    </script>
+    <script>
+        (function() {
+            const chartE2 = document.getElementById('NetWorthChart');
+            const ages = JSON.parse(chartE2.dataset.ages);
+            const net_worths = JSON.parse(chartE2.dataset.networths);
+            const magic_numbers = JSON.parse(chartE2.dataset.magicnumbers);
+            // const ages = JSON.parse(chartE2.getAttribute('data-ages') || '[]');
+            // const net_worths = JSON.parse(chartE2.getAttribute('data-net-worths') || '[]');
+            // const magic_numbers = JSON.parse(chartE2.getAttribute('data-magic-numbers') || '[]');
+
+            new Chart(chartE2.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ages,
+                datasets: [
+                {
+                    // label: 'Net Worth',
+                    // data: net_worths,
+                    // borderColor: 'rgb(80, 167, 114)',
+                    // backgroundColor: 'rgba(80, 167, 114, 0.2)',
+                    // fill: false,
+                    // tension: 0.2
+                    label: 'Net Worth',
+                    data: net_worths,
+                    borderColor: '#50a772',
+                    backgroundColor: 'rgb(148, 201, 169, 0.1)',
+                    borderWidth: 3,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#50a772',
+                    tension: 0.3,
+                    fill: true,
+                },
+                {
+                    // label: 'Magic Number',
+                    // data: magic_numbers,
+                    // borderColor: 'rgb(0, 0, 0)',
+                    // backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                    // fill: false,
+                    // tension: 0.2
+                    label: 'Magic Number',
+                    data: magic_numbers,
+                    borderColor: '#1d1919',
+                    backgroundColor: 'rgba(0, 0, 0, 0.08)',
+                    borderDash: [8, 4],
+                    borderWidth: 2,
+                    pointRadius: 2,
+                    pointBackgroundColor: '#1d1919',
+                    tension: 0.2,
+                    fill: false,
+                }
+                ]
+            },
+            options: {
+                responsive: true,
+                // maintainAspectRatio: false,
+                animation: false,
+                plugins: {
+                legend: { position: 'top' },
+                title: { display: true, text: 'Net Worth vs. Magic Number' },
+                tooltip: {
+                    callbacks: {
+                    label: function(context) {
+                        let label = context.dataset.label || '';
+                        if (label) label += ': ';
+                        if (context.parsed.y !== null) {
+                        label += '$' + context.parsed.y.toLocaleString();
+                        }
+                        return label;
+                    }
+                    }
+                }
+                },
+                scales: {
+                x: { title: { display: true, text: 'Age' } },
+                y: { 
+                    title: { display: true, text: ' Amount ($)' },
+                    ticks: {
+                    callback: function(value) {
+                        return '$' + value.toLocaleString();
+                    }
+                    }
+                }
+                }
+            }
             });
         })();
     </script>

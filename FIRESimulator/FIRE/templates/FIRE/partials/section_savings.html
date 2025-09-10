@@ -1,25 +1,19 @@
-<style>
-    .custom-tooltip {
-  --bs-tooltip-bg: var(--bd-violet-bg);
-  --bs-tooltip-color: var(--bs-white);
-}
-</style>
-
 <!-- SAVINGS -->
 <section id="savings" class="mb-5">
+    <!-- TITLE -->
     <h3 class="section-title-savings"><i class="bi bi-piggy-bank"></i> Savings</h3>
     <div class="tip-card-savings shadow-sm rounded mb-3">
-        <!-- SAVINGS INSTRUCTIONS -->
+        <!-- QUESTION -->
         <div class="row g-4 mb-1">
             <h5>How much money have you saved?</h5>
-            <!-- <p><i>The next step to determining your budget is to understand where your money is being spent...</i></p> -->
         </div>
+        <!-- SAVINGS INSTRUCTIONS -->
         <div class="row g-4 mb-3">
             <div class="accordion" id="savings-accordion">
                 <div class="accordion-item border-0">
                     <h2 class="accordion-header" id="savings-headingOne">
                         <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #384394;" type="button" data-bs-toggle="collapse" data-bs-target="#savings-collapseOne" aria-expanded="false" aria-controls="savings-collapseOne">
-                        Health Savings Accounts (HSA)
+                        <i class="bi bi-three-dots-vertical"></i> Health Savings Accounts (HSA)
                         </button>
                     </h2>
                     <div id="savings-collapseOne" class="accordion-collapse collapse" aria-labelledby="savings-headingOne">
@@ -33,13 +27,13 @@
                 </div>
             </div>
         </div>
+        <!-- SAVINGS FIELDS -->
         <div class="row g-4">
-            <!-- SAVINGS FIELDS -->
             <div class="col-lg-4">
                 <h5 class="fw-bold">HSA Opt-In <i class="bi bi-question-circle-fill text-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="TBD Tooltip" data-bs-custom-class="custom-tooltip"></i></h5>
                 <div class="form-floating mb-3">  
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="hsa_enrollment_opt_out" id="hsa_enrollment_opt_out" value="False" checked hx-get="{% url 'hsa-opt-in' %}" hx-target="#hsa-fields" hx-swap="innerHTML">
+                        <input class="form-check-input" type="radio" name="hsa_enrollment_opt_out" id="hsa_enrollment_opt_out" value="False" checked hx-get="{% url 'hsa-opt-in' %}" hx-target="#hsa-fields" hx-swap="innerHTML" hx-vals="js:{current_hsa_balance: 0, esitmated_hsa_yearly_return: 5.0, current_hsa_yearly_contribution_limit: 4300, estimated_hsa_yearly_contribution_limit_step: 150}">
                         <label class="form-check-label" for="hsa_enrollment_opt_out">Yes</label>
                     </div>
                     <div class="form-check form-check-inline">
@@ -53,15 +47,15 @@
             </div>
         </div>
         <div id="hsa-fields">
-            {% include 'FIRE/partials/opt_in_hsa.html' %}
+            {% include 'FIRE/partials/opt_in_hsa.html' with current_hsa_balance=0 esitmated_hsa_yearly_return=5.0 current_hsa_yearly_contribution_limit=4300 estimated_hsa_yearly_contribution_limit_step=150 %}
         </div>
-        <div class="row g-4 mb-3">
         <!-- SAVINGS INSTRUCTIONS -->
+        <div class="row g-4 mb-3">
             <div class="accordion" id="savings-accordion">
                 <div class="accordion-item border-0">
                     <h2 class="accordion-header" id="savings-headingTwo">
                         <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #384394;" type="button" data-bs-toggle="collapse" data-bs-target="#savings-collapseTwo" aria-expanded="false" aria-controls="savings-collapseTwo">
-                        Employer Sponsored Retirement Accounts (401k/403b/TSP)
+                        <i class="bi bi-three-dots-vertical"></i> Employer Sponsored Retirement Accounts (401k/403b/TSP)
                         </button>
                     </h2>
                     <div id="savings-collapseTwo" class="accordion-collapse collapse" aria-labelledby="savings-headingTwo">
@@ -75,6 +69,7 @@
                 </div>
             </div>
         </div>
+        <!-- SAVINGS FIELDS -->
         <div class="row g-4">
             <div class="col-lg-4">
                 <h5 class="fw-bold">Current Balance</h5>
@@ -134,13 +129,13 @@
                 <div id="401k_yearly_contribution_limit_stepHelp" class="form-text mb-3">On average, how much do you expect the 401k/403b contribution limit to increase each year?</div>
             </div>
         </div>
+        <!-- SAVINGS INSTRUCTIONS -->
         <div class="row g-4 mb-3">
-            <!-- SAVINGS INSTRUCTIONS -->
             <div class="accordion" id="savings-accordion">
                 <div class="accordion-item border-0">
                     <h2 class="accordion-header" id="savings-headingThree">
                         <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #384394;" type="button" data-bs-toggle="collapse" data-bs-target="#savings-collapseThree" aria-expanded="false" aria-controls="savings-collapseThree">
-                        Individual Retirement Accounts (IRA)
+                        <i class="bi bi-three-dots-vertical"></i> Individual Retirement Accounts (IRA)
                         </button>
                     </h2>
                     <div id="savings-collapseThree" class="accordion-collapse collapse" aria-labelledby="savings-headingThree">
@@ -203,13 +198,13 @@
                 <div id="ira_yearly_contribution_limit_stepHelp" class="form-text mb-3">On average, how much do you expect the IRA contribution limit to increase each year?</div>
             </div>
         </div>
+        <!-- SAVINGS INSTRUCTIONS -->
         <div class="row g-4 mb-3">
-            <!-- SAVINGS INSTRUCTIONS -->
             <div class="accordion" id="savings-accordion">
                 <div class="accordion-item border-0">
                     <h2 class="accordion-header" id="savings-headingFour">
                         <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #384394;" type="button" data-bs-toggle="collapse" data-bs-target="#savings-collapseFour" aria-expanded="false" aria-controls="savings-collapseFour">
-                        Taxable Brokerage Accounts (TBA)
+                        <i class="bi bi-three-dots-vertical"></i> Taxable Brokerage Accounts (TBA)
                         </button>
                     </h2>
                     <div id="savings-collapseFour" class="accordion-collapse collapse" aria-labelledby="savings-headingFour">
@@ -223,6 +218,7 @@
                 </div>
             </div>
         </div>
+        <!-- SAVINGS FIELDS -->
         <div class="row g-4">
             <div class="col-lg-6">
                 <h5 class="fw-bold">Current Balance</h5>
@@ -247,13 +243,13 @@
                 <div id="esitmated_iba_yearly_returnHelp" class="form-text mb-3">On average, how much do you expect your TBA investments to grow annually?</div>
             </div>
         </div>
+        <!-- SAVINGS INSTRUCTIONS -->
         <div class="row g-4 mb-3">
-            <!-- SAVINGS INSTRUCTIONS -->
             <div class="accordion" id="savings-accordion">
                 <div class="accordion-item border-0">
                     <h2 class="accordion-header" id="savings-headingFive">
                         <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #384394;" type="button" data-bs-toggle="collapse" data-bs-target="#savings-collapseFive" aria-expanded="false" aria-controls="savings-collapseFive">
-                        Appreciating Assets
+                        <i class="bi bi-three-dots-vertical"></i> Appreciating Assets
                         </button>
                     </h2>
                     <div id="savings-collapseFive" class="accordion-collapse collapse rounded-bottom" aria-labelledby="savings-headingFive">
@@ -267,8 +263,8 @@
                 </div>
             </div>
         </div>
+        <!-- SAVINGS FIELDS -->
         <div class="row g-4">
-            <!-- SAVINGS FIELDS -->
             <div class="col-12">
                 <h5 class="fw-bold">Appreicating Assets</h5>
                 <div id="assets-div">
@@ -288,20 +284,6 @@
 
 <script>
     FIREscrollspy.refresh()
-    // Initialize Bootstrap tooltips
-    document.addEventListener('DOMContentLoaded', function () {
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
-            new bootstrap.Tooltip(tooltipTriggerEl)
-        })
-    });
-</script>
-
-<script>
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl)
-})
 </script>
 
 <script>

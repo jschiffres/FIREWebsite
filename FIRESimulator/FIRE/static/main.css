@@ -43,8 +43,8 @@ body {
     --black-mute: #0b0a0a1b;
     --background: #F7F4EF;
   }
-  #questionnaire-navbar { background-color: var(--background); border-bottom: 2px solid black; }
-  .newclass { color: var(--expenses-light)}
+  #questionnaire-navbar { background-color: var(--black); border-bottom: 2px solid black; }
+  .appname { color: orange}
   .nav-link {color: black;}
   .nav-link.hover {color: var(--black-dark) !important;}
   .nav-header{color: var(--personal)}
@@ -87,6 +87,23 @@ body {
     .accordion-button::after {
       filter: brightness(0) invert(1);
     }
+  .modal-header-personal { background-color: var(--personal-dark); color: white;}
+  .modal-header-income { background-color: var(--income-dark); color: white;}
+  .modal-header-expenses { background-color: var(--expenses-dark); color: white;}
+  .modal-header-savings { background-color: var(--savings-dark); color: white;}
+  .modal-body-personal { background-color: var(--personal-mute); }
+  .modal-subheader-personal {background-color: var(--personal); color: white;}
+  .modal-body-income { background-color: var(--income-mute); }
+  .modal-subheader-income {background-color: var(--income); color: white;}
+  .modal-body-expenses { background-color: var(--expenses-mute); }
+  .modal-subheader-expenses {background-color: var(--expenses); color: white;}
+  .modal-body-savings { background-color: var(--savings-mute); }
+  .modal-subheader-savings {background-color: var(--savings); color: white;}
+  .modal-footer {background-color: var(--black-mute);}
+
+  .dashboard-card-header { background-color: var(--black); color: white}
+  .dashboard-card-body-good {background-color: var(--income-mute); color: var(--income-dark);}
+  .dashboard-card-body-bad {background-color: var(--expenses-mute); color: var(--expenses-dark)}
 
 footer {
     padding: 20px 0;
