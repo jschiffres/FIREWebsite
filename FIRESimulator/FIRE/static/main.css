@@ -1,67 +1,317 @@
-@import url('https://fonts.googleapis.com/css2?family=Finlandica:ital,wght@0,400..700;1,400..700&display=swap');
+/* FONT IMPORTS */
+/* @import url('https://fonts.googleapis.com/css2?family=Finlandica:ital,wght@0,400..700;1,400..700&display=swap'); */
 /* @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap'); */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+/* @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap'); */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
-
-/* body {
-    font-family: "Finlandica", sans-serif;
-    scroll-behavior: smooth;
-    background-color: #F7F4EF;
-} */
-
+/* BODY */
 body {
-    font-family: "Montserrat", sans-serif;
+    font-family: "Inter", sans-serif;
     scroll-behavior: smooth;
-    background-color: var(--background);
+    background-color: var(--Primary-Background);
+    height: 100vh;
 }
 
-/* body {
-    font-family: "Manrope", sans-serif;
-    scroll-behavior: smooth;
-    background-color: #ebeae7;
-    } */
+/* COLOR VARIABLES */
 :root {
-    --income: #94c9a9;
-    --income-dark: #50a772;
-    --income-light: #cbf1da;
-    --income-mute: #94c9a933;
-    --expenses: #D5573B;
-    --expenses-dark: #af3d23;
-    --expenses-light: #f59883;
-    --expenses-mute: #d5573b3a;
-    --savings: #777DA7;
-    --savings-dark: #3c4379;
-    --savings-light: #bbc1ed;
-    --savings-mute: #777da72d;
-    --personal: #dfac47;
-    --personal-dark: #e29909;
-    --personal-light: #f3c871;
-    --personal-mute: #dfac4729;
-    --black: #282222;
-    --black-dark: #000000;
-    --black-light: #4a4545;
-    --black-mute: #0b0a0a1b;
-    --background: #F7F4EF;
+  --Primary-Green: #285C53;
+  --Light-Green: #DFF5F1;
+  --Muted-Green: #D8DDD8;
+  --Primary-Orange: #EC652B;
+  --Light-Orange: #FFEDDD;
+  --Muted-Orange: #F5DFD2;
+  --Primary-Purple: #4F378A;
+  --Light-Purple: #EDE6F8;
+  --Muted-Purple: #DDD1E6;
+  --Primary-Berry: #B34E82;
+  --Light-Berry: #FFF3FF;
+  --Muted-Berry: #E8D9D9;
+  --Primary-Black: #0A0A0A;
+  --Light-Black: #282222;
+  --Muted-Black: #727A90;
+  --Primary-Background: #F3EEE8;
+  --Light-Background: #FCFBF9;
+
+  --income: #DFF5F1;
+  --income-dark: #285C53;
+  --income-light: #D8DDD8;
+  --income-mute: #B9FC7225;
+  --expenses: #FFEDDD;
+  --expenses-dark: #EC652B;
+  --expenses-light: #F5DFD2;
+  --expenses-mute: #F5BDFB25;
+  --savings: #EDE6F8;
+  --savings-dark: #4F378A;
+  --savings-light: #DDD1E6;
+  --savings-mute: #63D8EA25;
+  --personal: #FFF3FF;
+  --personal-dark: #B34E82;
+  --personal-light: #E8D9D9;
+  --personal-mute: #FAE44D25;
+  --black: #282222;
+  --black-dark: #0A0A0A;
+  --black-light: #4a4545;
+  --black-mute: #0b0a0a1b;
   }
-  #questionnaire-navbar { background-color: var(--black); border-bottom: 2px solid black; }
-  .appname { color: orange}
-  .nav-link {color: black;}
-  .nav-link.hover {color: var(--black-dark) !important;}
-  .nav-header{color: var(--personal)}
-  .nav-link-personal.active { background-color: var(--personal-dark) !important; color: #fff !important; }
-  .nav-link-income.active { background-color: var(--income-dark) !important; color: #fff !important; }
-  .nav-link-expenses.active { background-color: var(--expenses-dark) !important; color: #fff !important; }
-  .nav-link-savings.active { background-color: var(--savings-dark) !important; color: #fff !important; }
-  .section-title-personal { color: var(--personal-dark); font-weight: bold; display: flex; align-items: center; gap: .5rem; }
-  .section-title-income { color: var(--income-dark); font-weight: bold; display: flex; align-items: center; gap: .5rem; }
-  .section-title-expense { color: var(--expenses-dark); font-weight: bold; display: flex; align-items: center; gap: .5rem; }
-  .section-title-savings { color: var(--savings-dark); font-weight: bold; display: flex; align-items: center; gap: .5rem; }
-  .tip-card-personal { background-color: var(--personal-mute); border-left: 5px solid var(--personal); padding: 1rem; border-radius: .25rem; }
-  .tip-card-income { background-color: var(--income-mute); border-left: 5px solid var(--income); padding: 1rem; border-radius: .25rem; }
-  .tip-card-expense { background-color: var(--expenses-mute); border-left: 5px solid var(--expenses); padding: 1rem; border-radius: .25rem; }
-  .tip-card-savings { background-color: var(--savings-mute); border-left: 5px solid var(--savings); padding: 1rem; border-radius: .25rem; }
-  .btn-success { background-color: var(--income-dark); border: none; }
-  .btn-success:hover { background-color: var(--income); }
+
+  /* BASE */
+  .navbar-main-dropdown {
+    border-radius: 8px;
+    border: 1px solid #FFF;
+    color: #FFF;
+    font-family: Inter;
+    font-size: var(--Static-Label-Large-Size, 14px);
+    font-style: normal;
+    font-weight: 600;
+    line-height: var(--Static-Label-Large-Line-Height, 20px); /* 142.857% */
+    letter-spacing: var(--Static-Label-Large-Tracking, 0.1px);
+  }
+
+  /* REUSABLE ELEMENTS */
+  .btn-action-filled {
+    border-radius: 8px;
+    background: #4F378A;
+    color: #FFF;
+    font-family: Inter;
+    font-size: var(--Static-Label-Large-Size, 14px);
+    font-style: normal;
+    font-weight: 600;
+    line-height: var(--Static-Label-Large-Line-Height, 20px);
+    letter-spacing: var(--Static-Label-Large-Tracking, 0.1px);
+  }
+  .btn-action-filled:hover {
+    border-radius: 8px;
+    background: #230655;
+    color: #FFF;
+    font-family: Inter;
+    font-size: var(--Static-Label-Large-Size, 14px);
+    font-style: normal;
+    font-weight: 600;
+    line-height: var(--Static-Label-Large-Line-Height, 20px);
+    letter-spacing: var(--Static-Label-Large-Tracking, 0.1px);
+  }
+  .btn-action-empty {
+    border-radius: 8px;
+    border: 1px solid #49454F;
+    color: #49454F;
+    font-family: Inter;
+    font-size: var(--Static-Label-Large-Size, 14px);
+    font-style: normal;
+    font-weight: 600;
+    line-height: var(--Static-Label-Large-Line-Height, 20px);
+    letter-spacing: var(--Static-Label-Large-Tracking, 0.1px);
+  }
+  .btn-action-empty:hover {
+    border-radius: 8px; 
+    border: 1px solid #49454F; 
+    background: #F7F7F7; 
+    font-family: Inter; 
+    font-size: var(--Static-Label-Large-Size, 14px); 
+    font-style: normal; 
+    font-weight: 600; 
+    line-height: var(--Static-Label-Large-Line-Height, 20px); 
+    letter-spacing: var(--Static-Label-Large-Tracking, 0.1px);
+  }
+  .btn-action-empty:disabled {
+    border-radius: 8px; 
+    border: 1px solid #49454F; 
+    background: #f0cbcb; 
+    font-family: Inter; 
+    font-size: var(--Static-Label-Large-Size, 14px); 
+    font-style: normal; font-weight: 600; 
+    line-height: var(--Static-Label-Large-Line-Height, 20px); 
+    letter-spacing: var(--Static-Label-Large-Tracking, 0.1px);
+  }
+  #app-navbar { 
+    background-color: var(--Primary-Background); 
+    box-shadow: var(--sds-size-depth-0) var(--sds-size-depth-100) var(--sds-size-depth-100) var(--sds-size-depth-negative-025) var(--sds-color-black-200), var(--sds-size-depth-0) var(--sds-size-depth-100) var(--sds-size-depth-100) var(--sds-size-depth-negative-025) var(--sds-color-black-100); 
+    z-index:999
+  }
+  .icon-personal {
+    color: var(--Primary-Berry); 
+    background-color: var(--Muted-Berry); 
+    border-radius: 8.537px;
+  }
+  .icon-income {
+    color: var(--Primary-Green); 
+    background-color: var(--Muted-Green); 
+    border-radius: 8.537px;
+  }
+  .icon-expenses {
+    color: var(--Primary-Orange); 
+    background-color: var(--Muted-Orange); 
+    border-radius: 8.537px;
+  }
+  .icon-savings {
+    color: var(--Primary-Purple); 
+    background-color: var(--Muted-Purple); 
+    border-radius: 8.537px;
+  }
+
+  /* LANDING PAGE */
+  #landing-header {
+    color: var(--Black, #0A0A0A);
+    font-family: Inter;
+    font-size: 64px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 82px;
+  }
+  #landing-subtext {
+    color: var(--Black, #0A0A0A);
+    font-family: Inter;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 300;
+    line-height: normal;
+  }
+  #landing-card { 
+    background: var(--Muted-Green);
+    border: none;
+  }
+  #landing-card2 {
+    background: var(--Muted-Purple);
+    border: none;
+  }
+  #landing-card3 {
+    background: var(--Muted-Orange);
+    border: none;
+  }
+  .landing-card-header {
+    color: var(--Black, #0A0A0A);
+    text-align: center;
+    font-family: Inter;
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 32px;
+    letter-spacing: -0.24px;
+  }
+  .landing-card-text {
+    color: var(--Black, #0A0A0A);
+    text-align: center;
+    font-family: Inter;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+  }
+  .landing-card-icon {
+    text-align: center;
+    font-size: 76px;
+  }
+
+  /* NEW PLAN */
+  .nav-link-personal.active { 
+    background-color: var(--Muted-Berry) !important; 
+    color: black !important; 
+  }
+  .nav-link-income.active { 
+    background-color: var(--Muted-Green) !important; 
+    color: black !important; 
+  }
+  .nav-link-expenses.active { 
+    background-color: var(--Muted-Orange) !important; 
+    color: black !important; 
+  }
+  .nav-link-savings.active { 
+    background-color: var(--Muted-Purple) !important; 
+    color: black !important; 
+  }
+  .nav-link-tips {
+    color: var(--Primary-Purple); 
+    font-family: Inter; 
+    font-size: 14px; 
+    font-style: normal; 
+    font-weight: 600; 
+    line-height: 20px;
+  }
+  .questionnaire-nav-btn {
+    border-radius: 8px; 
+    border: 1px solid #49454F; 
+    color: #49454F; 
+    font-family: Inter; 
+    font-size: var(--Static-Label-Large-Size, 14px); 
+    font-style: normal; 
+    font-weight: 600; 
+    line-height: var(--Static-Label-Large-Line-Height, 20px); 
+    letter-spacing: var(--Static-Label-Large-Tracking, 0.1px);
+  }
+  .questionnaire-nav-btn:hover {
+    border-radius: 8px; 
+    border: 1px solid #49454F; 
+    background: #F7F7F7; 
+    font-family: Inter; 
+    font-size: var(--Static-Label-Large-Size, 14px); 
+    font-style: normal; 
+    font-weight: 600; 
+    line-height: var(--Static-Label-Large-Line-Height, 20px); 
+    letter-spacing: var(--Static-Label-Large-Tracking, 0.1px);
+  }
+  .questionnaire-nav-btn:disabled {
+    border-radius: 8px; 
+    border: 1px solid #49454F; 
+    background: #f0cbcb; 
+    font-family: Inter; 
+    font-size: var(--Static-Label-Large-Size, 14px); 
+    font-style: normal; font-weight: 600; 
+    line-height: var(--Static-Label-Large-Line-Height, 20px); 
+    letter-spacing: var(--Static-Label-Large-Tracking, 0.1px);
+  }
+  .appname {color: #FFF; font-family: Inter; font-size: 24px; font-style: normal; line-height: normal; text-decoration: none;}
+  .input-name {color: var(--Black-Black-500, #727A90); font-family: Inter; font-size: 14px; font-style: normal; font-weight: 500; line-height: 20px; /* 142.857% */ letter-spacing: 0.07px;}
+  .input-field {border-radius: 10px; border: 1px solid var(--Black-Black-200, #DCDEE3); background: var(--White, #FFF); color: var(--Black-Black-500, #727A90); font-family: Inter; font-size: 14px; font-style: normal; font-weight: 400; line-height: 20px; /* 142.857% */ letter-spacing: 0.07px;}
+  .dashboard-input-name {color: #6E6E6E; font-family: Inter; font-size: 16px; font-style: normal; font-weight: 500; line-height: 24px; /* 150% */ letter-spacing: 0.08px;}
+  .input-select {border: 1px solid var(--Black-Black-200, #DCDEE3); color: var(--Black-Black-500, #727A90); font-family: Inter; font-size: 14px; font-style: normal; font-weight: 400; line-height: 20px; /* 142.857% */ letter-spacing: 0.07px;}
+  .dashboard-input-field {color: var(--Black, #0A0A0A); font-family: Inter; font-size: 32px; font-style: normal; font-weight: 600; line-height: normal; letter-spacing: 0.32px;}
+  canvas {border-radius: 12px; background: var(--Light-Background);}
+  .dashboard-card {background:  var(--Light-Background); border: none;}
+
+  .form-control {height: 40px !important;}
+  .form-select {height: 40px !important;}
+  .action-icon {color: var(--Primary-Purple);}
+  .btn-add {border-radius: 8px; color: var(--Primary-Purple); font-family: Inter; font-size: 14px; font-style: normal; font-weight: 600; line-height: 20px; /* 142.857% */}
+  .btn-add:hover {border-radius: 8px; background: #F7F7F7; color: var(--Primary-Purple); font-family: Inter; font-size: 14px; font-style: normal; font-weight: 600; line-height: 20px; /* 142.857% */}
+  .btn-add.active {border-radius: 8px; color: var(--Primary-Purple); font-family: Inter; font-size: 14px; font-style: normal; font-weight: 600; line-height: 20px; /* 142.857% */}
+  .btn-remove {border-radius: 8px; color: red; font-family: Inter; font-size: 14px; font-style: normal; font-weight: 600; line-height: 20px; /* 142.857% */}
+  .btn-remove:hover {border-radius: 8px; background: #F7F7F7; color: red; font-family: Inter; font-size: 14px; font-style: normal; font-weight: 600; line-height: 20px; /* 142.857% */}
+  .btn-remove.active {border-radius: 8px; color: red; font-family: Inter; font-size: 14px; font-style: normal; font-weight: 600; line-height: 20px; /* 142.857% */}
+  .btn-add:disabled
+  .btn-new-plan {border-radius: 8px; background-color: var(--Primary-Purple) !important; color: #FFF; font-family: Inter; font-size: var(--Static-Label-Large-Size, 14px); font-style: normal; font-weight: 600; line-height: var(--Static-Label-Large-Line-Height, 20px); /* 142.857% */ letter-spacing: var(--Static-Label-Large-Tracking, 0.1px);}
+  .back-modal {background: var(--Light-Background);}
+  .dashboard-modal {background: var(--Light-Background);}
+  .dashboard-modal-footer {background: var(--Light-Background) !important;}
+  .btn-edit-income {background-color: var(--Muted-Green); color: var(--Primary-Black); text-align: center; font-family: Inter; font-size: var(--Static-Title-Small-Size, 14px); font-style: normal; font-weight: 500; line-height: var(--Static-Title-Small-Line-Height, 20px); /* 142.857% */ letter-spacing: var(--Static-Title-Small-Tracking, 0.1px);}
+  .btn-edit-expenses {background-color: var(--Muted-Orange); color: var(--Primary-Black); text-align: center; font-family: Inter; font-size: var(--Static-Title-Small-Size, 14px); font-style: normal; font-weight: 500; line-height: var(--Static-Title-Small-Line-Height, 20px); /* 142.857% */ letter-spacing: var(--Static-Title-Small-Tracking, 0.1px);}
+  .btn-edit-savings {background-color: var(--Muted-Purple); color: var(--Primary-Black); text-align: center; font-family: Inter; font-size: var(--Static-Title-Small-Size, 14px); font-style: normal; font-weight: 500; line-height: var(--Static-Title-Small-Line-Height, 20px); /* 142.857% */ letter-spacing: var(--Static-Title-Small-Tracking, 0.1px);}
+  .expense-entry-header {color: var(--Black-Black-500, #727A90); font-family: Inter; font-size: 18px; font-style: normal; font-weight: 600; letter-spacing: 0.07px;}
+  .expense-name {color: var(--Black-Black-500, #727A90); font-family: Inter; font-size: 18px; font-style: normal; font-weight: 600; letter-spacing: 0.07px;}
+  .nav-header{color: #000; font-family: Inter; font-size: 32px; font-style: normal; font-weight: 700; line-height: normal;}
+  .nav-link {color: var(--Primary-Black); text-align: center; font-family: Inter; font-size: var(--Static-Title-Small-Size, 14px); font-style: normal; font-weight: 500; line-height: var(--Static-Title-Small-Line-Height, 20px); /* 142.857% */ letter-spacing: var(--Static-Title-Small-Tracking, 0.1px);}
+  .nav-link:hover {color: var(--Light-Black)}
+  .nav-link:focus {color: var(--Light-Black)}
+  .section-title-personal { color: var(--Primary-Black); color: #0C0D0F; font-family: Inter; font-size: 20px; font-style: normal; font-weight: 600; line-height: 28px; /* 155.556% */}
+  .section-title-income { color: var(--Primary-Black); color: #0C0D0F; font-family: Inter; font-size: 20px; font-style: normal; font-weight: 600; line-height: 28px; /* 155.556% */}
+  .section-title-expenses { color: var(--Primary-Black); color: #0C0D0F; font-family: Inter; font-size: 20px; font-style: normal; font-weight: 600; line-height: 28px; /* 155.556% */}
+  .section-title-savings { color: var(--Primary-Black); color: #0C0D0F; font-family: Inter; font-size: 20px; font-style: normal; font-weight: 600; line-height: 28px; /* 155.556% */}
+  .tip-card-personal { background-color: var(--Light-Background); border-left: 5px solid var(--Primary-Berry); border-radius: .25rem;}
+  .tip-card-income { background-color: var(--Light-Background); border-left: 5px solid var(--Primary-Green); border-radius: .25rem;}
+  .tip-card-expenses { background-color: var(--Light-Background); border-left: 5px solid var(--Primary-Orange); border-radius: .25rem;}
+  .tip-card-savings { background-color: var(--Light-Background); border-left: 5px solid var(--Primary-Purple); border-radius: .25rem;}
+  .income-entry-card {background-color: var(--Light-Background); border: 2px solid var(--Muted-Green); border-radius: .25rem;}
+  .expense-entry-card {background-color: var(--Light-Background); border: 2px solid var(--Muted-Orange); border-radius: .25rem;}
+  .saving-entry-card {background-color: var(--Light-Background); border: 2px solid var(--Muted-Purple); border-radius: .25rem;}
+  .accordion-saving { border: 2px solid var(--Muted-Purple); border-radius: .25rem;}
+  .accordion-savings-body { background-color: var(--Light-Background);}
+  .accordion-button-savings { background-color: #F5F4F2 !important; color: var(--Primary-Purple) !important; font-family: Inter; font-size: 16px; font-style: normal; font-weight: 600; letter-spacing: 0.07px;}
+  .accordion-income { border: 2px solid var(--Muted-Green); border-radius: .25rem;}
+  .accordion-income-body { background-color: var(--Light-Background);}
+  .accordion-button-income { background-color: #F5F4F2 !important; color: var(--Primary-Green) !important; font-family: Inter; font-size: 16px; font-style: normal; font-weight: 600; letter-spacing: 0.07px;}
+  .accordion-expense { border: 2px solid var(--Muted-Orange); border-radius: .25rem;}
+  .accordion-expenses-body { background-color: var(--Light-Background);}
+  .accordion-button-expenses { background-color: #F5F4F2 !important; color: var(--Primary-Orange) !important; font-family: Inter; font-size: 16px; font-style: normal; font-weight: 600; letter-spacing: 0.07px;}
+  /* .btn-success { background-color: var(--income-dark); border: none; }
+  .btn-success:hover { background-color: var(--income); color: black; }
   .btn-success:focus, .btn-success:active {background-color: var(--income-dark) !important; border: none !important; box-shadow: 0 0 0 0.25rem var(--income-light) !important; color: #fff !important;}
   .btn-outline-success:hover { background-color: var(--income-dark); color: #fff !important;}
   .btn-outline-success:focus, .btn-outline-success:active {background-color: var(--income-dark) !important; border: none !important; box-shadow: 0 0 0 0.25rem var(--income-light) !important; color: #fff !important;}
@@ -69,125 +319,57 @@ body {
   .btn-primary:hover { background-color: var(--black-light); }
   .btn-primary:focus, .btn-primary:active {background-color: var(--black-dark) !important; border: none !important; box-shadow: 0 0 0 0.25rem var(--black-light) !important; color: #fff !important;}
   .btn-secondary { background-color: var(--savings-dark); border: none; }
-  .btn-secondary:hover { background-color: var(--savings); }
+  .btn-secondary:hover { background-color: var(--savings); color: black; }
   .btn-secondary:focus, .btn-secondary:active {background-color: var(--savings-dark) !important; border: none !important; box-shadow: 0 0 0 0.25rem var(--savings-light) !important; color: #fff !important;}
   .btn-warning { background-color: var(--personal-dark); border: none; color: #fff !important;}
-  .btn-warning:hover { background-color: var(--personal); color: #fff !important;}
-  .btn-warning:focus, .btn-warning:active {background-color: var(--personal-dark) !important; border: none !important; box-shadow: 0 0 0 0.25rem var(--personal-light) !important; color: #fff !important;}
-  .btn-danger { background-color: var(--expenses-dark); border: none; color: #fff !important;}
-  .btn-danger:hover { background-color: var(--expenses); color: #fff !important;}
-  .btn-danger:focus, .btn-warning:active {background-color: var(--expenses-dark) !important; border: none !important; box-shadow: 0 0 0 0.25rem var(--expenses-light) !important; color: #fff !important;}
-  #navbar-main { background-color: var(--black); }
-  #footer { background-color: var(--black-light) !important; width: 100%; color: white; text-align: center; margin-top:20px; }
+  .btn-warning:hover { background-color: var(--personal); color: black !important; }
+  .btn-warning:focus, .btn-warning:active {background-color: var(--personal-dark) !important; border: none !important; box-shadow: 0 0 0 0.25rem var(--personal-light) !important; color: #fff !important;} */
+  /* .btn-danger { background-color: var(--expenses-dark); border: none; color: #fff !important;}
+  .btn-danger:hover { background-color: var(--expenses); color: black !important; }
+  .btn-danger:focus, .btn-warning:active {background-color: var(--expenses-dark) !important; border: none !important; box-shadow: 0 0 0 0.25rem var(--expenses-light) !important; color: #fff !important;} */
+  #navbar-main { background-color: var(--Primary-Black); z-index:1000;}
+  .dropdown-menu { position: absolute; z-index: 1050;}
+  #footer { background-color: var(--Light-Black) !important; width: 100%; color: white; text-align: center; }
+  .site {
+    min-height: 100dvh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    grid-template-columns: minmax(0, 1fr);
+  }
   .form-control:focus 
   {
     border-color: var(--black-light);
     box-shadow: inset 0 1px 1px var(--black-mute), 0 0 8px var(--black-dark);
   }
-    .accordion-button::after {
-      filter: brightness(0) invert(1);
-    }
-  .modal-header-personal { background-color: var(--personal-dark); color: white;}
-  .modal-header-income { background-color: var(--income-dark); color: white;}
-  .modal-header-expenses { background-color: var(--expenses-dark); color: white;}
-  .modal-header-savings { background-color: var(--savings-dark); color: white;}
-  .modal-body-personal { background-color: var(--personal-mute); }
-  .modal-subheader-personal {background-color: var(--personal); color: white;}
-  .modal-body-income { background-color: var(--income-mute); }
-  .modal-subheader-income {background-color: var(--income); color: white;}
-  .modal-body-expenses { background-color: var(--expenses-mute); }
-  .modal-subheader-expenses {background-color: var(--expenses); color: white;}
-  .modal-body-savings { background-color: var(--savings-mute); }
-  .modal-subheader-savings {background-color: var(--savings); color: white;}
-  .modal-footer {background-color: var(--black-mute);}
+  .form-select:focus 
+  {
+    border-color: var(--black-light);
+    box-shadow: inset 0 1px 1px var(--black-mute), 0 0 8px var(--black-dark);
+  }
+  /* .accordion-button::after {
+    filter: brightness(0) invert(1);
+  } */
+  .modal-header-income { background-color: var(--Primary-Green); color: white;}
+  .modal-header-expenses { background-color: var(--Primary-Orange); color: white;}
+  .modal-header-savings { background-color: var(--Primary-Purple); color: white;}
+  .modal-body-income { background-color: var(--Primary-Background); }
+  .modal-subheader-income {background-color: var(--income); color: black;}
+  .modal-body-expenses { background-color: var(--Primary-Background); }
+  .modal-subheader-expenses {background-color: var(--expenses); color: black;}
+  .modal-body-savings { background-color: var(--Primary-Background); }
+  .modal-subheader-savings {background-color: var(--savings); color: black;}
+  .modal-footer {background-color: var(--Light-Black);}
 
   .dashboard-card-header { background-color: var(--black); color: white}
   .dashboard-card-body-good {background-color: var(--income-mute); color: var(--income-dark);}
   .dashboard-card-body-bad {background-color: var(--expenses-mute); color: var(--expenses-dark)}
-
+  .table-striped {--bs-table-striped-bg: rgba(0, 0, 0, 0.04);}
 footer {
     padding: 20px 0;
     text-align: center;
     background: #f1f1f1;
     color: #666;
     }
-
-.slider {
-    accent-color: #000000;
-    height: 6px;
-    border-radius: 3px;
-    outline: solid 1px #000000;
-}
-
-.slider:active {
-    accent-color: #000000;
-    height: 6px;
-    border-radius: 3px;
-    outline: solid 1px #000000;
-}
-
-.slider:focus {
-    accent-color: #000000;
-    height: 6px;
-    border-radius: 3px;
-    outline: solid 1px #000000;
-}
-
-.slider::-webkit-slider-thumb {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: #000000;
-    border: 2px solid #000000;
-    cursor: pointer;
-    box-shadow: 0 0 2px #000000;
-}
-
-.slider::-webkit-slider-thumb:active {
-    background-color: rgba(0, 0, 0, 0.77);
-    box-shadow: 0 0 0 2px #0000001d;
-}
-
-.slider::-webkit-slider-thumb:focus {
-    background-color: rgba(0, 0, 0, 0.77);
-    box-shadow: 0 0 0 2px #0000001d;
-}
-
-.slider::-moz-range-thumb {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: #000000;
-    border: 2px solid #000000;
-    cursor: pointer;
-    box-shadow: 0 0 2px #000000;
-}
-.slider::-ms-thumb {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: #000000;
-    border: 2px solid #000000;
-    cursor: pointer;
-    box-shadow: 0 0 2px #000000;
-}
-
-/* Remove default styles for Firefox */
-.slider::-moz-range-track {
-    background: linear-gradient(90deg, #000000 0%, #000000 100%);
-    height: 6px;
-    border-radius: 3px;
-}
-
-.slider::-ms-fill-lower {
-    background: #000000;
-    border-radius: 3px;
-}
-
-.slider::-ms-fill-upper {
-    background: #000000;
-    border-radius: 3px;
-}
 
 .accordion-button:focus {
     box-shadow: none;
@@ -199,121 +381,30 @@ footer {
     box-shadow: 0 0 0 0.25rem #f9f9f9; /* Green glow */
 }
 
-.table thead th {
-    vertical-align: middle;
-  }
+th {
+  color: rgba(0, 0, 0, 0.87);
+  font-feature-settings: 'liga' off, 'clig' off;
+  font-family: Inter;
+  font-size: var(--font-size-0875-rem, 14px);
+  font-style: normal;
+  font-weight: 600;
+  line-height: 24px; /* 171.429% */
+  letter-spacing: 0.17px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  text-align: start;
+}
 
-table, th, td {
-  border: 1px solid black;
-  } 
+td {
+  color: rgba(0, 0, 0, 0.87);
+  font-feature-settings: 'liga' off, 'clig' off;
+  font-family: Inter;
+  font-size: var(--font-size-0875-rem, 14px);
+  font-style: normal;
+  font-weight: 400;
+  line-height: 143%; /* 20.02px */
+  letter-spacing: 0.17px;
+}
 
 tr {
-    text-align: left;
-  }
-
-th {
-    text-align: center;
-    white-space: nowrap;
-    height: 55px;
-  }
-
-.th-input-headers-personal {
-    color:black!important;
-    background-color:var(--personal-light) !important;
-  }
-
-.th-input-headers-income {
-    color:black !important; 
-    background-color:var(--income-light) !important;
-  }
-
-.th-input-headers-expenses {
-    color:black !important; 
-    background-color:var(--expenses-light) !important;
-  }
-
-.th-input-headers-savings {
-    color:black !important; 
-    background-color:var(--savings-light) !important;
-  }
-
-.th-input-headers-special {
-    color:white!important;
-    background-color:var(--black-light) !important;
-  }
-
-.th-input-values {
-    color: black !important; 
-    background-color: white !important;
-  }
-
-.th-sections-personal {
-    color: white !important; 
-    background-color: var(--personal-dark) !important;
-  }
-
-.th-sections-personal {
-    color: white !important; 
-    background-color: var(--personal-dark) !important;
-  }
-
-.th-sections-income {
-    color: white !important; 
-    background-color: var(--income-dark) !important;
-  }
-
-.th-sections-expenses {
-    color: white !important; 
-    background-color: var(--expenses-dark) !important;
-  }
-
-.th-sections-savings {
-    color: white !important; 
-    background-color: var(--savings-dark) !important;
-  }
-
-.th-sections-special {
-    color: white !important; 
-    background-color: var(--black) !important;
-  }
-
-.th-headers {
-    color: white !important; 
-}
-
-.th-income {
-    background-color: var(--income-dark) !important;
-  }
-
-.th-expenses {
-    background-color: var(--expenses-dark) !important;
-  }
-
-.th-savings {
-    background-color: var(--savings-dark) !important;
-  }
-
-  .th-savings-light {
-    background-color: var(--savings) !important;
-  }
-
-.th-personal {
-    background-color: var(--personal-dark) !important;
-  }
-
-.th-special {
-    background-color: var(--black) !important;
-  }
-
-.hr-big {
-    height: 6px; 
-    background-color: #000000; 
-    border: none; 
-    border-radius: 3px;
-}
-.hr-small {
-    height: 2px; 
-    background-color: #000000; 
-    border: none; 
-    border-radius: 3px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12) ;
 }

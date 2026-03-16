@@ -1,263 +1,169 @@
+<script>
+    function expenseInfoValidation() {
+        const section = document.getElementById("expenses")
+        if (section) {
+
+            if (section.hidden == false) {
+
+                // Define Variables from DOM
+                const expense_entries = document.querySelectorAll('.expense-entry')
+                const expensesButton = document.getElementById('savings-button')
+
+                // Set initial stlye for button
+                let disableButton = false
+
+                // If no expense entries:
+                if (expense_entries.length === 0) {
+
+                    // Update button style to disabled
+                    disableButton = true
+                    expensesButton.disabled = disableButton;
+                }
+
+                // If there are expense entries:
+                else {
+                    let disableButton = false
+                    const expense_name_headers = document.querySelectorAll('.expense_name_header')
+                    const expense_names = document.querySelectorAll('.expense_name')
+                    const expense_categories = document.querySelectorAll('.expense_category')
+                    const expense_name_errors = document.querySelectorAll('.expense-name-error')
+                    const expense_category_errors = document.querySelectorAll('.expense-category-error')
+                    const expense_start_ages = document.querySelectorAll('.expense_start_age')
+                    const expense_stop_ages = document.querySelectorAll('.expense_stop_age')
+                    const expense_age_errors = document.querySelectorAll('.expense-age-error')
+                    const expense_starting_amounts = document.querySelectorAll('.expense_starting_amount')
+                    const expense_amount_errors = document.querySelectorAll('.expense-amount-error')
+                    const expense_rates = document.querySelectorAll('.expense_rate')
+                    const expense_rate_errors = document.querySelectorAll('.expense-rate-error')
+
+                    expense_names.forEach(function (name, i) {
+                        expense_name_errors[i].style.display = 'none'
+                        expense_name_headers[i].textContent = name.value
+                        if (name.value == '') {
+                            // Update display style to disabled/block
+                            disableButton = true
+                            expense_name_errors[i].style.display='block'
+                        }
+                    });
+
+                    expense_categories.forEach(function (category, i) {
+                        expense_category_errors[i].style.display = 'none'
+                        if (category.value == 'None') {
+                            // Update display style to disabled/block
+                            disableButton = true
+                            expense_category_errors[i].style.display='block'
+                        }
+                    });
+
+                    expense_start_ages.forEach(function (age, i) {
+                        expense_age_errors[i].style.display = 'none'
+                        if (age.value == "Current Age") {
+                            if (expense_stop_ages[i].value == "Current Age") {
+                                // Update display style to disabled/block
+                                disableButton = true
+                                expense_age_errors[i].style.display='block'
+                            }
+                        }
+                        else if (age.value == "Target Retirement Age") {
+                            // Update display style to disabled/block
+                            disableButton = true
+                            expense_age_errors[i].style.display='block'
+                        }
+                        else if (Number(age.value) >= Number(expense_stop_ages[i].value)) {
+                            // Update display style to disabled/block
+                            disableButton = true
+                            expense_age_errors[i].style.display='block'
+                        }
+                    });
+
+                    expense_starting_amounts.forEach(function (amount, i) {
+                        expense_amount_errors[i].style.display = 'none'
+                        if (Number(amount.value) <= 0) {
+                            // Update display style to disabled/block
+                            disableButton = true
+                            expense_amount_errors[i].style.display='block'
+                        }
+                    });
+
+                    expense_rates.forEach(function (rate, i) {
+                        expense_rate_errors[i].style.display = 'none'
+                        if (Number(rate.value) < 0 || Number(rate.value > 99.9)) {
+                            // Update display style to disabled/block
+                            disableButton = true
+                            expense_rate_errors[i].style.display='block'
+                        }
+                    });
+
+                    // Update button style based on pass/fail of constraints
+                    expensesButton.disabled = disableButton;
+                }
+            }
+        }
+    }
+    
+    document.body.addEventListener('htmx:afterSwap', function (evt) {
+        expenseInfoValidation()
+    })
+
+    document.addEventListener('change', function (e) {
+        if (e.target.classList.contains("input-field") || e.target.classList.contains("input-select")) {
+            expenseInfoValidation()
+        }
+    })
+
+    document.body.addEventListener('htmx:afterRequest', function (evt) {
+        if (evt.detail.requestConfig.verb == 'delete') {
+            expenseInfoValidation()
+        }
+    })
+</script>
+
 <!-- EXPENSES -->
-<section id="expenses" class="mb-5">
-    <!-- TITLE -->
-    <h3 class="section-title-expense"><i class="bi bi-receipt"></i> Expenses</h3>
-    <div class="tip-card-expense shadow-sm rounded mb-3">
-        <!-- QUESTION -->
-        <div class="row g-4 mb-1">
-            <h5>How much money do you spend?</h5>
-        </div>
-        <!-- EXPENSES INSTRUCTIONS -->
-        <div class="row g-4 mb-3">
-            <div class="accordion" id="expenses-accordion">
-                <div class="accordion-item border-0">
-                    <h2 class="accordion-header" id="expenses-headingOne">
-                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: rgb(143, 20, 20);" type="button" data-bs-toggle="collapse" data-bs-target="#expenses-collapseOne" aria-expanded="false" aria-controls="expenses-collapseOne">
-                        <i class="bi bi-three-dots-vertical"></i> Fixed Costs
-                        </button>
-                    </h2>
-                    <div id="expenses-collapseOne" class="accordion-collapse collapse" aria-labelledby="expenses-headingOne">
-                        <div class="accordion-body" style="background-color: rgb(255, 175, 175);">
-                            <p><b><i class="bi bi-question-lg"></i> How: </b>This is how...</p>
-                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
-                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
-                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note...
-                        </div>
-                    </div>
-                </div>
-                <div class="accordion-item border-0">
-                    <h2 class="accordion-header" id="expenses-headingTwo">
-                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: rgb(168, 35, 35);" type="button" data-bs-toggle="collapse" data-bs-target="#expenses-collapseTwo" aria-expanded="false" aria-controls="expenses-collapseTwo">
-                        <i class="bi bi-three-dots-vertical"></i> Variable Costs
-                        </button>
-                    </h2>
-                    <div id="expenses-collapseTwo" class="accordion-collapse collapse" aria-labelledby="expenses-headingTwo">
-                        <div class="accordion-body" style="background-color: rgb(255, 175, 175);">
-                            <p><b><i class="bi bi-question-lg"></i> How: </b>This is how...</p>
-                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
-                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
-                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note...
-                        </div>
-                    </div>
-                </div>
-                <div class="accordion-item border-0">
-                    <h2 class="accordion-header" id="expenses-headingThree">
-                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: rgb(202, 60, 60);" type="button" data-bs-toggle="collapse" data-bs-target="#expenses-collapseThree" aria-expanded="false" aria-controls="expenses-collapseThree">
-                        <i class="bi bi-three-dots-vertical"></i> Inflation & Lifestyle Adjustments
-                        </button>
-                    </h2>
-                    <div id="expenses-collapseThree" class="accordion-collapse collapse" aria-labelledby="expenses-headingThree">
-                        <div class="accordion-body" style="background-color: rgb(255, 175, 175);">
-                            <p><b><i class="bi bi-question-lg"></i> How: </b>This is how...</p>
-                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
-                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
-                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note...
-                        </div>
-                    </div>
-                </div>
+<section id="expenses" class="mt-4 mb-4">
+    <!-- CARD -->
+    <div class="card tip-card-expenses shadow rounded mb-3">
+        <div class="card-body card-body-expenses">
+            <!-- TITLE -->
+            <h3 class="section-title-expenses"><i class="bi bi-arrow-down icon-expenses"></i> Expenses</h3>
+            <!-- EXPENSES FIELDS -->
+            <div id="expense-div">
+            </div>
+            <div>
+                <button type="button" class="btn btn-add" hx-get="{% url 'create-expense' %}" hx-target="#expense-div" hx-swap="beforeend" hx-vals="js:{entry_count: document.querySelectorAll('.expense-entry').length}"><i class="bi bi-plus"></i>  Add</button>
             </div>
         </div>
-        <!-- EXPENSES FIELDS -->
-        <div class="row g-4">
-            <div class="col-lg-6">
-                <h5 class="fw-bold">Fixed Costs <i class="bi bi-question-circle-fill text-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="TBD Tooltip"></i></h5>
-                <div class="input-group">
-                    <span class="input-group-text">$</span>
-                    <div class="form-floating">
-                        <input type="number" class="form-control" id="current_yearly_fixed_costs" name="current_yearly_fixed_costs" min="1" max="100000000" value="17500" required>
-                        <label for="current_yearly_fixed_costs">Current Yearly Fixed Costs</label>
-                    </div>
-                </div>
-                <div id="current_yearly_fixed_costsHelp" class="form-text mb-3"><small>What is your current yearly fixed costs expense amount?</small></div>
-            </div>
-            <div class="col-lg-6">
-                <h5 class="fw-bold">Inflation <i class="bi bi-question-circle-fill text-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="TBD Tooltip"></i></h5>
-                <div class="input-group">
-                    <div class="form-floating">
-                        <input type="number" class="form-control" id="estimated_fixed_costs_inflation" name="estimated_fixed_costs_inflation" min="0" max="99.9" value="3.2" step=".1" required>
-                        <label for="estimated_fixed_costs_inflation">Estimated Yearly Fixed Costs Inflation</label>
-                    </div>
-                    <span class="input-group-text">%</span>
-                </div>
-                <div id="estimated_fixed_costs_inflationHelp" class="form-text mb-3"><small>On average, how much do you anticipate your fixed costs to increase each year?</small></div>
-            </div>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-6 col-md-6 col-sm-6 text-start mt-4 mb-4">
+            <!-- <button type="button" id="expenses-back-button" class="btn btn-action-empty btn-lg" hx-delete hx-target="#expenses" hx-swap="delete" hx-on::before-request="document.getElementById('income').hidden = false"><i class="bi bi-arrow-left"></i> Back</i></button> -->
+            <button type="button" class="btn btn-action-empty btn-lg" data-bs-toggle="modal" data-bs-target="#expenses-Back-Modal"><i class="bi bi-arrow-left"></i> Income</i></button>
         </div>
-        <div class="row g-4">
-            <div class="col-12">
-                <h5 class="fw-bold">Adjustment</h5>
-                <div id="fixedcost-adjustments-div">
-                </div>
-                <div>
-                    <button type="button" class="btn btn-primary" hx-get="{% url 'create-fixedcost-adjustment' %}" hx-vals="js:{max_age: document.getElementById('estimated_retirement_age').value, min_age: document.getElementById('current_age').value}" hx-target="#fixedcost-adjustments-div" hx-swap="beforeend"><i class="bi bi-plus-circle-fill"></i> Fixed Cost Adjustment</button>
-                    <p class="form-text"><small><i>*One entry per year before retirement age</i></small></p>
-                </div>
-            </div>
+        <div class="col-lg-6 col-md-6 col-sm-6 text-end mb-4">
+            <button id="savings-button" type="button" class="btn btn-action-empty btn-lg" hx-get="{% url 'create-savings-section' %}" hx-target="#savings-div" hx-swap="beforeend transition:true" hx-on::before-request="document.getElementById('expenses').hidden = true">Savings <i class="bi bi-arrow-right"></i></button>
         </div>
-        <!-- EXPENSES FIELDS -->
-        <div class="row g-4">
-            <div class="col-lg-6">
-                <h5 class="fw-bold">Variable Costs <i class="bi bi-question-circle-fill text-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="TBD Tooltip"></i></h5>
-                <div class="input-group">
-                    <span class="input-group-text">$</span>
-                    <div class="form-floating">
-                        <input type="number" class="form-control" id="current_yearly_variable_costs" name="current_yearly_variable_costs" min="1" max="100000000" value="20000" required>
-                        <label for="current_yearly_variable_costs">Current Yearly Variable Costs</label>
-                    </div>
+    </div>
+    <div class="modal fade" id="expenses-Back-Modal" data-bs-backdrop="delete" data-bs-keyboard="false" tabindex="-1" aria-labelledby="income-Back-Modal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content back-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="staticBackdropLabel"><i class="bi-exclamation-circle-fill"></i> Leave Expenses?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div id="current_yearly_variable_costsHelp" class="form-text mb-3"><small>What is your current yearly variable costs expense amount?</small></div>
-            </div>
-            <div class="col-lg-6">
-                <h5 class="fw-bold">Inflation <i class="bi bi-question-circle-fill text-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="TBD Tooltip"></i></h5>
-                <div class="input-group">
-                    <div class="form-floating">
-                        <input type="number" class="form-control" id="estimated_variable_costs_inflation" name="estimated_variable_costs_inflation" min="0" max="99.9" value="3.2" step=".1" required>
-                        <label for="estimated_variable_costs_inflation">Estimated Yearly Variable Costs Inflation</label>
-                    </div>
-                    <span class="input-group-text">%</span>
+                <div class="modal-body">
+                    Expenses entered will not be saved. <i>Are you sure?</i>
                 </div>
-                <div id="estimated_variable_costs_inflationHelp" class="form-text mb-3"><small>On average, how much do you anticipate your variable costs to increase each year?</small></div>
-            </div>
-        </div>
-        <div class="row g-4">
-            <div class="col-12">
-                <h5 class="fw-bold">Adjustment</h5>
-                <div id="variablecost-adjustments-div">
-                </div>
-                <div>
-                    <button type="button" class="btn btn-primary" hx-get="{% url 'create-variablecost-adjustment' %}" hx-vals="js:{max_age: document.getElementById('estimated_retirement_age').value, min_age: document.getElementById('current_age').value}" hx-target="#variablecost-adjustments-div" hx-swap="beforeend"><i class="bi bi-plus-circle-fill"></i> Variable Cost Adjustment</button>
-                    <p class="form-text"><small><i>*One entry per year before retirement age</i></small></p>
-                </div>
-            </div>
-        </div>
-        <!-- EXPENSES INSTRUCTIONS -->
-        <div class="row g-4 mb-3">
-            <div class="accordion" id="expenses-accordion">
-                <div class="accordion-item border-0">
-                    <h2 class="accordion-header" id="expenses-headingFour">
-                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: rgb(143, 20, 20);" type="button" data-bs-toggle="collapse" data-bs-target="#expenses-collapseFour" aria-expanded="false" aria-controls="expenses-collapseFour">
-                        <i class="bi bi-three-dots-vertical"></i> Health Insurance
-                        </button>
-                    </h2>
-                    <div id="expenses-collapseFour" class="accordion-collapse collapse" aria-labelledby="expenses-headingFour">
-                        <div class="accordion-body" style="background-color: rgb(255, 175, 175);">
-                            <p><b><i class="bi bi-question-lg"></i> How: </b>This is how...</p>
-                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
-                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
-                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note...
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- EXPENSES FIELDS -->
-        <div class="row g-4">
-            <div class="col-lg-6">
-                <h5 class="fw-bold">Health Insurance</h5>
-                <div class="input-group">
-                    <span class="input-group-text">$</span>
-                    <div class="form-floating">
-                        <input type="number" class="form-control" id="current_yearly_health_insurance_cost" name="current_yearly_health_insurance_cost" min="0" max="100000000" value="2600" required>
-                        <label for="current_yearly_health_insurance_cost">Current Yearly Health Insurance Cost</label>
-                    </div>
-                </div>
-                <div id="current_yearly_health_insurance_costHelp" class="form-text mb-3"><small>What is your current yearly health insurance cost?</small></div>
-            </div>
-            <div class="col-lg-6">
-                <h5 class="fw-bold">Inflation</h5>
-                <div class="input-group">
-                    <div class="form-floating">
-                        <input type="number" class="form-control" id="estimated_health_insurance_inflation" name="estimated_health_insurance_inflation" min="0" max="99.9" value="5.0" step=".1" required>
-                        <label for="estimated_health_insurance_inflation">Estimated Yearly Heath Insurance Inflation</label>
-                    </div>
-                    <span class="input-group-text">%</span>
-                </div>
-                <div id="estimated_health_insurance_inflationHelp" class="form-text mb-3"><small>On average, how much do you anticipate your health insurance cost to increase each year?</small></div>
-            </div>
-        </div>
-        <!-- EXPENSES INSTRUCTIONS -->
-        <div class="row g-4 mb-3">
-            <div class="accordion" id="expenses-accordion">
-                <div class="accordion-item border-0">
-                    <h2 class="accordion-header" id="expenses-headingFive">
-                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: rgb(143, 20, 20);" type="button" data-bs-toggle="collapse" data-bs-target="#expenses-collapseFive" aria-expanded="false" aria-controls="expenses-collapseFive">
-                        <i class="bi bi-three-dots-vertical"></i> Taxes
-                        </button>
-                    </h2>
-                    <div id="expenses-collapseFive" class="accordion-collapse collapse" aria-labelledby="expenses-headingFive">
-                        <div class="accordion-body" style="background-color: rgb(255, 175, 175);">
-                            <p><b><i class="bi bi-question-lg"></i> How: </b>This is how...</p>
-                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
-                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
-                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note...
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- EXPENSES FIELDS -->
-        <div class="row g-4">
-            <div class="col-lg-6">
-                <h5 class="fw-bold">Taxes</h5>
-                <div class="input-group">
-                    <div class="form-floating">
-                        <input type="number" class="form-control" id="estimated_tax_rate" name="estimated_tax_rate" min="0" max="99.9" value="18.0" step=".1" required>
-                        <label for="estimated_tax_rate">Estimated Current Tax Rate</label>
-                    </div>
-                    <span class="input-group-text">%</span>
-                </div>
-                <div id="estimated_tax_rateHelp" class="form-text mb-3"><small>What is your current estimated tax rate?</small></div>
-            </div>
-            <div class="col-lg-6">
-                <h5 class="fw-bold">Future Taxes</h5>
-                <div class="input-group">
-                    <div class="form-floating">
-                        <input type="number" class="form-control" id="estimated_tax_rate_step" name="estimated_tax_rate_step" min="0" max="99.9" value="0.3" step=".1" required>
-                        <label for="estimated_tax_rate_step">Estimated Tax Rate Yearly Increase</label>
-                    </div>
-                    <span class="input-group-text">%</span>
-                </div>
-                <div id="estimated_tax_rate_stepHelp" class="form-text mb-3"><small>On average, how much do you anticipate your tax rate to increase each year?</small></div>
-            </div>
-        </div>
-        <!-- EXPENSES INSTRUCTIONS -->
-        <div class="row g-4 mb-3">
-            <div class="accordion" id="expenses-accordion">
-                <div class="accordion-item border-0">
-                    <h2 class="accordion-header" id="expenses-headingSix">
-                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: rgb(143, 20, 20);" type="button" data-bs-toggle="collapse" data-bs-target="#expenses-collapseSix" aria-expanded="false" aria-controls="expenses-collapseSix">
-                        <i class="bi bi-three-dots-vertical"></i> Lump Sum Expenses
-                        </button>
-                    </h2>
-                    <div id="expenses-collapseSix" class="accordion-collapse collapse" aria-labelledby="expenses-headingSix">
-                        <div class="accordion-body" style="background-color: rgb(255, 175, 175);">
-                            <p><b><i class="bi bi-question-lg"></i> How: </b>This is how...</p>
-                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
-                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
-                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note...
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- EXPENSES FIELDS -->
-        <div class="row g-4">
-            <div class="col-12">
-                <h5 class="fw-bold">Lump Sum Expense</h5>
-                <div id="lumpsumexpense-div">
-                </div>
-                <div>
-                    <button type="button" class="btn btn-primary" hx-get="{% url 'create-lumpsum-expense' %}" hx-vals="js:{max_age: document.getElementById('estimated_retirement_age').value, min_age: document.getElementById('current_age').value}" hx-target="#lumpsumexpense-div" hx-swap="beforeend"><i class="bi bi-plus-circle-fill"></i> Add Lump Sum</button>
-                    <p class="form-text"><small><i>*One entry per year before retirement age</i></small></p>
+                <div class="modal-footer" style="background: #FCFBF9;">
+                    <button type="button" id="expenses-back-button" class="btn btn-action-empty" data-bs-dismiss="modal" hx-delete hx-target="#expenses" hx-swap="delete" hx-on::before-request="document.getElementById('income').hidden = false"><i class="bi bi-arrow-left"> </i>Back</i></button>
                 </div>
             </div>
         </div>
     </div>
 </section>
-<hr class="hr-big">
-<!-- SAVINGS HTML -->
-<div id="savings-div" class="text-center mt-3 mb-3">
-    <button type="button" class="btn btn-primary btn-lg" hx-get="{% url 'create-savings-section' %}" hx-target="#savings-div" hx-swap="outerHTML transition:true"><i class="bi bi-arrow-down-circle-fill"></i> Savings</i></button>
+<!-- EXPENSES HTML -->
+<div id="savings-div">
+
 </div>
+
 
 <style>
     /* Fade transition for HTMX */
@@ -275,7 +181,3 @@
         opacity: 1;
     }
 </style>
-
-<script>
-    FIREscrollspy.refresh()
-</script>

@@ -1,0 +1,100 @@
+<style>
+    table {
+        border-collapse: collapse;
+        position: relative;
+    }
+    
+    .tbl-container
+    {
+        max-width: fit-content;
+        max-height: fit-content;
+    }
+    .tbl-fixed
+    {
+        overflow-x: scroll;
+        overflow-y: scroll;
+        height: fit-content;
+        max-height: 400px;
+    }
+    th, td
+    {
+        font-size: 100%;
+        padding: 12px !important;
+    }
+    th {
+        white-space: nowrap;
+    }
+    .header{
+        position:sticky;
+        top: 0;
+    }
+</style>
+
+<div class="income-entry">
+    <div class="accordion" data-id="income-accordion-{{ entry_count }}">
+        <div class="accordion-income">
+            <h2 class="accordion-header">
+                <button class="accordion-button accordion-button-income income_name_header" type="button" data-bs-toggle="collapse" data-bs-target="#income-entry-{{ entry_count }}" aria-expanded="true" aria-controls="income-entry-{{ entry_count }}">
+                    My Income
+                </button>
+            </h2>
+            <div id="income-entry-{{ entry_count }}" class="accordion-collapse collapse show">
+                <div class="accordion-body accordion-income-body">
+                    {% if user.is_authenticated %}
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <!-- INCOME FIELDS ROW-->
+                            <div class="row g-4 mb-3">
+                                <div class="col-lg-6">
+                                    <h5 class="input-name">Income Name</h5>              
+                                    <input type="text" class="form-control input-field income_name" name="income_name" value="My Income" required>
+                                    <div class="form-text text-danger form-error-text income-name-error"><small> Please provide a name for this income.</small></div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <h5 class="input-name">Category</h5>              
+                                    <select class="form-select input-select income_category" name="income_category" hx-get="{% url 'income-fields' %}" hx-target="next .income-fields" hx-trigger="change" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, salary_count: document.querySelectorAll('.income-salary-entry').length, recurring_income_count: document.querySelectorAll('.income-recurring-entry').length, one_time_income_count: document.querySelectorAll('.income-one-time-entry').length}">
+                                        <option value=None>--> Select a category <--</option>
+                                        <option value="Salary">Salary</option>
+                                        <option value="Recurring">Recurring</option>
+                                        <option value="One-time">One-time</option>
+                                    </select>
+                                    <div class="form-text text-danger form-error-text income-category-error"><small> Please select a category.</small></div>
+                                </div>
+                            </div>
+                            <div class="income-fields">
+                            </div>
+                        </div>
+                        <div class="col-lg-6 income-table align-self-center">
+                            
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="row g-4 mb-3">
+                        <div class="col-lg-4">
+                            <h5 class="input-name">Income Name</h5>              
+                            <input type="text" class="form-control input-field income_name" name="income_name" value="My Income" required>
+                            <div class="form-text text-danger form-error-text income-name-error"><small> Please provide a name for this income.</small></div>
+                        </div>
+                        <div class="col-lg-4">
+                            <h5 class="input-name">Category</h5>              
+                            <select class="form-select input-select income_category" name="income_category" hx-get="{% url 'income-fields' %}" hx-target="next .income-fields" hx-trigger="change" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, salary_count: document.querySelectorAll('.income-salary-entry').length, recurring_income_count: document.querySelectorAll('.income-recurring-entry').length, one_time_income_count: document.querySelectorAll('.income-one-time-entry').length}">
+                                <option value=None>--> Select a category <--</option>
+                                <option value="Salary">Salary</option>
+                                <option value="Recurring">Recurring</option>
+                                <option value="One-time">One-time</option>
+                            </select>
+                            <div class="form-text text-danger form-error-text income-category-error"><small> Please select a category.</small></div>
+                        </div>
+                    </div>
+                    <div class="income-fields">
+                    </div>
+                    {% endif %}
+                    <div class="text-end">
+                        <button type="button" class="btn btn-sm btn-remove" hx-delete hx-target="closest .income-entry" hx-swap="delete"><i class="bi bi-x"></i> Remove</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr>
+</div>

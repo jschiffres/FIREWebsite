@@ -1,0 +1,73 @@
+{% if user.is_authenticated %}
+<div class="income-one-time-entry" hx-get="{% url 'income-table' %}" hx-target="next .income-table" hx-trigger="load" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, amount: document.getElementsByName('one_time_income_amount')[{{ one_time_income_count }}].value, tax_rate: document.getElementsByName('one_time_income_tax_rate')[{{ one_time_income_count }}].value, age: document.getElementsByName('one_time_income_age')[{{ one_time_income_count }}].value, income_category: 'One-time'}">
+    <!-- INCOME FIELDS ROW -->
+    <div class="row g-4 mb-3">
+        <div class="col-lg-12">
+            <h5 class="input-name">Amount</h5>   
+            <div class="input-group">
+                <span class="input-group-text">$</span>             
+                <input type="number" class="form-control input-field income_starting_amount" name="one_time_income_amount" min="100" max="100000000" value="10000" required hx-get="{% url 'income-table' %}" hx-target="next .income-table" hx-trigger="change delay:1s" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, amount: document.getElementsByName('one_time_income_amount')[{{ one_time_income_count }}].value, tax_rate: document.getElementsByName('one_time_income_tax_rate')[{{ one_time_income_count }}].value, age: document.getElementsByName('one_time_income_age')[{{ one_time_income_count }}].value, income_category: 'One-time'}">
+            </div>
+            <div class="form-text text-danger form-error-text income-amount-error"><small> Amount must be greater than $0</small></div>
+        </div>
+    </div>
+    <!-- INCOME FIELDS ROW -->
+    <div class="row g-4 mb-3">
+        <div class="col-lg-12">
+            <h5 class="input-name">Age</h5>              
+            <select class="form-select input-select age" name="one_time_income_age" hx-get="{% url 'income-table' %}" hx-target="next .income-table" hx-trigger="change delay:1s" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, amount: document.getElementsByName('one_time_income_amount')[{{ one_time_income_count }}].value, tax_rate: document.getElementsByName('one_time_income_tax_rate')[{{ one_time_income_count }}].value, age: document.getElementsByName('one_time_income_age')[{{ one_time_income_count }}].value, income_category: 'One-time'}">
+                {% for age in ages %}
+                        <option value="{{ age }}">{{ age }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <!-- INCOME FIELDS ROW -->
+    <div class="row g-4 mb-3">
+        <div class="col-lg-12">
+            <h5 class="input-name">Tax Rate <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-title="What percentage of this income will be taken out as taxes?"></i></h5>   
+            <div class="input-group">           
+                <input type="number" class="form-control input-field tax_rate income_rate" name="one_time_income_tax_rate" min="0" max="99.9" value="12.0" step="0.1" required hx-get="{% url 'income-table' %}" hx-target="next .income-table" hx-trigger="change delay:1s" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, amount: document.getElementsByName('one_time_income_amount')[{{ one_time_income_count }}].value, tax_rate: document.getElementsByName('one_time_income_tax_rate')[{{ one_time_income_count }}].value, age: document.getElementsByName('one_time_income_age')[{{ one_time_income_count }}].value, income_category: 'One-time'}">
+                <span class="input-group-text">%</span>  
+            </div>
+            <div class="form-text text-danger form-error-text income-rate-error"><small> Please provide a number between 0% and 99.9%</small></div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="income-lump-sum-entry">
+    <!-- INCOME FIELDS ROW -->
+    <div class="row g-4 mb-3">
+        <div class="col-lg-4">
+            <h5 class="input-name">Amount</h5>   
+            <div class="input-group">
+                <span class="input-group-text">$</span>             
+                <input type="number" class="form-control input-field amount income_starting_amount" name="one_time_income_amount" min="100" max="10000000" value="10000" required>
+            </div>
+            <div class="form-text text-danger form-error-text income-amount-error"><small> Amount must be greater than $0</small></div>
+        </div>
+    </div>
+    <!-- INCOME FIELDS ROW -->
+    <div class="row g-4 mb-3">
+        <div class="col-lg-4">
+            <h5 class="input-name">Age</h5>              
+            <select class="form-select input-select age" name="one_time_income_age">
+                {% for age in ages %}
+                        <option value="{{ age }}">{{ age }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <!-- INCOME FIELDS ROW -->
+    <div class="row g-4 mb-3">
+        <div class="col-lg-4">
+            <h5 class="input-name">Tax Rate <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-title="What percentage of this income will be taken out as taxes?"></i></h5>   
+            <div class="input-group">           
+                <input type="number" class="form-control input-field tax_rate income_rate" name="one_time_income_tax_rate" min="0" max="99.9" value="12.0" step="0.1" required>
+                <span class="input-group-text">%</span>  
+            </div>
+            <div class="form-text text-danger form-error-text income-rate-error"><small> Please provide a number between 0% and 99.9%</small></div>
+        </div>
+    </div>
+</div>
+{% endif %}

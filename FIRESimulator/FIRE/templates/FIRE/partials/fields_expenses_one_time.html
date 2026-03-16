@@ -1,0 +1,51 @@
+{% if user.is_authenticated %}
+<div class="expense-one-time-entry" hx-get="{% url 'expense-table' %}" hx-target="next .expense-table" hx-trigger="load" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, amount: document.getElementsByName('one_time_expense_amount')[{{ one_time_expense_count }}].value, age: document.getElementsByName('one_time_expense_age')[{{ one_time_expense_count }}].value, expense_category: 'One-time'}">
+    <!-- EXPENSE FIELDS ROW -->
+    <div class="row g-4 mb-3">
+        <div class="col-lg-12">
+            <h5 class="input-name">Amount</h5>   
+            <div class="input-group">
+                <span class="input-group-text">$</span>             
+                <input type="number" class="form-control input-field expense_starting_amount" name="one_time_expense_amount" min="100" max="10000000" value="10000" required hx-get="{% url 'expense-table' %}" hx-target="next .expense-table" hx-trigger="change delay:1s" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, amount: document.getElementsByName('one_time_expense_amount')[{{ one_time_expense_count }}].value, age: document.getElementsByName('one_time_expense_age')[{{ one_time_expense_count }}].value, expense_category: 'One-time'}">
+            </div>
+            <div class="form-text text-danger form-error-text expense-amount-error"><small> Amount must be greater than $0</small></div>
+        </div>
+    </div>
+    <!-- EXPENSE FIELDS ROW -->
+    <div class="row g-4 mb-3">
+        <div class="col-lg-12">
+            <h5 class="input-name">Age</h5>              
+            <select class="form-select input-select age" name="one_time_expense_age" hx-get="{% url 'expense-table' %}" hx-target="next .expense-table" hx-trigger="change delay:1s" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, amount: document.getElementsByName('one_time_expense_amount')[{{ one_time_expense_count }}].value, age: document.getElementsByName('one_time_expense_age')[{{ one_time_expense_count }}].value, expense_category: 'One-time'}">
+                {% for age in ages %}
+                        <option value="{{ age }}">{{ age }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="expense-lump-sum-entry">
+    <!-- EXPENSE FIELDS ROW -->
+    <div class="row g-4 mb-3">
+        <div class="col-lg-4">
+            <h5 class="input-name">Amount</h5>   
+            <div class="input-group">
+                <span class="input-group-text">$</span>             
+                <input type="number" class="form-control input-field expense_starting_amount" name="one_time_expense_amount" min="100" max="10000000" value="10000" required>
+            </div>
+            <div class="form-text text-danger form-error-text expense-amount-error"><small> Amount must be greater than $0</small></div>
+        </div>
+    </div>
+    <!-- EXPENSE FIELDS ROW -->
+    <div class="row g-4 mb-3">
+        <div class="col-lg-4">
+            <h5 class="input-name">Age</h5>              
+            <select class="form-select input-select age" name="one_time_expense_age">
+                {% for age in ages %}
+                        <option value="{{ age }}">{{ age }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+</div>
+{% endif %}

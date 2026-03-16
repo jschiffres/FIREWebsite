@@ -1,298 +1,119 @@
-<!-- SAVINGS -->
-<section id="savings" class="mb-5">
-    <!-- TITLE -->
-    <h3 class="section-title-savings"><i class="bi bi-piggy-bank"></i> Savings</h3>
-    <div class="tip-card-savings shadow-sm rounded mb-3">
-        <!-- QUESTION -->
-        <div class="row g-4 mb-1">
-            <h5>How much money have you saved?</h5>
-        </div>
-        <!-- SAVINGS INSTRUCTIONS -->
-        <div class="row g-4 mb-3">
-            <div class="accordion" id="savings-accordion">
-                <div class="accordion-item border-0">
-                    <h2 class="accordion-header" id="savings-headingOne">
-                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #384394;" type="button" data-bs-toggle="collapse" data-bs-target="#savings-collapseOne" aria-expanded="false" aria-controls="savings-collapseOne">
-                        <i class="bi bi-three-dots-vertical"></i> Health Savings Accounts (HSA)
-                        </button>
-                    </h2>
-                    <div id="savings-collapseOne" class="accordion-collapse collapse" aria-labelledby="savings-headingOne">
-                        <div class="accordion-body" style="background-color: #c2c7e6;">
-                            <p><b><i class="bi bi-question-lg"></i> How: </b>This is how...</p>
-                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
-                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
-                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note...
-                        </div>
-                    </div>                
+<script>
+    function savingInfoValidation() {
+        const saving_entries = document.querySelectorAll('.saving-entry')
+        const savingsButton = document.getElementById('savings-button')
+        saving_entries.forEach(function (entry, i) {
+            const saving_name_header = entry.querySelectorAll('.saving_name_header')[0]
+            const saving_name = entry.querySelectorAll('.saving_name')[0].value
+            saving_name_header.textContent = saving_name + " - Investment Priority: " + String(i + 1)
+        })
+    }
+
+    document.body.addEventListener('htmx:afterSwap', function (evt) {
+        savingInfoValidation()
+        tooltips()
+    })
+
+    document.body.addEventListener('drop', function (evt) {
+        savingInfoValidation()
+    })
+
+    document.addEventListener('change', function (e) {
+        if (e.target.classList.contains("saving_name")) {
+            savingInfoValidation()
+        }
+    })
+</script>
+
+<script>
+    function savingsAccordionAction(action) {
+        const saving_entries = document.querySelectorAll('.saving-entry')
+        saving_entries.forEach(function (entry, i) {
+            accordion = entry.querySelectorAll('.savings-accordion')[0]
+            if (action == "Expand") {
+                accordion.classList.add("show")
+            }
+            else {
+                accordion.classList.remove("show")
+            }
+        })
+    }
+</script>
+
+<!-- Savings -->
+<section id="savings" class="mt-4 mb-4">
+    <!-- CARD -->
+    <div class="card tip-card-savings shadow rounded mb-3">
+        <div class="card-body card-body-savings">
+            <!-- TITLE -->
+            <h3 class="section-title-savings"><i class="bi bi-currency-dollar icon-savings"></i> Savings</h3>
+            <div class="m-3">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="saving_option" id="saving_option_simple" value="Simple" hx-get="{% url 'savings-method' %}" hx-target="#savings-method" hx-trigger="click" hx-swap="innerHTML">
+                    <label class="form-check-label" for="saving_option_simple">Simple</label>
+                    <a tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-title="Simple" data-bs-content="Savings will be added to your current net worth and will grow at a singular growth rate."><i class="bi bi-question-circle"></i></a>
                 </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="saving_option" id="saving_option_recommended" value="Recommended" hx-get="{% url 'savings-method' %}" hx-target="#savings-method" hx-trigger="click" hx-swap="innerHTML">
+                    <label class="form-check-label" for="saving_option_fire">Recommended</label>
+                    <a tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-title="Recommended" data-bs-html="true" data-bs-content="Savings will be allocated in the following order*: <ol> <li>401k to recieve employer match</li><li>Max HSA</li><li>Max 401k</li><li>Max IRA</li><li>TBA</li></ol> *Each account is optional"><i class="bi bi-question-circle"></i></a>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="saving_option" id="saving_option_custom" value="Custom" hx-get="{% url 'savings-method' %}" hx-target="#savings-method" hx-trigger="click" hx-swap="innerHTML">
+                    <label class="form-check-label" for="saving_option_advanced">Custom</label>
+                    <a tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-title="Custom" data-bs-content="Savings will be allocated per your priorities. Add as many accounts and order them yourself!"><i class="bi bi-question-circle"></i></a>
+                </div>
+            </div>
+            <div id="savings-method">
+
             </div>
         </div>
-        <!-- SAVINGS FIELDS -->
-        <div class="row g-4">
-            <div class="col-lg-4">
-                <h5 class="fw-bold">HSA Opt-In <i class="bi bi-question-circle-fill text-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="TBD Tooltip" data-bs-custom-class="custom-tooltip"></i></h5>
-                <div class="form-floating mb-3">  
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="hsa_enrollment_opt_out" id="hsa_enrollment_opt_out" value="False" checked hx-get="{% url 'hsa-opt-in' %}" hx-target="#hsa-fields" hx-swap="innerHTML" hx-vals="js:{current_hsa_balance: 0, esitmated_hsa_yearly_return: 5.0, current_hsa_yearly_contribution_limit: 4300, estimated_hsa_yearly_contribution_limit_step: 150}">
-                        <label class="form-check-label" for="hsa_enrollment_opt_out">Yes</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="hsa_enrollment_opt_out" id="hsa_enrollment_opt_in" value="True" hx-delete hx-target="#hsa-inputs" hx-swap="delete">
-                        <label class="form-check-label" for="hsa_enrollment_opt_in">No</label>
-                    </div>
-                    <div id="hsa_enrollment_opt_outHelp" class="form-text">
-                        <small>Do you plan to contribute to an HSA?</small>
-                    </div>  
-                </div>
-            </div>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-6 col-md-6 col-sm-6 text-start mt-4 mb-4">
+            <!-- <button type="button" id="savings-back-button" class="btn btn-action-empty btn-lg" hx-delete hx-target="#savings" hx-swap="delete" hx-on::before-request="document.getElementById('expenses').hidden = false"><i class="bi bi-arrow-left"></i> Back</i></button> -->
+            <button type="button" class="btn btn-action-empty btn-lg" data-bs-toggle="modal" data-bs-target="#savings-Back-Modal"><i class="bi bi-arrow-left"></i> Back</i></button>
         </div>
-        <div id="hsa-fields">
-            {% include 'FIRE/partials/opt_in_hsa.html' with current_hsa_balance=0 esitmated_hsa_yearly_return=5.0 current_hsa_yearly_contribution_limit=4300 estimated_hsa_yearly_contribution_limit_step=150 %}
+        <div class="col-lg-6 col-md-6 col-sm-6 text-end mb-4">
+            <button type="submit" class="btn btn-action-empty btn-lg"><i class="bi bi-play"></i> Create Plan</button>
         </div>
-        <!-- SAVINGS INSTRUCTIONS -->
-        <div class="row g-4 mb-3">
-            <div class="accordion" id="savings-accordion">
-                <div class="accordion-item border-0">
-                    <h2 class="accordion-header" id="savings-headingTwo">
-                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #384394;" type="button" data-bs-toggle="collapse" data-bs-target="#savings-collapseTwo" aria-expanded="false" aria-controls="savings-collapseTwo">
-                        <i class="bi bi-three-dots-vertical"></i> Employer Sponsored Retirement Accounts (401k/403b/TSP)
-                        </button>
-                    </h2>
-                    <div id="savings-collapseTwo" class="accordion-collapse collapse" aria-labelledby="savings-headingTwo">
-                        <div class="accordion-body" style="background-color: #c2c7e6;">
-                            <p><b><i class="bi bi-question-lg"></i> How: </b>This is how...</p>
-                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
-                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
-                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note...
-                        </div>
-                    </div>
+    </div>
+    <div class="modal fade" id="savings-Back-Modal" data-bs-backdrop="delete" data-bs-keyboard="false" tabindex="-1" aria-labelledby="income-Back-Modal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content back-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="staticBackdropLabel"><i class="bi-exclamation-circle-fill"></i> Leave Savings?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-            </div>
-        </div>
-        <!-- SAVINGS FIELDS -->
-        <div class="row g-4">
-            <div class="col-lg-4">
-                <h5 class="fw-bold">Current Balance</h5>
-                <div class="input-group">
-                    <span class="input-group-text">$</span>
-                    <div class="form-floating">
-                        <input type="number" class="form-control" id="current_401k_balance" name="current_401k_balance" min="0" max="100000000" value="50000" required>
-                        <label for="current_401k_balance">Current Retirement Plan Balance</label>
-                    </div>
+                <div class="modal-body">
+                    Savings entered will not be saved. <i>Are you sure?</i>
                 </div>
-                <div id="current_401k_balanceHelp" class="form-text mb-3">How much money is currently in your employer sponsored retirement plan(s)?</div>
-            </div>
-            <div class="col-lg-4">
-                <h5 class="fw-bold">Estimated Yearly Return</h5>
-                <div class="input-group">
-                    <div class="form-floating">
-                        <input type="number" class="form-control" id="esitmated_401k_yearly_return" name="esitmated_401k_yearly_return" min="0" max="99.9" value="5.0" step=".1" required>
-                        <label for="esitmated_401k_yearly_return">Estimated Retirement Plan Yearly Return</label>
-                    </div>
-                    <span class="input-group-text">%</span>
-                </div>
-                <div id="esitmated_401k_yearly_returnHelp" class="form-text mb-3">On average, how much do you expect your retirement plan investments to grow annually?</div>
-            </div>
-            <div class="col-lg-4">
-                <h5 class="fw-bold">Employer Contribution</h5>
-                <div class="input-group">
-                    <div class="form-floating">
-                        <input type="number" class="form-control" id="current_401k_employer_contribution" name="current_401k_employer_contribution" min="0" max="99.9" value="3.0" step=".1" required>
-                        <label for="current_401k_employer_contribution">Current Retirement Plan Employer Contribution</label>
-                    </div>
-                    <span class="input-group-text">%</span>
-                </div>
-                <div id="current_401k_employer_contributionHelp" class="form-text mb-3">On average, what percentage of your yearly salary do you anticipate your employer to contribute to your retirement plan each year?</div>
-            </div>
-        </div>
-        <div class="row g-4">
-            <div class="col-lg-6">
-                <h5 class="fw-bold">Contribution Limit</h5>
-                <div class="input-group">
-                    <span class="input-group-text">$</span>
-                    <div class="form-floating">
-                        <input type="number" class="form-control" id="current_401k_yearly_contribution_limit" name="current_401k_yearly_contribution_limit" min="1" max="100000000" value="23500" required>
-                        <label for="current_401k_yearly_contribution_limit">Current Retirement Plan Yearly Contribution Limit</label>
-                    </div>
-                </div>
-                <div id="current_401k_yearly_contribution_limitHelp" class="form-text mb-3">The current contribution limit for a 401k/403b is $23,500.</div>
-            </div>
-            <div class="col-lg-6">
-                <h5 class="fw-bold">Future Contribution Limit</h5>
-                <div class="input-group">
-                    <span class="input-group-text">$</span>
-                    <div class="form-floating">
-                        <input type="number" class="form-control" id="401k_yearly_contribution_limit_step" name="estimated_401k_yearly_contribution_limit_step" min="0" max="10000" value="500" step="1" required>
-                        <label for="401k_yearly_contribution_limit_step">Estimated Retirement Plan Yearly Contribution Limit Increase</label>
-                    </div>
-                </div>
-                <div id="401k_yearly_contribution_limit_stepHelp" class="form-text mb-3">On average, how much do you expect the 401k/403b contribution limit to increase each year?</div>
-            </div>
-        </div>
-        <!-- SAVINGS INSTRUCTIONS -->
-        <div class="row g-4 mb-3">
-            <div class="accordion" id="savings-accordion">
-                <div class="accordion-item border-0">
-                    <h2 class="accordion-header" id="savings-headingThree">
-                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #384394;" type="button" data-bs-toggle="collapse" data-bs-target="#savings-collapseThree" aria-expanded="false" aria-controls="savings-collapseThree">
-                        <i class="bi bi-three-dots-vertical"></i> Individual Retirement Accounts (IRA)
-                        </button>
-                    </h2>
-                    <div id="savings-collapseThree" class="accordion-collapse collapse" aria-labelledby="savings-headingThree">
-                        <div class="accordion-body" style="background-color: #c2c7e6">
-                            <p><b><i class="bi bi-question-lg"></i> How: </b>This is how...</p>
-                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
-                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
-                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note...
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- SAVINGS FIELDS -->
-        <div class="row g-4">
-            <div class="col-lg-6">
-                <h5 class="fw-bold">Current Balance</h5>
-                <div class="input-group">
-                    <span class="input-group-text">$</span>
-                    <div class="form-floating">
-                        <input type="number" class="form-control" id="current_ira_balance" name="current_ira_balance" min="0" max="100000000" value="10000" required>
-                        <label for="current_ira_balance">Current IRA Balance</label>
-                    </div>
-                </div>
-                <div id="current_ira_balanceHelp" class="form-text mb-3">How much money is currently in your IRA(s)?</div>
-            </div>
-            <div class="col-lg-6">
-                <h5 class="fw-bold">Estimated Yearly Return</h5>
-                <div class="input-group">
-                    <div class="form-floating">
-                        <input type="number" class="form-control" id="esitmated_ira_yearly_return" name="esitmated_ira_yearly_return" min="0" max="99.9" value="5.0" step=".1" required>
-                        <label for="esitmated_ira_yearly_return">Estimated IRA Yearly Return</label>
-                    </div>
-                    <span class="input-group-text">%</span>
-                </div>
-                <div id="esitmated_ira_yearly_returnHelp" class="form-text mb-3">On average, how much do you expect your IRA investments to grow annually?</div>
-            </div>
-        </div>
-        <div class="row g-4">
-            <div class="col-lg-6">
-                <h5 class="fw-bold">Contribution Limit</h5>
-                <div class="input-group">
-                    <span class="input-group-text">$</span>
-                    <div class="form-floating">
-                        <input type="number" class="form-control" id="current_ira_yearly_contribution_limit" name="current_ira_yearly_contribution_limit" min="1" max="100000000" value="7000" required>
-                        <label for="current_ira_yearly_contribution_limit">Current IRA Yearly Contribution Limit</label>
-                    </div>
-                </div>
-                <div id="current_ira_yearly_contribution_limitHelp" class="form-text mb-3">The current contribution limit for an IRA is $7,000.</div>
-            </div>
-            <div class="col-lg-6">
-                <h5 class="fw-bold">Future Contribution Limit</h5>
-                <div class="input-group">
-                    <span class="input-group-text">$</span>
-                    <div class="form-floating">
-                        <input type="number" class="form-control" id="ira_yearly_contribution_limit_step" name="estimated_ira_yearly_contribution_limit_step" min="0" max="10000" value="300" step="1" required>
-                        <label for="ira_yearly_contribution_limit_step">Estimated IRA Yearly Contribution Limit Increase</label>
-                    </div>
-                </div>
-                <div id="ira_yearly_contribution_limit_stepHelp" class="form-text mb-3">On average, how much do you expect the IRA contribution limit to increase each year?</div>
-            </div>
-        </div>
-        <!-- SAVINGS INSTRUCTIONS -->
-        <div class="row g-4 mb-3">
-            <div class="accordion" id="savings-accordion">
-                <div class="accordion-item border-0">
-                    <h2 class="accordion-header" id="savings-headingFour">
-                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #384394;" type="button" data-bs-toggle="collapse" data-bs-target="#savings-collapseFour" aria-expanded="false" aria-controls="savings-collapseFour">
-                        <i class="bi bi-three-dots-vertical"></i> Taxable Brokerage Accounts (TBA)
-                        </button>
-                    </h2>
-                    <div id="savings-collapseFour" class="accordion-collapse collapse" aria-labelledby="savings-headingFour">
-                        <div class="accordion-body" style="background-color: #c2c7e6">
-                            <p><b><i class="bi bi-question-lg"></i> How: </b>This is how...</p>
-                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
-                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
-                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note...
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- SAVINGS FIELDS -->
-        <div class="row g-4">
-            <div class="col-lg-6">
-                <h5 class="fw-bold">Current Balance</h5>
-                <div class="input-group">
-                    <span class="input-group-text">$</span>
-                    <div class="form-floating">
-                        <input type="number" class="form-control" id="current_iba_balance" name="current_iba_balance" min="0" max="100000000" value="20000" required>
-                        <label for="current_iba_balance">Current TBA Balance</label>
-                    </div>
-                </div>
-                <div id="current_iba_balanceHelp" class="form-text mb-3">How much money is currently in your TBA(s)?</div>
-            </div>
-            <div class="col-lg-6">
-                <h5 class="fw-bold">Estimated Yearly Return</h5>
-                <div class="input-group">
-                    <div class="form-floating">
-                        <input type="number" class="form-control" id="esitmated_iba_yearly_return" name="esitmated_iba_yearly_return" min="0" max="99.9" value="5.0" step=".1" required>
-                        <label for="esitmated_iba_yearly_return">Estimated IRA Yearly Return</label>
-                    </div>
-                    <span class="input-group-text">%</span>
-                </div>
-                <div id="esitmated_iba_yearly_returnHelp" class="form-text mb-3">On average, how much do you expect your TBA investments to grow annually?</div>
-            </div>
-        </div>
-        <!-- SAVINGS INSTRUCTIONS -->
-        <div class="row g-4 mb-3">
-            <div class="accordion" id="savings-accordion">
-                <div class="accordion-item border-0">
-                    <h2 class="accordion-header" id="savings-headingFive">
-                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #384394;" type="button" data-bs-toggle="collapse" data-bs-target="#savings-collapseFive" aria-expanded="false" aria-controls="savings-collapseFive">
-                        <i class="bi bi-three-dots-vertical"></i> Appreciating Assets
-                        </button>
-                    </h2>
-                    <div id="savings-collapseFive" class="accordion-collapse collapse rounded-bottom" aria-labelledby="savings-headingFive">
-                        <div class="accordion-body" style="background-color: #c2c7e6">
-                            <p><b><i class="bi bi-question-lg"></i> How: </b>This is how...</p>
-                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
-                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
-                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note...
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- SAVINGS FIELDS -->
-        <div class="row g-4">
-            <div class="col-12">
-                <h5 class="fw-bold">Appreicating Assets</h5>
-                <div id="assets-div">
-                </div>
-                <div>
-                    <button type="button" class="btn btn-primary" hx-get="{% url 'create-asset' %}" hx-target="#assets-div" hx-swap="beforeend"><i class="bi bi-plus-circle-fill"></i> Add Asset</button>
+                <div class="modal-footer" style="background: #FCFBF9;">
+                    <button type="button" id="savings-back-button" class="btn btn-action-empty" data-bs-dismiss="modal" hx-delete hx-target="#savings" hx-swap="delete" hx-on::before-request="document.getElementById('expenses').hidden = false"><i class="bi bi-arrow-left"> </i> Expenses</i></button>
                 </div>
             </div>
         </div>
     </div>
 </section>
-<hr class="hr-big">
-<!-- SUBMIT BUTTON -->
-<div class="text-center mt-5">
-    <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-play-circle-fill"></i> Create Simulation</button>
+<!-- savings HTML -->
+<div id="savings-div">
+
 </div>
 
-<script>
-    FIREscrollspy.refresh()
-</script>
 
-<script>
-    $(document).ready(function() {
-        $(window).keydown(function(event){
-            if(event.keyCode == 13) {
-            event.preventDefault();
-            return True;
-            }
-        });
-    });
-</script>
+<style>
+    /* Fade transition for HTMX */
+    .htmx-swapping {
+        opacity: 0;
+        transition: opacity 9000ms ease;
+    }
+    .htmx-settling {
+        opacity: 0;
+    }
+    #incomes-div {
+        transition: opacity 9000ms ease;
+    }
+    #incomes-div.htmx-settling {
+        opacity: 1;
+    }
+</style>

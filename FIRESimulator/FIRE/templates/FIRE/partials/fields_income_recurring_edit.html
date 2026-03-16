@@ -1,0 +1,142 @@
+{% if user.is_authenticated %}
+<div class="income-recurring-entry">
+    <!-- INCOME FIELDS ROW -->
+    <div class="row g-4 mb-3">
+        <div class="col-lg-12">
+            <h5 class="input-name">Starting Amount</h5>   
+            <div class="input-group">
+                <span class="input-group-text">$</span>             
+                <input type="number" class="form-control input-field income_starting_amount" name="recurring_income_starting_amount" min="1" max="10000000" value="{{ income.starting_amount }}" required hx-get="{% url 'income-table' %}" hx-target="next .income-table" hx-trigger="change delay:1s" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, starting_amount: document.getElementsByName('recurring_income_starting_amount')[{{ income.category_index }}].value, yearly_change: document.getElementsByName('recurring_income_yearly_change')[{{ income.category_index }}].value, tax_rate: document.getElementsByName('recurring_income_tax_rate')[{{ income.category_index }}].value, tax_rate_change: document.getElementsByName('recurring_income_tax_rate_change')[{{ income.category_index }}].value, start_age: document.getElementsByName('recurring_income_start_age')[{{ income.category_index }}].value, stop_age: document.getElementsByName('recurring_income_stop_age')[{{ income.category_index }}].value, income_category: 'Recurring'}">
+            </div>
+            <div class="form-text text-danger form-error-text income-amount-error"><small> Amount must be greater than $0</small></div>
+        </div>
+    </div>
+    <!-- INCOME FIELDS ROW -->
+    <div class="row g-4 mb-3">
+        <div class="col-lg-12">
+            <h5 class="input-name">Yearly Change <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-title="On average, how much do you anticipate this income to increase each year?"></i></h5>   
+            <div class="input-group">           
+                <input type="number" class="form-control input-field yearly_change income_rate" name="recurring_income_yearly_change" min="0" max="99.9" value="{{ income.yearly_change }}" step="0.1" required hx-get="{% url 'income-table' %}" hx-target="next .income-table" hx-trigger="change delay:1s" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, starting_amount: document.getElementsByName('recurring_income_starting_amount')[{{ income.category_index }}].value, yearly_change: document.getElementsByName('recurring_income_yearly_change')[{{ income.category_index }}].value, tax_rate: document.getElementsByName('recurring_income_tax_rate')[{{ income.category_index }}].value, tax_rate_change: document.getElementsByName('recurring_income_tax_rate_change')[{{ income.category_index }}].value, start_age: document.getElementsByName('recurring_income_start_age')[{{ income.category_index }}].value, stop_age: document.getElementsByName('recurring_income_stop_age')[{{ income.category_index }}].value, income_category: 'Recurring'}">
+                <span class="input-group-text">%</span>  
+            </div>
+            <div class="form-text text-danger form-error-text income-rate-error"><small> Please provide a number between 0% and 99.9%</small></div>
+        </div>
+    </div>
+    <!-- INCOME FIELDS ROW -->
+    <div class="row g-4 mb-3">
+        <div class="col-lg-6">
+            <h5 class="input-name">Tax Rate</h5>   
+            <div class="input-group">           
+                <input type="number" class="form-control input-field tax_rate income_rate" name="recurring_income_tax_rate" min="0" max="99.9" value="{{ income.tax_rate }}" step="0.1" required hx-get="{% url 'income-table' %}" hx-target="next .income-table" hx-trigger="change delay:1s" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, starting_amount: document.getElementsByName('recurring_income_starting_amount')[{{ income.category_index }}].value, yearly_change: document.getElementsByName('recurring_income_yearly_change')[{{ income.category_index }}].value, tax_rate: document.getElementsByName('recurring_income_tax_rate')[{{ income.category_index }}].value, tax_rate_change: document.getElementsByName('recurring_income_tax_rate_change')[{{ income.category_index }}].value, start_age: document.getElementsByName('recurring_income_start_age')[{{ income.category_index }}].value, stop_age: document.getElementsByName('recurring_income_stop_age')[{{ income.category_index }}].value, income_category: 'Recurring'}">
+                <span class="input-group-text">%</span>  
+            </div>
+            <div class="form-text text-danger form-error-text income-rate-error"><small> Please provide a number between 0% and 99.9%</small></div>
+        </div>
+        <div class="col-lg-6">
+            <h5 class="input-name">Yearly Tax Rate Change <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-title="On average, how much do you anticipate your tax rate to increase each year?"></i></h5>   
+            <div class="input-group">           
+                <input type="number" class="form-control input-field tax_rate_change income_rate" name="recurring_income_tax_rate_change" min="0" max="99.9" value="{{ income.tax_rate_change }}" step="0.1" required hx-get="{% url 'income-table' %}" hx-target="next .income-table" hx-trigger="change delay:1s" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, starting_amount: document.getElementsByName('recurring_income_starting_amount')[{{ income.category_index }}].value, yearly_change: document.getElementsByName('recurring_income_yearly_change')[{{ income.category_index }}].value, tax_rate: document.getElementsByName('recurring_income_tax_rate')[{{ income.category_index }}].value, tax_rate_change: document.getElementsByName('recurring_income_tax_rate_change')[{{ income.category_index }}].value, start_age: document.getElementsByName('recurring_income_start_age')[{{ income.category_index }}].value, stop_age: document.getElementsByName('recurring_income_stop_age')[{{ income.category_index }}].value, income_category: 'Recurring'}">
+                <span class="input-group-text">%</span>  
+            </div>
+            <div class="form-text text-danger form-error-text income-rate-error"><small> Please provide a number between 0% and 99.9%</small></div>
+        </div>
+    </div>
+    <!-- INCOME FIELDS ROW -->
+    <div class="row g-4 mb-3">
+        <div class="col-lg-6">
+            <h5 class="input-name">Start Age</h5>              
+            <select class="form-select input-select income_start_age" name="recurring_income_start_age" hx-get="{% url 'income-table' %}" hx-target="next .income-table" hx-trigger="change delay:1s" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, starting_amount: document.getElementsByName('recurring_income_starting_amount')[{{ income.category_index }}].value, yearly_change: document.getElementsByName('recurring_income_yearly_change')[{{ income.category_index }}].value, tax_rate: document.getElementsByName('recurring_income_tax_rate')[{{ income.category_index }}].value, tax_rate_change: document.getElementsByName('recurring_income_tax_rate_change')[{{ income.category_index }}].value, start_age: document.getElementsByName('recurring_income_start_age')[{{ income.category_index }}].value, stop_age: document.getElementsByName('recurring_income_stop_age')[{{ income.category_index }}].value, income_category: 'Recurring'}">
+                {% for age in ages %}
+                    {% if age == income.start_age %}
+                        <option value="{{ age }}" selected>{{ age }}</option>
+                    {% else %}
+                        <option value="{{ age }}">{{ age }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-lg-6">
+            <h5 class="input-name">Stop Age</h5>              
+            <select class="form-select input-select income_stop_age" name="recurring_income_stop_age" hx-get="{% url 'income-table' %}" hx-target="next .income-table" hx-trigger="change delay:1s" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, starting_amount: document.getElementsByName('recurring_income_starting_amount')[{{ income.category_index }}].value, yearly_change: document.getElementsByName('recurring_income_yearly_change')[{{ income.category_index }}].value, tax_rate: document.getElementsByName('recurring_income_tax_rate')[{{ income.category_index }}].value, tax_rate_change: document.getElementsByName('recurring_income_tax_rate_change')[{{ income.category_index }}].value, start_age: document.getElementsByName('recurring_income_start_age')[{{ income.category_index }}].value, stop_age: document.getElementsByName('recurring_income_stop_age')[{{ income.category_index }}].value, income_category: 'Recurring'}">
+                {% for age in ages reversed %}
+                    {% if age == income.stop_age %}
+                        <option value="{{ age }}" selected>{{ age }}</option>
+                    {% else %}
+                        <option value="{{ age }}">{{ age }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+            <div class="form-text text-danger form-error-text income-age-error"><small>Stop age must be greater than start age.</small></div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="income-Recurring-entry">
+    <!-- INCOME FIELDS ROW -->
+    <div class="row g-4 mb-3">
+        <div class="col-lg-4">
+            <h5 class="input-name">Starting Amount</h5>   
+            <div class="input-group">
+                <span class="input-group-text">$</span>             
+                <input type="number" class="form-control input-field income_starting_amount" name="recurring_income_starting_amount" min="1" max="10000000" value="{{ income.amount }}" required>
+            </div>
+            <div class="form-text text-danger form-error-text income-amount-error"><small> Amount must be greater than $0</small></div>
+        </div>
+        <div class="col-lg-4">
+            <h5 class="input-name">Yearly Change <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-title="On average, how much do you anticipate this income to increase each year?"></i></h5>   
+            <div class="input-group">           
+                <input type="number" class="form-control input-field yearly_change income_rate" name="recurring_income_yearly_change" min="0" max="99.9" value="{{ income.yearly_change }}" step="0.1" required>
+                <span class="input-group-text">%</span>  
+            </div>
+            <div class="form-text text-danger form-error-text income-rate-error"><small> Please provide a number between 0% and 99.9%</small></div>
+        </div>
+    </div>
+    <!-- INCOME FIELDS ROW -->
+    <div class="row g-4 mb-3">
+        <div class="col-lg-4">
+            <h5 class="input-name">Tax Rate <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-title="On average, what percentage of this income will be taken out as taxes each year?"></i></h5>   
+            <div class="input-group">           
+                <input type="number" class="form-control input-field tax_rate income_rate" name="recurring_income_tax_rate" min="0" max="99.9" value="{{ income.tax_rate }}" step="0.1" required>
+                <span class="input-group-text">%</span>  
+            </div>
+            <div class="form-text text-danger form-error-text income-rate-error"><small> Please provide a number between 0% and 99.9%</small></div>
+        </div>
+        <div class="col-lg-4">
+            <h5 class="input-name">Yearly Tax Rate Change <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-title="On average, how much do you anticipate your tax rate to increase each year?"></i></h5>   
+            <div class="input-group">           
+                <input type="number" class="form-control input-field tax_rate_change income_rate" name="recurring_income_tax_rate_change" min="0" max="99.9" value="{{ income.tax_rate_change }}" step="0.1" required>
+                <span class="input-group-text">%</span>  
+            </div>
+            <div class="form-text text-danger form-error-text income-rate-error"><small> Please provide a number between 0% and 99.9%</small></div>
+        </div>
+    </div>
+    <!-- INCOME FIELDS ROW -->
+    <div class="row g-4 mb-3">
+        <div class="col-lg-4">
+            <h5 class="input-name">Start Age</h5>              
+            <select class="form-select input-select income_start_age" name="recurring_income_start_age">
+                {% for age in ages %}
+                    {% if age == income.start_age %}
+                        <option value="{{ age }}" selected>{{ age }}</option>
+                    {% else %}
+                        <option value="{{ age }}">{{ age }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-lg-4">
+            <h5 class="input-name">Stop Age</h5>              
+            <select class="form-select input-select income_stop_age" name="recurring_income_stop_age">
+                {% for age in ages reversed %}
+                    {% if age == income.stop_age %}
+                        <option value="{{ age }}" selected>{{ age }}</option>
+                    {% else %}
+                        <option value="{{ age }}">{{ age }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+            <div class="form-text text-danger form-error-text income-age-error"><small>Stop age must be greater than start age.</small></div>
+        </div>
+    </div>
+</div>
+{% endif %}

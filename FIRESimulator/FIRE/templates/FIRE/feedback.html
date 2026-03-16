@@ -1,0 +1,83 @@
+{% extends 'FIRE/base.html' %}
+
+{% block content %}
+
+{% if error %}
+
+    <div class="alert alert-danger" role="alert">
+        {{ error }}
+    </div>
+
+{% endif %}
+
+{% if user.is_superuser %}
+
+    <h1>Feedback</h1>
+
+    {% if feedback %}
+
+        <table class="table table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th class="th-special" style="text-align: center;">User</th>
+                    <th class="th-special" style="text-align: center;">Category</th>
+                    <th class="th-special" style="text-align: center;">Feedback</th>
+                    <th class="th-special" style="text-align: center;">Date Provided</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in feedback %}
+                <tr>
+                    <td>{{ f.user }}</td>
+                    <td>{{ f.category }}</td>
+                    <td>{{ f.feedback }}</td>
+                    <td>{{ f.created_at|date:"D d M Y" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    {% else %}
+        
+        <h5 class="text-center"> No feedback to report</h5>
+
+    {% endif %}
+
+    <hr class="hr-big">
+
+{% endif %}
+
+<div class="col-4 mx-auto mt-3">
+
+    <h1 class="text-center">Feedback</h1>
+
+    <form method="POST"> 
+    {% csrf_token %}
+        <div class="mb-3">
+
+            <label for="category">Category</label>
+            <select class="form-select" id="category" name="category">
+                <option value=None>- -</option>
+                <option value="Bug Report">Bug Report</option>
+                <option value="Feature Request">Feature Request</option>
+                <option value="Content Accuracy">Content Accuracy</option>
+                <option value="Performance Issue">Performance Issue</option>
+                <option value="Account Issue">Account Issue</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+        
+        <div class="mb-3">
+            <label for="feedback">Feedback</label>
+            <textarea type="text" class="form-control" id="feedback" name="feedback"  required rows="5"></textarea>
+        </div>
+
+        <div class="d-flex justify-content-center">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-chat-left-text-fill"></i> Submit</button>
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,45 @@
+<div class="saving-entry">
+    <div class="accordion">
+        <div class="accordion-saving" data-id="income-accordion-{{ entry_count }}">
+            <h2 class="accordion-header">
+                <button class="accordion-button accordion-button-savings saving_name_header" type="button" data-bs-toggle="collapse" data-bs-target="#saving-entry-{{ entry_count }}" aria-expanded="true" aria-controls="saving-entry-{{ entry_count }}">
+                    My Account
+                </button>
+            </h2>
+            <div id="saving-entry-{{ entry_count }}" class="accordion-collapse savings-accordion collapse show">
+                <div class="accordion-body accordion-savings-body">
+                    <div class="row g-4 mb-3">
+                        <div class="col-lg-3">
+                            <h5 class="input-name">Account Name</h5>              
+                            <input type="text" class="form-control input-field saving_name" name="saving_name" value="My Account" required>
+                        </div>
+                        <div class="col-lg-3">
+                            <h5 class="input-name">Category</h5>              
+                            <select class="form-select input-select saving_category" name="saving_category" hx-get="{% url 'saving-fields' %}" hx-target="next .saving-fields" hx-trigger="change" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, entry_count: document.querySelectorAll('.saving-entry').length, esrp_count: document.querySelectorAll('.esrp-entry').length, hsa_count: document.querySelectorAll('.hsa-entry').length, ira_count: document.querySelectorAll('.ira-entry').length, tba_count: document.querySelectorAll('.tba-entry').length}">
+                                <option value=None>--> Select a category <--</option>
+                                {% if esrp_count == 0 %}
+                                    <option value="ESRP">Employer Sponsored Retirement Account (401k/403b)</option>
+                                {% endif %}
+                                {% if hsa_count == 0 %}
+                                    <option value="HSA">Health Savings Account (HSA)</option>
+                                {% endif %}
+                                {% if ira_count == 0 %}
+                                    <option value="IRA">Individual Retirement Account (IRA)</option>
+                                {% endif %}
+                                {% if tba_count == 0 %}
+                                    <option value="TBA">Taxable Brokerage Account (TBA)</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="saving-fields">
+                    </div>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-sm btn-remove" hx-delete hx-target="closest .saving-entry" hx-swap="delete"><i class="bi bi-x"></i> Remove</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr>
+</div>

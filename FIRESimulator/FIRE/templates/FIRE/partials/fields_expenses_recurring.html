@@ -1,0 +1,88 @@
+{% if user.is_authenticated %}
+<div class="expense-recurring-entry" hx-get="{% url 'expense-table' %}" hx-target="next .expense-table" hx-trigger="load" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, starting_amount: document.getElementsByName('recurring_expense_starting_amount')[{{ recurring_expense_count }}].value, yearly_change: document.getElementsByName('recurring_expense_yearly_change')[{{ recurring_expense_count }}].value, start_age: document.getElementsByName('recurring_expense_start_age')[{{ recurring_expense_count }}].value, stop_age: document.getElementsByName('recurring_expense_stop_age')[{{ recurring_expense_count }}].value, expense_category: 'Recurring'}">
+    <!-- EXPENSE FIELDS ROW -->
+    <div class="row g-4 mb-3">
+        <div class="col-lg-12">
+            <h5 class="input-name">Starting Amount</h5>   
+            <div class="input-group">
+                <span class="input-group-text">$</span>             
+                <input type="number" class="form-control input-field expense_starting_amount" name="recurring_expense_starting_amount" min="1" max="10000000" value="2500" required hx-get="{% url 'expense-table' %}" hx-target="next .expense-table" hx-trigger="change delay:1s" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, starting_amount: document.getElementsByName('recurring_expense_starting_amount')[{{ recurring_expense_count }}].value, yearly_change: document.getElementsByName('recurring_expense_yearly_change')[{{ recurring_expense_count }}].value, start_age: document.getElementsByName('recurring_expense_start_age')[{{ recurring_expense_count }}].value, stop_age: document.getElementsByName('recurring_expense_stop_age')[{{ recurring_expense_count }}].value, expense_category: 'Recurring'}">
+            </div>
+            <div class="form-text text-danger form-error-text expense-amount-error"><small> Amount must be greater than $0</small></div>
+        </div>
+    </div>
+    <!-- EXPENSE FIELDS ROW -->
+    <div class="row g-4 mb-3">
+        <div class="col-lg-12">
+            <h5 class="input-name">Yearly Change <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-title="On average, how much do you anticipate this expense to increase each year?"></i></h5>   
+            <div class="input-group">           
+                <input type="number" class="form-control input-field yearly_change expense_rate" name="recurring_expense_yearly_change" min="0" max="99.9" value="2.0" step="0.1" required hx-get="{% url 'expense-table' %}" hx-target="next .expense-table" hx-trigger="change delay:1s" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, starting_amount: document.getElementsByName('recurring_expense_starting_amount')[{{ recurring_expense_count }}].value, yearly_change: document.getElementsByName('recurring_expense_yearly_change')[{{ recurring_expense_count }}].value, start_age: document.getElementsByName('recurring_expense_start_age')[{{ recurring_expense_count }}].value, stop_age: document.getElementsByName('recurring_expense_stop_age')[{{ recurring_expense_count }}].value, expense_category: 'Recurring'}">
+                <span class="input-group-text">%</span>  
+            </div>
+            <div class="form-text text-danger form-error-text expense-rate-error"><small> Please provide a number between 0% and 99.9%</small></div>
+        </div>
+    </div>
+    <!-- EXPENSE FIELDS ROW -->
+    <div class="row g-4 mb-3">
+        <div class="col-lg-6">
+            <h5 class="input-name">Start Age</h5>              
+            <select class="form-select input-select expense_start_age" name="recurring_expense_start_age" hx-get="{% url 'expense-table' %}" hx-target="next .expense-table" hx-trigger="change delay:1s" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, starting_amount: document.getElementsByName('recurring_expense_starting_amount')[{{ recurring_expense_count }}].value, yearly_change: document.getElementsByName('recurring_expense_yearly_change')[{{ recurring_expense_count }}].value, start_age: document.getElementsByName('recurring_expense_start_age')[{{ recurring_expense_count }}].value, stop_age: document.getElementsByName('recurring_expense_stop_age')[{{ recurring_expense_count }}].value, expense_category: 'Recurring'}">
+                {% for age in ages %}
+                        <option value="{{ age }}">{{ age }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-lg-6">
+            <h5 class="input-name">Stop Age</h5>              
+            <select class="form-select input-select expense_stop_age" name="recurring_expense_stop_age" hx-get="{% url 'expense-table' %}" hx-target="next .expense-table" hx-trigger="change delay:1s" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, starting_amount: document.getElementsByName('recurring_expense_starting_amount')[{{ recurring_expense_count }}].value, yearly_change: document.getElementsByName('recurring_expense_yearly_change')[{{ recurring_expense_count }}].value, start_age: document.getElementsByName('recurring_expense_start_age')[{{ recurring_expense_count }}].value, stop_age: document.getElementsByName('recurring_expense_stop_age')[{{ recurring_expense_count }}].value, expense_category: 'Recurring'}">
+                {% for age in ages reversed %}
+                        <option value="{{ age }}">{{ age }}</option>
+                {% endfor %}
+            </select>
+            <div class="form-text text-danger form-error-text expense-age-error"><small>Stop age must be greater than start age.</small></div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="expense-recurring-entry">
+    <!-- EXPENSE FIELDS ROW -->
+    <div class="row g-4 mb-3">
+        <div class="col-lg-4">
+            <h5 class="input-name">Starting Amount</h5>   
+            <div class="input-group">
+                <span class="input-group-text">$</span>             
+                <input type="number" class="form-control input-field expense_starting_amount" name="recurring_expense_starting_amount" min="1" max="10000000" value="2500" required>
+            </div>
+            <div class="form-text text-danger form-error-text expense-amount-error"><small> Amount must be greater than $0</small></div>
+        </div>
+        <div class="col-lg-4">
+            <h5 class="input-name">Yearly Change <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-title="On average, how much do you anticipate this expense to increase each year?"></i></h5>   
+            <div class="input-group">           
+                <input type="number" class="form-control input-field yearly_change expense_rate" name="recurring_expense_yearly_change" min="0" max="99.9" value="2.0" step="0.1" required>
+                <span class="input-group-text">%</span>  
+            </div>
+            <div class="form-text text-danger form-error-text expense-rate-error"><small> Please provide a number between 0% and 99.9%</small></div>
+        </div>
+    </div>
+    <!-- EXPENSE FIELDS ROW -->
+    <div class="row g-4 mb-3">
+        <div class="col-lg-4">
+            <h5 class="input-name">Start Age</h5>              
+            <select class="form-select input-select expense_start_age" name="recurring_expense_start_age">
+                {% for age in ages %}
+                        <option value="{{ age }}">{{ age }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-lg-4">
+            <h5 class="input-name">Stop Age</h5>              
+            <select class="form-select input-select expense_stop_age" name="recurring_expense_stop_age">
+                {% for age in ages reversed %}
+                        <option value="{{ age }}">{{ age }}</option>
+                {% endfor %}
+            </select>
+            <div class="form-text text-danger form-error-text expense-age-error"><small>Stop age must be greater than start age.</small></div>
+        </div>
+    </div>
+</div>
+{% endif %}

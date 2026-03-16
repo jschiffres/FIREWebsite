@@ -1,0 +1,19 @@
+<div class="tba-entry">
+    <!-- SAVINGS FIELDS ROW -->
+    <div class="row g-4 mb-3">
+        <div class="col-lg-3">
+            <h5 class="input-name">Current Value</h5>   
+            <div class="input-group">
+                <span class="input-group-text">$</span>             
+                <input type="number" class="form-control input-field" name="tba_current_value" min="1" max="10000000" value="{{ account.current_value }}" required>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <h5 class="input-name">Yearly Growth</h5>   
+            <div class="input-group">           
+                <input type="number" class="form-control input-field" name="tba_yearly_growth" min="0" max="99.9" value="{{ account.yearly_growth }}" step="0.1" required>
+                <span class="input-group-text">%</span>  
+            </div>
+        </div>
+    </div>
+</div>

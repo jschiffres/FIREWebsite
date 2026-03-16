@@ -1,182 +1,188 @@
+<script>
+    function incomeInfoValidation() {
+        console.log("val")
+        const section = document.getElementById("income")
+        if (section) {
+
+            if (section.hidden == false) {
+
+                // Define Variables from DOM
+                const income_entries = document.querySelectorAll('.income-entry')
+                const expensesButton = document.getElementById('expenses-button')
+
+                // Set initial stlye for button
+                let disableButton = false
+
+                // If no income entries:
+                if (income_entries.length === 0) {
+
+                    // Update button style to disabled
+                    disableButton = true
+                    expensesButton.disabled = disableButton;
+                }
+
+                // If there are income entries:
+                else {
+                    let disableButton = false
+                    const income_name_headers = document.querySelectorAll('.income_name_header')
+                    const income_names = document.querySelectorAll('.income_name')
+                    const income_categories = document.querySelectorAll('.income_category')
+                    const income_name_errors = document.querySelectorAll('.income-name-error')
+                    const income_category_errors = document.querySelectorAll('.income-category-error')
+                    const income_start_ages = document.querySelectorAll('.income_start_age')
+                    const income_stop_ages = document.querySelectorAll('.income_stop_age')
+                    const income_age_errors = document.querySelectorAll('.income-age-error')
+                    const income_starting_amounts = document.querySelectorAll('.income_starting_amount')
+                    const income_amount_errors = document.querySelectorAll('.income-amount-error')
+                    const income_rates = document.querySelectorAll('.income_rate')
+                    const income_rate_errors = document.querySelectorAll('.income-rate-error')
+
+                    income_names.forEach(function (name, i) {
+                        income_name_errors[i].style.display = 'none'
+                        income_name_headers[i].textContent = name.value
+                        if (name.value == '') {
+                            // Update display style to disabled/block
+                            disableButton = true
+                            income_name_errors[i].style.display='block'
+                        }
+                    });
+
+                    income_categories.forEach(function (category, i) {
+                        income_category_errors[i].style.display = 'none'
+                        if (category.value == 'None') {
+                            // Update display style to disabled/block
+                            disableButton = true
+                            income_category_errors[i].style.display='block'
+                        }
+                    });
+
+                    income_start_ages.forEach(function (age, i) {
+                        income_age_errors[i].style.display = 'none'
+                        if (age.value == "Current Age") {
+                            if (income_stop_ages[i].value == "Current Age") {
+                                // Update display style to disabled/block
+                                disableButton = true
+                                income_age_errors[i].style.display='block'
+                            }
+                        }
+                        else if (age.value == "Target Retirement Age") {
+                            // Update display style to disabled/block
+                            disableButton = true
+                            income_age_errors[i].style.display='block'
+                        }
+                        else if (Number(age.value) >= Number(income_stop_ages[i].value)) {
+                            // Update display style to disabled/block
+                            disableButton = true
+                            income_age_errors[i].style.display='block'
+                        }
+                    });
+
+                    income_starting_amounts.forEach(function (amount, i) {
+                        income_amount_errors[i].style.display = 'none'
+                        if (Number(amount.value) <= 0) {
+                            // Update display style to disabled/block
+                            disableButton = true
+                            income_amount_errors[i].style.display='block'
+                        }
+                    });
+
+                    income_rates.forEach(function (rate, i) {
+                        income_rate_errors[i].style.display = 'none'
+                        if (Number(rate.value) < 0 || Number(rate.value > 99.9)) {
+                            // Update display style to disabled/block
+                            disableButton = true
+                            income_rate_errors[i].style.display='block'
+                        }
+                    });
+
+                    // Update button style based on pass/fail of constraints
+                    expensesButton.disabled = disableButton;
+                }
+            }
+        }
+    }
+    
+    document.body.addEventListener('htmx:afterSwap', function (evt) {
+        incomeInfoValidation()
+        tooltips()
+    })
+
+    document.addEventListener('change', function (e) {
+        if (e.target.classList.contains("input-field") || e.target.classList.contains("input-select")) {
+            incomeInfoValidation()
+        }
+    })
+
+    document.body.addEventListener('htmx:afterRequest', function (evt) {
+        if (evt.detail.requestConfig.verb == 'delete') {
+            incomeInfoValidation()
+        }
+    })
+</script>
+
 <!-- INCOME -->
-<section id="income" class="mb-5">
-    <!-- TITLE -->
-    <h3 class="section-title-income"><i class="bi bi-cash-stack"></i> Income</h3>
-    <div class="tip-card-income shadow-sm rounded mb-3">
-        <!-- QUESTION -->
-        <div class="row g-4 mb-1">
-            <h5>How much money do you make?</h5>
-        </div>
-        <!-- INCOME INSTRUCTIONS -->
-        <div class="row g-4 mb-3">
-            <div class="accordion" id="income-accordian">
-                <div class="accordion-item border-0">
-                    <h2 class="accordion-header" id="incomes-headingOne">
-                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #16634f;" type="button" data-bs-toggle="collapse" data-bs-target="#incomes-collapseOne" aria-expanded="false" aria-controls="incomes-collapseOne">
-                        <i class="bi bi-three-dots-vertical"></i> Salary
-                        </button>
-                    </h2>
-                    <div id="incomes-collapseOne" class="accordion-collapse collapse" aria-labelledby="incomes-headingOne">
-                        <div class="accordion-body" style="background-color: #84edd383;">
-                            <p><b><i class="bi bi-question-lg"></i> How: </b>Review compensation statements provided by your employer(s) to derive your current <u>gross salary</u> amount. For those with variable income or working as independent contractors, utilize prior year amounts as fit to inform your current amount.</p>
-                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>Your salary figure will be your main source of income and should dictate your lifestyle spending choices. Your current salary will dictate</p>
-                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>Understand factors within your control such as frequent job hopping and factors out of your control such as a recession.</p>
-                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note....</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="accordion-item border-0">
-                    <h2 class="accordion-header" id="incomes-headingTwo">
-                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #257b64;" type="button" data-bs-toggle="collapse" data-bs-target="#incomes-collapseTwo" aria-expanded="false" aria-controls="incomes-collapseTwo">
-                        <i class="bi bi-three-dots-vertical"></i> Raises
-                        </button>
-                    </h2>
-                    <div id="incomes-collapseTwo" class="accordion-collapse collapse" aria-labelledby="incomes-headingTwo">
-                        <div class="accordion-body" style="background-color: #84edd383;">
-                            <p><b><i class="bi bi-question-lg"></i> How: </b>An <u>annual raise of 3-5% is a safe estimate</u> but depending on your industry it could be higher or lower.</p>
-                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>Factoring in raises will help you understand how your income may grow over time and how that can impact your savings rate and retirement timeline.</p>
-                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>Understand factors within your control such as frequent job hopping and factors out of your control such as a recession.</p>
-                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note....</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="accordion-item border-0">
-                    <h2 class="accordion-header" id="incomes-headingThree">
-                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #35927a;" type="button" data-bs-toggle="collapse" data-bs-target="#incomes-collapseThree" aria-expanded="false" aria-controls="incomes-collapseThree">
-                        <i class="bi bi-three-dots-vertical"></i> Bonuses
-                        </button>
-                    </h2>
-                    <div id="incomes-collapseThree" class="accordion-collapse collapse" aria-labelledby="incomes-headingThree">
-                        <div class="accordion-body" style="background-color: #84edd383;">
-                            <p><b><i class="bi bi-question-lg"></i> How: </b>Yearly bonuses are not a given and may not happen at all depending on your line of work. Utilize prior year amounts or employment offer letters, if possible, to derive your bonus payments as an estimated percentage of your salary. Be conservative as there are many factors out of your control that may reduce this percentage.</p>
-                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
-                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
-                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note....</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- INCOME FIELDS -->
-        <div class="row g-4">
-            <div class="col-lg-4">
-                <h5 class="fw-bold">Salary <i class="bi bi-question-circle-fill text-success" data-bs-toggle="tooltip" data-bs-placement="top" title="TBD Tooltip"></i></h5>
-                <div class="input-group">
-                    <span class="input-group-text">$</span>
-                    <div class="form-floating">
-                        <input type="number" class="form-control" id="current_yearly_salary" name="current_yearly_salary" min="1000" max="1000000" value="75000" required>
-                        <label for="current_yearly_salary">Current Yearly Gross Salary</label>
-                    </div>
-                </div>
-                <div id="current_yearly_salaryHelp" class="form-text mb-3"><small>What is your current yearly gross salary?</i></small></div>
-            </div>
-            <div class="col-lg-4">
-                <h5 class="fw-bold">Raises <i class="bi bi-question-circle-fill text-success" data-bs-toggle="tooltip" data-bs-placement="top" title="TBD Tooltip"></i></h5>
-                <div class="input-group">
-                    <div class="form-floating">
-                        <input type="number" class="form-control" id="estimated_salary_raise" name="estimated_salary_raise" min="0" max="99.9" value="3.0" step=".1" required>
-                        <label for="estimated_salary_raise">Estimated Yearly Salary Raise</label>
-                    </div>
-                    <span class="input-group-text">%</span>
-                </div>
-                <div id="estimated_salary_raiseHelp" class="form-text mb-3"><small>On average, how much do you anticipate your salary to increase each year?</small></div>
-            </div>
-            <div class="col-lg-4">
-                <h5 class="fw-bold">Bonuses <i class="bi bi-question-circle-fill text-success" data-bs-toggle="tooltip" data-bs-placement="top" title="TBD Tooltip"></i></h5>
-                <div class="input-group">
-                    <div class="form-floating">
-                        <input type="number" class="form-control" id="estimated_bonus" name="estimated_bonus" min="0" max="999.9" value="1.5" step=".1" required>
-                        <label for="estimated_bonus">Estimated Yearly Bonus</label>
-                    </div>
-                    <span class="input-group-text">%</span>
-                </div>
-                <div id="estimated_bonusHelp" class="form-text mb-3"><small>On average, what percentage of your yearly salary do you anticipate to recieve as a bonus each year?</small></div>
-            </div>
-        </div>
-        <!-- INCOME INSTRUCTIONS -->
-        <div class="row g-4 mb-3">
-            <div class="accordion" id="income-accordian">
-                <div class="accordion-item border-0">
-                    <h2 class="accordion-header" id="incomes-headingFour">
-                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #16634f;" type="button" data-bs-toggle="collapse" data-bs-target="#incomes-collapseFour" aria-expanded="false" aria-controls="incomes-collapseFour">
-                        <i class="bi bi-three-dots-vertical"></i> Other Income
-                        </button>
-                    </h2>
-                    <div id="incomes-collapseFour" class="accordion-collapse collapse" aria-labelledby="incomes-headingFour">
-                        <div class="accordion-body" style="background-color: #84edd383;">
-                            <p><b><i class="bi bi-question-lg"></i> How: </b>Income earned outside of your normal salary(s) should be included if it is <u>currently a consistent factor</u> within your monthly/yearly budget. Some sources of income might be easy to predict annual increases such as rental income or trust annuities while some might be just a fixed amount.</p>
-                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
-                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
-                            <p><b><i class="bi bi-asterisk"></i> Note: </b> For those receiving stock as compensation along with their normal salary, include that within the this section as a dollar amount or within the Bonus section as a percentage of your gross salary.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- INCOME FIELDS -->
-        <div class="row g-4">
-            <div class="col-lg-6">
-                <h5 class="fw-bold">Other Income</h5>
-                <div class="input-group">
-                    <span class="input-group-text">$</span>
-                    <div class="form-floating">
-                        <input type="number" class="form-control" id="current_yearly_other_income" name="current_yearly_other_income" min="0" max="1000000" value="0" required>
-                        <label for="current_yearly_other_income">Current Other Income</label>
-                    </div>
-                </div>
-                <div id="current_yearly_other_incomeHelp" class="form-text mb-3"><small>What is your current yearly other income amount?</i></small></div>
-            </div>
-            <div class="col-lg-6">
-                <h5 class="fw-bold">Future Other Income</h5>
-                <div class="input-group">
-                    <div class="form-floating">
-                        <input type="number" class="form-control" id="estimated_other_income_increase" name="estimated_other_income_increase" min="0" max="99.9" value="0.0" step=".1" required>
-                        <label for="estimated_other_income_increase">Estimated Yearly Other Income Increase</label>
-                    </div>
-                    <span class="input-group-text">%</span>
-                </div>
-                <div id="estimated_other_income_increaseHelp" class="form-text mb-3"><small>On average, how much do you anticipate your other income to increase each year?</small></div>
-            </div>
-        </div>
-        <!-- INCOME INSTRUCTIONS -->
-        <div class="row g-4 mb-3">
-            <div class="accordion" id="income-accordian">
-                <div class="accordion-item border-0">
-                    <h2 class="accordion-header" id="incomes-headingFive">
-                        <button class="accordion-button collapsed fw-bold" style="color: white; background-color: #16634f;" type="button" data-bs-toggle="collapse" data-bs-target="#incomes-collapseFive" aria-expanded="false" aria-controls="incomes-collapseFive">
-                        <i class="bi bi-three-dots-vertical"></i> Lump Sum Income
-                        </button>
-                    </h2>
-                    <div id="incomes-collapseFive" class="accordion-collapse collapse" aria-labelledby="incomes-headingFive">
-                        <div class="accordion-body" style="background-color: #84edd383;">
-                            <p><b><i class="bi bi-question-lg"></i> How: </b>If you have any anticipated large inheritances of money in the future (prior to your retirement age) that you believe will factor into your retirement savings, detail their amounts and anticipated age upon receival.</p>
-                            <p><b><i class="bi bi-calculator-fill"></i> Why: </b>This is how it will be used within the simulation...</p>
-                            <p><b><i class="bi bi-lightbulb-fill"></i> Tip: </b>This is a tip...</p>
-                            <p><b><i class="bi bi-asterisk"></i> Note: </b> This is a note...
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row g-4">
+<section id="income" class="mt-4 mb-4">
+    <!-- SORTABLE -->
+    <script>
+        document.body.addEventListener('htmx:afterRequest', function (evt) {
+            console.log(evt.detail.requestConfig.verb)
+            const income_entries = document.getElementById('income-div');
+
+            const sortable = new Sortable(income_entries, {
+                animation: 150,
+                handle: '.accordion-header', // users drag the header
+                ghostClass: 'bg-light',
+                onEnd: function (evt) {
+                    const newOrder = Array.from(income_entries.children).map(item => item.dataset.id);
+                }
+            });
+        });
+    </script>
+    <!-- CARD -->
+    <div class="card tip-card-income shadow rounded mb-3">
+        <div class="card-body card-body-income">
+            <!-- TITLE -->
+            <h3 class="section-title-income"><i class="bi bi-arrow-up icon-income"></i> Income</h3>
             <!-- INCOME FIELDS -->
-            <div class="col-12">
-                <h5 class="fw-bold">Lump Sum Income</h5>
-                <div id="lumpsumincome-div">
+            <div id="income-div">
+            </div>
+            <div>
+                <button type="button" class="btn btn-add" hx-get="{% url 'create-income' %}" hx-target="#income-div" hx-swap="beforeend" hx-vals="js:{entry_count: document.querySelectorAll('.income-entry').length}"><i class="bi bi-plus"></i>  Add</button>
+            </div>
+        </div>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-6 col-md-6 col-sm-6 text-start mt-4 mb-4">
+            <!-- <button type="button" class="btn btn-action-empty btn-lg" hx-delete hx-target="#income" hx-swap="delete" hx-on::before-request="document.getElementById('personalInfo').hidden = false"><i class="bi bi-arrow-left"></i> Back</i></button> -->
+            <button type="button" class="btn btn-action-empty btn-lg" data-bs-toggle="modal" data-bs-target="#income-Back-Modal"><i class="bi bi-arrow-left"></i> Personal Info</i></button>
+        </div>
+        <div class="col-lg-6 col-md-6 col-sm-6 text-end mb-4">
+            <button id="expenses-button" type="button" class="btn btn-action-empty btn-lg" hx-get="{% url 'create-expenses-section' %}" hx-target="#expenses-div" hx-swap="beforeend transition:true" hx-on::before-request="document.getElementById('income').hidden = true">Expenses <i class="bi bi-arrow-right"></i></button>
+        </div>
+    </div>
+    <div class="modal fade" id="income-Back-Modal" data-bs-backdrop="delete" data-bs-keyboard="false" tabindex="-1" aria-labelledby="income-Back-Modal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content back-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="staticBackdropLabel"><i class="bi-exclamation-circle-fill"></i> Leave Incomes?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div>
-                    <button type="button" class="btn btn-primary" hx-get="{% url 'create-lumpsum-income' %}" hx-vals="js:{max_age: document.getElementById('estimated_retirement_age').value, min_age: document.getElementById('current_age').value}" hx-target="#lumpsumincome-div" hx-swap="beforeend transform:true"><i class="bi bi-plus-circle-fill"></i> Add Lump Sum</button>
-                    <p class="form-text"><small><i>*One entry per year before retirement age</i></small></p>
+                <div class="modal-body">
+                    Incomes entered will not be saved. <i>Are you sure?</i>
+                </div>
+                <div class="modal-footer" style="background: #FCFBF9;">
+                    <button type="button" id="income-back-button" class="btn btn-action-empty" data-bs-dismiss="modal" hx-delete hx-target="#income" hx-swap="delete" hx-on::before-request="document.getElementById('personalInfo').hidden = false"><i class="bi bi-arrow-left"> </i>Back</i></button>
                 </div>
             </div>
         </div>
     </div>
 </section>
-<hr class="hr-big">
 <!-- EXPENSES HTML -->
-<div id="expenses-div" class="text-center mt-3 mb-3">
-    <button type="button" class="btn btn-primary btn-lg" hx-get="{% url 'create-expenses-section' %}" hx-target="#expenses-div" hx-swap="outerHTML transition:true"><i class="bi bi-arrow-down-circle-fill"></i> Expenses</i></button>
+<div id="expenses-div">
+
 </div>
+
+
 <style>
     /* Fade transition for HTMX */
     .htmx-swapping {
@@ -186,14 +192,10 @@
     .htmx-settling {
         opacity: 0;
     }
-    #incomes-div {
+    #expenses-div {
         transition: opacity 9000ms ease;
     }
-    #incomes-div.htmx-settling {
+    #expenses-div.htmx-settling {
         opacity: 1;
     }
 </style>
-
-<script>
-    FIREscrollspy.refresh()
-</script>

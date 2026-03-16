@@ -1,0 +1,213 @@
+{% extends 'FIRE/base.html' %}
+
+{% block content %}
+
+<script>
+    $(document).ready(function() {
+        $(window).keydown(function(event){
+            if(event.keyCode == 13) {
+            event.preventDefault();
+            return false;
+            }
+        });
+    });
+</script>
+
+<script>
+    function updateQuestionnaireNav(e) {
+        const personal = document.getElementById('personal-nav-link')
+        const income = document.getElementById('income-nav-link')
+        const expenses = document.getElementById('expenses-nav-link')
+        const savings = document.getElementById('savings-nav-link')
+        if (e.target.id == "income-button") {
+            income.classList.add("active")
+            personal.classList.remove("active")
+        }
+        else if (e.target.id == "income-back-button") {
+            personal.classList.add("active")
+            income.classList.remove("active")
+        }
+        else if (e.target.id == "expenses-button") {
+            expenses.classList.add("active")
+            income.classList.remove("active")
+        }
+        else if (e.target.id == "expenses-back-button") {
+            income.classList.add("active")
+            expenses.classList.remove("active")
+        }
+        else if (e.target.id == "savings-button") {
+            savings.classList.add("active")
+            expenses.classList.remove("active")
+        }
+        else if (e.target.id == "savings-back-button") {
+            expenses.classList.add("active")
+            savings.classList.remove("active")
+        }
+    }
+
+    document.addEventListener('click', function (e) {
+        if (e.target.classList.contains("btn-action-empty")) {
+            updateQuestionnaireNav(e)
+        }
+    })
+</script>
+
+<script>
+    function personalInfoValidation() {
+        // Define Variables from DOM
+        const plan_name = document.getElementById('plan_name').value
+        const currentAge = Number(document.getElementById('current_age').value)
+        const retirementAge = Number(document.getElementById('retirement_age').value)
+        const retirementAgeHelp = document.getElementById('retirement_ageHelp')
+        const coastfireAge = Number(document.getElementById('coast_fire_age').value)
+        const coastfireAgeHelp = document.getElementById('coast_fire_ageHelp')
+        const missingInputsHelp = document.getElementById('missingInputsHelp')
+        const inputAgesHelp = document.getElementById('inputAgesHelp')
+        const incomeButton = document.getElementById('income-button')
+
+        // Set initial stlyes for button and errors
+        let disableButton = false
+        coastfireAgeHelp.style.display='none'
+        retirementAgeHelp.style.display='none'
+        missingInputsHelp.style.display='none'
+        inputAgesHelp.style.display='none'
+
+        // Check current age constraint
+        if (currentAge >= retirementAge) {
+            disableButton = true
+            retirementAgeHelp.style.display='block'
+        }
+
+        // Check coast fire age constraints
+        if (coastfireAge != 0) {
+            if (coastfireAge >= retirementAge || coastfireAge <= currentAge) {
+                disableButton = true
+                coastfireAgeHelp.style.display='block'
+            }
+        }
+
+        // Check age value constraints
+        if (currentAge > 100 || currentAge < 0 || retirementAge > 101 || retirementAge < 0 || coastfireAge > 101 || coastfireAge < 0) {
+            disableButton = true
+            inputAgesHelp.style.display='block'
+        }
+
+        // Ensure form is completley filled out
+        if (currentAge == 0 || retirementAge == 0 || plan_name == '') {
+            disableButton = true
+            missingInputsHelp.style.display='block'
+        }
+        
+        // Update button style based on pass/fail of constraints
+        incomeButton.disabled = disableButton;
+    }
+
+    // Run function on load
+    document.addEventListener('DOMContentLoaded', function() {
+        personalInfoValidation()
+        tooltips()
+     })
+
+    // Run function when inputs are changed
+    document.addEventListener('change', function (e) {
+        if (e.target.id == "current_age" || e.target.id == "retirement_age" || e.target.id == "coast_fire_age" || e.target.id == "plan_name") {
+            personalInfoValidation()
+        }
+    })
+</script>
+
+{% if error %}
+    <div class="alert alert-danger alert-dismissible fade show mb-0" role="alert">
+        <i class="bi bi-exclamation-circle-fill"></i> {{ error }} <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+{% endif %}
+
+<!-- QUESTIONNAIRE NAVBAR -->
+<nav id="app-navbar" class="navbar mt-0 shadow-lg sticky-top navbar-expand-lg">
+    <div class="container">
+        <h1 class="mt-3 mb-3 fs-3 fw-bold" id="nav-header">Questionnaire</h1>
+        <ul class="nav nav-pills">
+            <li class="nav-item"><a class="nav-link nav-link-personal active" id="personal-nav-link" href="#personalInfo"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#B34E82"/></svg> Personal Info</a></li>
+            <li class="nav-item"><a class="nav-link nav-link-income" id="income-nav-link" href="#income"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#285C53"/></svg> Income</a></li>
+            <li class="nav-item"><a class="nav-link nav-link-expenses" id="expenses-nav-link" href="#expenses"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="5" fill="#EC652B"/></svg> Expenses</a></li>
+            <li class="nav-item"><a class="nav-link nav-link-savings" id="savings-nav-link" href="#savings"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#4F378A"/></svg> Savings</a></li>
+        </ul>
+        <ul class="nav nav-pills">
+            <li class="nav-item"><a class="nav-link nav-link-tips" href="#"><i class="bi bi-lightbulb"></i> Tips</a></li>
+        </ul>
+    </div>
+</nav>
+
+<!-- NAVBAR SCROLL CONTAINER -->
+<div class="container">
+    <form method="POST">{% csrf_token %}
+        <!-- PERSONAL INFO -->
+        <section id="personalInfo" class="mt-4 mb-4">
+            <!-- PERSONAL FIELDS ROW -->
+            <div class="row g-4 mb-3">
+                <div class="col-lg-12">
+                    <div id="missingInputsHelp" class="form-text text-danger"><small>Please fill out all required fields.</small></div>
+                    <h5 class="input-name">Plan Name</h5>
+                    <input type="text" class="form-control input-field" id="plan_name" name="plan_name" value="My Plan" required>
+                </div>
+            </div>
+            <!-- CARD -->
+            <div class="card tip-card-personal shadow rounded mb-3">
+                <div class="card-body card-body-personal">
+                    <!-- TITLE -->
+                    <h3 class="section-title-personal"><i class="bi bi-person icon-personal"></i> Personal Info</h3>
+                    <div id="inputAgesHelp" class="form-text text-danger"><small>All ages must be greater than 0 and less than 100</small></div>
+                    <!-- PERSONAL FIELDS ROW -->
+                    <div class="row g-4 mb-3">
+                        <div class="col-lg-4">
+                            <h5 class="input-name">Current Age</h5>              
+                             <input type="number" class="form-control input-field" id="current_age" name="current_age" min="1" max="100" value="25" required>
+                        </div>
+                    </div>
+                    <!-- PERSONAL FIELDS ROW -->
+                    <div class="row g-4 mb-3">
+                        <div class="col-lg-4">
+                            <h5 class="input-name">Target Retirement Age <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-title="What age would you like to retire?"></i></h5>              
+                             <input type="number" class="form-control input-field" id="retirement_age" name="retirement_age" min="2" max="101" value="40" required>
+                             <div id="retirement_ageHelp" class="form-text text-danger"><small>Retirement age must be greater than current age.</small></div>
+                        </div>
+                    </div>
+                    <!-- PERSONAL FIELDS ROW -->
+                    <div class="row g-4 mb-3">
+                        <div class="col-lg-4">
+                            <h5 class="input-name">Coast FI Age (Optional) <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-title="At this age, no additional savings will be contributed to your retirement."></i></h5>              
+                             <input type="number" class="form-control input-field" id="coast_fire_age" name="coast_fire_age" min="2" max="101">
+                             <div id="coast_fire_ageHelp" class="form-text text-danger"><small>Coast FI age must be greater than current age and less than retirement age.</small></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- NEXT BUTTON -->
+            <div class="text-end mt-4 mb-4">
+                <button type="button" id="income-button" class="btn btn-action-empty btn-lg" hx-get="{% url 'create-incomes-section' %}" hx-target="#incomes-div" hx-swap="beforeend transition:true" hx-on::before-request="document.getElementById('personalInfo').hidden = true">Income <i class="bi bi-arrow-right"></i></button>
+            </div>
+        </section>
+        <!-- INCOME SECTION PLACEHOLDER -->
+        <div id="incomes-div">
+        </div>
+    </form>
+</div>
+
+<style>
+    /* Fade transition for HTMX */
+    .htmx-swapping {
+        opacity: 0;
+        transition: opacity 9000ms ease;
+    }
+    .htmx-settling {
+        opacity: 0;
+    }
+    #incomes-div {
+        transition: opacity 9000ms ease;
+    }
+    #incomes-div.htmx-settling {
+        opacity: 1;
+    }
+</style>
+
+{% endblock %}

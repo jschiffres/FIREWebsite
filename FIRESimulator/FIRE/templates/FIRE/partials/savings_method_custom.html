@@ -1,0 +1,28 @@
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+document.body.addEventListener('htmx:afterRequest', function () {
+    const list = document.getElementById('saving-div');
+
+    const sortable = new Sortable(list, {
+        animation: 150,
+        handle: '.accordion-header', // users drag the header
+        ghostClass: 'bg-light',
+        onEnd: function (evt) {
+            const newOrder = Array.from(list.children).map(item => item.dataset.id);
+        }
+    });
+});
+</script>
+
+<!-- Savings Entries -->
+<div id="saving-div">
+</div>
+<div class="btn-toolbar" role="toolbar">
+    <div class="btn-group" role="group">
+        <button type="button" class="btn btn-add" hx-get="{% url 'create-saving' %}" hx-target="#saving-div" hx-swap="beforeend" hx-vals="js:{entry_count: document.querySelectorAll('.saving-entry').length, esrp_count: document.querySelectorAll('.esrp-entry').length, hsa_count: document.querySelectorAll('.hsa-entry').length, ira_count: document.querySelectorAll('.ira-entry').length, tba_count: document.querySelectorAll('.tba-entry').length}"><i class="bi bi-plus"></i>  Account</button>
+    </div>
+    <div class="btn-group m-2 text-center" role="group">
+        <button type="button" id="expand-savings-entries" class="btn btn-action-empty" onclick="savingsAccordionAction('Expand');"><i class="bi bi-arrows-expand"></i>  Expand All</button>
+        <button type="button" id="collapse-savings-entries" class="btn btn-action-empty" onclick="savingsAccordionAction('Collapse');"><i class="bi bi-arrows-collapse"></i>  Collapse All</button>
+    </div>
+</div>

@@ -1,0 +1,20 @@
+<div class="container tbl-container">
+    <div class="row tbl-fixed">
+        <table class="table table-borderless table-striped table-hover table-sm">
+            <thead style="position: sticky;top: 0">
+                <tr>
+                    <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#B34E82"/></svg> Age</th>
+                    <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#EC652B"/></svg> Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in data %}
+                    <tr>
+                        <td>{{ d.age }}</td>
+                        <td>{{ d.amount }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -8,12 +8,23 @@
 </style>
 {% endif %}
 
+<script>
+    $(document).ready(function() {
+        $(window).keydown(function(event){
+            if(event.keyCode == 13) {
+            event.preventDefault();
+            console.log("hello")
+            return false;
+            }
+        });
+    });
+</script>
+
 <form>
     <!-- DASHBOARD NAVBAR -->
-    <nav id="questionnaire-navbar" class="navbar sticky-top shadow-sm mb-3 rounded">
-        <div class="container-fluid">
+    <nav id="app-navbar" class="navbar mt-0 shadow-lg sticky-top navbar-expand-lg">
+        <div class="container">
             <h1 class="navbar-brand mb-0 fs-3 fw-bold" id="nav-header" style="color:white;"><i class="bi bi-speedometer"></i> Dashboard</h1>
-            
             <ul class="nav nav-pills">
                 <!-- <li class="nav-item"><button type="button" class="btn btn-warning me-2" data-bs-toggle="modal" data-bs-target="#personalinfo-Modal"><i class="bi bi-pencil-square"></i> Personal Info</button></li> -->
                 <li class="nav-item"><button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#income-Modal"><i class="bi bi-pencil-square"></i> Income</button></li>
@@ -164,7 +175,7 @@
                             <div class="col-lg-1 align-self-center">
                                 <button type="button" class="btn btn-sm btn-danger mb-1" hx-delete hx-target="#lumpsumincome-entry" hx-swap="delete"><i class="bi bi-x-circle-fill"></i></button>
                             </div>
-                            <div class="col-lg-3">
+                            <div class="col-lg-4">
                                 <h6 class="fw-bold">Name</h6>
                                 <div class="form-floating mb-1">
                                     <input type="text" class="form-control" id="lumpsum_income_names" name="lumpsum_income_names" value="{{ name }}" required>
@@ -183,13 +194,14 @@
                                 </div>
                                 <div id="estimated_lumpsum_income_amountsHelp" class="form-text mb-1"><small>How much will this lump sum income be?</small></i></div>
                             </div>
-                            <div class="col-lg-4">
+                            <div class="col-lg-3">
                                 <h6 class="fw-bold">Age</h6>
                                 <div class="input-group">
                                     <div class="form-floating">
                                         <input type="number" class="form-control" max="{{ simulation.estimated_retirement_age|add:'-1' }}" min="{{ simulation.current_age }}" step="1" id="estimated_lumpsum_income_ages" name="estimated_lumpsum_income_ages" value="{{ age }}" required>
                                         <label for="estimated_lumpsum_income_ages">Age</label>
                                     </div>
+                                    <span class="input-group-text">years old</span>
                                 </div>
                                 <div id="estimated_lumpsum_income_agesHelp" class="form-text"><small>What age will you recieve this lump sum income?</small></div>
                             </div>
@@ -205,7 +217,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-success" data-bs-dismiss="modal" hx-post="{% url 'runsimulation' simulation.id %}" hx-target="#runsimulation-div" hx-swap="innerHTML" {% if user.is_authenticated %} {% else %} disabled {% endif %}>Save changes</button>
+                    <button type="submit" class="btn btn-success" data-backdrop="false" data-bs-dismiss="modal" hx-post="{% url 'runsimulation' simulation.id %}" hx-target="#runsimulation-div" hx-swap="innerHTML" {% if user.is_authenticated %} {% else %} disabled {% endif %}>Save changes</button>
                 </div>
             </div>
         </div>
@@ -257,7 +269,7 @@
                                     <div class="col-lg-1 align-self-center">
                                         <button type="button" class="btn btn-sm btn-danger mb-1" hx-delete hx-target="#fixedcost-adjustment" hx-swap="delete"><i class="bi bi-x-circle-fill"></i></button>
                                     </div>
-                                    <div class="col-lg-3">
+                                    <div class="col-lg-4">
                                         <h6 class="fw-bold">Name</h6>
                                         <div class="form-floating mb-1">
                                             <input type="text" class="form-control" id="fixed_cost_adjustment_names" name="fixed_cost_adjustment_names" value="{{ name }}" required>
@@ -276,13 +288,14 @@
                                         </div>
                                         <div id="estimated_fixed_cost_adjustmentsHelp" class="form-text mb-1"><small>How much will your fixed costs increase on top of inflation?</small></i></div>
                                     </div>
-                                    <div class="col-lg-4">
+                                    <div class="col-lg-3">
                                         <h6 class="fw-bold">Age</h6>
                                         <div class="input-group">
                                             <div class="form-floating">
                                                 <input type="number" class="form-control" max="{{ simulation.estimated_retirement_age|add:'-1' }}" min="{{ simulation.current_age|add:'1' }}" step="1" id="estimated_fixed_cost_adjustment_ages" name="estimated_fixed_cost_adjustment_ages" value="{{ age }}" required>
                                                 <label for="estimated_fixed_cost_adjustments">Age</label>
                                             </div>
+                                            <span class="input-group-text">years old</span>
                                         </div>
                                         <div id="estimated_fixed_cost_adjustment_agesHelp" class="form-text"><small>What age will this adjustment occur?</small></div>
                                     </div>
@@ -336,7 +349,7 @@
                                     <div class="col-lg-1 align-self-center">
                                         <button type="button" class="btn btn-sm btn-danger mb-1" hx-delete hx-target="#variablecost-adjustment" hx-swap="delete"><i class="bi bi-x-circle-fill"></i></button>
                                     </div>
-                                    <div class="col-lg-3">
+                                    <div class="col-lg-4">
                                         <h6 class="fw-bold">Name</h6>
                                         <div class="form-floating mb-1">
                                             <input type="text" class="form-control" id="variable_cost_adjustment_names" name="variable_cost_adjustment_names" value="{{ name }}" required>
@@ -355,13 +368,14 @@
                                         </div>
                                         <div id="estimated_variable_cost_adjustmentsHelp" class="form-text mb-1"><small>How much will your variable costs increase on top of inflation?</small></i></div>
                                     </div>
-                                    <div class="col-lg-4">
+                                    <div class="col-lg-3">
                                         <h6 class="fw-bold">Age</h6>
                                         <div class="input-group">
                                             <div class="form-floating">
                                                 <input type="number" class="form-control" max="{{ simulation.estimated_retirement_age|add:'-1' }}" min="{{ simulation.current_age|add:'1' }}" step="1" id="estimated_variable_cost_adjustment_ages" name="estimated_variable_cost_adjustment_ages" value="{{ age }}" required>
                                                 <label for="estimated_variable_cost_adjustment_ages">Age</label>
                                             </div>
+                                            <span class="input-group-text">years old</span>
                                         </div>
                                         <div id="estimated_variable_cost_adjustment_agesHelp" class="form-text"><small>What age will this adjustment occur?</small></div>
                                     </div>
@@ -446,7 +460,7 @@
                             <div class="col-lg-1 align-self-center">
                                 <button type="button" class="btn btn-sm btn-danger mb-1" hx-delete hx-target="#lumpsumexpense-entry" hx-swap="delete"><i class="bi bi-x-circle-fill"></i></button>
                             </div>
-                            <div class="col-lg-3">
+                            <div class="col-lg-4">
                                 <h6 class="fw-bold">Name</h6>
                                 <div class="form-floating mb-1">
                                     <input type="text" class="form-control" id="lumpsum_expense_names" name="lumpsum_expense_names" value="{{ name }}" required>
@@ -465,13 +479,14 @@
                                 </div>
                                 <div id="estimated_lumpsum_expense_amountsHelp" class="form-text mb-1"><small>How much will this lump sum expense be?</small></i></div>
                             </div>
-                            <div class="col-lg-4">
+                            <div class="col-lg-3">
                                 <h6 class="fw-bold">Age</h6>
                                 <div class="input-group">
                                     <div class="form-floating">
                                         <input type="number" class="form-control" max="{{ simulation.estimated_retirement_age|add:'-1' }}" min="{{ simulation.current_age }}" step="1" id="estimated_lumpsum_expense_ages" name="estimated_lumpsum_expense_ages" value="{{ age }}" required>
                                         <label for="estimated_lumpsum_expense_ages">Age</label>
                                     </div>
+                                    <span class="input-group-text">years old</span>
                                 </div>
                                 <div id="estimated_lumpsum_expense_agesHelp" class="form-text"><small>What age will you recieve this lump sum income?</small></div>
                             </div>
@@ -752,7 +767,7 @@
                 <div class="card-header text-center dashboard-card-header pb-0">
                     <h5>Final Net Worth</h5>
                 </div>
-                {% if last_year.drawdown|slice:":-1" > '4.01' %}
+                {% if last_year.drawdown_int > 4.0 %}
                 <div class="card-body text-center dashboard-card-body-bad">
                 {% else %}
                 <div class="card-header text-center dashboard-card-body-good">
@@ -766,7 +781,7 @@
                 <div class="card-header text-center dashboard-card-header pb-0">
                     <h5>Magic Number</h5>
                 </div>
-                {% if last_year.drawdown|slice:":-1" > '4' %}
+                {% if last_year.drawdown_int > 4.0 %}
                 <div class="card-body text-center dashboard-card-body-bad">
                 {% else %}
                 <div class="card-header text-center dashboard-card-body-good">
@@ -780,7 +795,7 @@
                 <div class="card-header text-center dashboard-card-header pb-0">
                     <h5>Withdraw Rate</h5>
                 </div>
-                {% if last_year.drawdown|slice:":-1" > '4' %}
+                {% if last_year.drawdown_int > 4.0 %}
                 <div class="card-body text-center dashboard-card-body-bad">
                 {% else %}
                 <div class="card-header text-center dashboard-card-body-good">
@@ -794,7 +809,7 @@
                 <div class="card-header text-center dashboard-card-header pb-0">
                     <h5>FI Age</h5>
                 </div>
-                {% if last_year.drawdown|slice:":-1" > '4' %}
+                {% if last_year.drawdown_int > 4.0 %}
                 <div class="card-body text-center dashboard-card-body-bad">
                 {% else %}
                 <div class="card-header text-center dashboard-card-body-good">
@@ -849,50 +864,66 @@
                 <thead>
                     <tr class="first">
                         {% if toggle %}
-                        <th class="th-headers th-personal">AGE</th>
-                        <th class="th-headers th-personal">YEAR</th>
-                        <th class="th-headers th-income">SALARY</th>
-                        <th class="th-headers th-income">BONUS</th>
-                        <th class="th-headers th-income">OTHER INCOME</th>
-                        <th class="th-headers th-income">LUMP SUM INCOME</th>
-                        <th class="th-headers th-expenses">FIXED COSTS</th>
-                        <th class="th-headers th-expenses">VARIABLE COSTS</th>
-                        <th class="th-headers th-expenses">HEALTH INSURANCE</th>
-                        <th class="th-headers th-expenses">LUMP SUM EXPENSE</th>
-                        <th class="th-headers th-expenses">TAXES</th>
-                        <th class="th-headers th-special">SAVINGS</th>
-                        <th class="th-headers th-savings-light">HSA START</th>
-                        <th class="th-headers th-savings-light">HSA CONTRIBUTION LIMIT</th>
-                        <th class="th-headers th-savings-light">HSA CONTRIBUTION</th>
-                        <th class="th-headers th-savings">HSA END</th>
-                        <th class="th-headers th-savings-light">RETIREMENT PLAN START</th>
-                        <th class="th-headers th-savings-light">RETIREMENT PLAN CONTRIBUTION LIMIT</th>
-                        <th class="th-headers th-savings-light">RETIREMENT PLAN CONTRIBUTION</th>
-                        <th class="th-headers th-savings-light">RETIREMENT PLAN EMPLOYER CONTRIBUTION</th>
-                        <th class="th-headers th-savings">RETIREMENT PLAN END</th>
-                        <th class="th-headers th-savings-light">IRA START</th>
-                        <th class="th-headers th-savings-light">IRA CONTRIBUTION LIMIT</th>
-                        <th class="th-headers th-savings-light">IRA CONTRIBUTION</th>
-                        <th class="th-headers th-savings">IRA END</th>
-                        <th class="th-headers th-savings-light">TBA START</th>
-                        <th class="th-headers th-savings-light">TBA CONTRIBUTION</th>
-                        <th class="th-headers th-savings">TBA END</th>
-                        <th class="th-headers th-savings">TOTAL ASSETS VALUE</th>
-                        <th class="th-headers th-special">NET WORTH</th>
-                        <th class="th-headers th-special">MAGIC NUMBER</th>
-                        <th class="th-headers th-special">DRAWDOWN %</th>
+                            <th class="th-headers th-personal">AGE</th>
+                            <th class="th-headers th-personal">YEAR</th>
+                            <th class="th-headers th-income">SALARY</th>
+                            <th class="th-headers th-income">BONUS</th>
+                            {% if simulation.current_yearly_other_income %}
+                                <th class="th-headers th-income">OTHER INCOME</th>
+                            {% endif %}
+                            {% if simulation.estimated_lumpsum_income_amounts %}
+                                <th class="th-headers th-income">LUMP SUM INCOME</th>
+                            {% endif %}
+                            <th class="th-headers th-expenses">FIXED COSTS</th>
+                            <th class="th-headers th-expenses">VARIABLE COSTS</th>
+                            <th class="th-headers th-expenses">HEALTH INSURANCE</th>
+                            {% if simulation.estimated_lumpsum_expense_amounts %}
+                                <th class="th-headers th-expenses">LUMP SUM EXPENSE</th>
+                            {% endif %}
+                            <th class="th-headers th-expenses">TAXES</th>
+                            <th class="th-headers th-special">SAVINGS</th>
+                            {% if not simulation.hsa_enrollment_opt_out %}
+                                <th class="th-headers th-savings-light">HSA START</th>
+                                <th class="th-headers th-savings-light">HSA CONTRIBUTION LIMIT</th>
+                                <th class="th-headers th-savings-light">HSA CONTRIBUTION</th>
+                                <th class="th-headers th-savings">HSA END</th>
+                            {% endif %}
+                            <th class="th-headers th-savings-light">RETIREMENT PLAN START</th>
+                            <th class="th-headers th-savings-light">RETIREMENT PLAN CONTRIBUTION LIMIT</th>
+                            <th class="th-headers th-savings-light">RETIREMENT PLAN CONTRIBUTION</th>
+                            <th class="th-headers th-savings-light">RETIREMENT PLAN EMPLOYER CONTRIBUTION</th>
+                            <th class="th-headers th-savings">RETIREMENT PLAN END</th>
+                            <th class="th-headers th-savings-light">IRA START</th>
+                            <th class="th-headers th-savings-light">IRA CONTRIBUTION LIMIT</th>
+                            <th class="th-headers th-savings-light">IRA CONTRIBUTION</th>
+                            <th class="th-headers th-savings">IRA END</th>
+                            <th class="th-headers th-savings-light">TBA START</th>
+                            <th class="th-headers th-savings-light">TBA CONTRIBUTION</th>
+                            <th class="th-headers th-savings">TBA END</th>
+                            {% if simulation.current_asset_values %}
+                                <th class="th-headers th-savings">TOTAL ASSETS VALUE</th>
+                            {% endif %}
+                            <th class="th-headers th-special">NET WORTH</th>
+                            <th class="th-headers th-special">MAGIC NUMBER</th>
+                            <th class="th-headers th-special">DRAWDOWN %</th>
                         {% else %}
-                        <th class="th-headers th-personal">AGE</th>
-                        <th class="th-headers th-personal">YEAR</th>
-                        <th class="th-headers th-special">SAVINGS</th>
-                        <th class="th-headers th-savings">HSA END</th>
-                        <th class="th-headers th-savings">RETIREMENT PLAN END</th>
-                        <th class="th-headers th-savings">IRA END</th>
-                        <th class="th-headers th-savings">TBA END</th>
-                        <th class="th-headers th-savings">TOTAL ASSETS VALUE</th>
-                        <th class="th-headers th-special">NET WORTH</th>
-                        <th class="th-headers th-special">MAGIC NUMBER</th>
-                        <th class="th-headers th-special">DRAWDOWN %</th>
+                            <th class="th-headers th-personal">AGE</th>
+                            <th class="th-headers th-personal">YEAR</th>
+                            <th class="th-headers th-income">TOTAL INCOME</th>
+                            <th class="th-headers th-expenses">TOTAL EXPENSES</th>
+                            <th class="th-headers th-special">SAVINGS</th>
+                            {% if not simulation.hsa_enrollment_opt_out %}
+                                <th class="th-headers th-savings">HSA END</th>
+                            {% endif %}
+                            <th class="th-headers th-savings">RETIREMENT PLAN END</th>
+                            <th class="th-headers th-savings">IRA END</th>
+                            <th class="th-headers th-savings">TBA END</th>
+                            {% if simulation.current_asset_values %}
+                                <th class="th-headers th-savings">TOTAL ASSETS VALUE</th>
+                            {% endif %}
+                            <th class="th-headers th-special">NET WORTH</th>
+                            <th class="th-headers th-special">MAGIC NUMBER</th>
+                            <th class="th-headers th-special">DRAWDOWN %</th>
                         {% endif %}
                     </tr>
                 </thead>
@@ -900,50 +931,66 @@
                     {% for d in data %}
                     <tr>
                         {% if toggle %}
-                        <td class="sticky-col sticky-col-1">{{ d.age }}</td>
-                        <td class="sticky-col sticky-col-2">{{ d.year }}</td>
-                        <td >{{ d.salary }}</td>
-                        <td >{{ d.bonus }}</td>
-                        <td >{{ d.other_income }}</td>
-                        <td >{{ d.lump_sum_income }}</td>
-                        <td >{{ d.fixed_cost }}</td>
-                        <td >{{ d.variable_cost }}</td>
-                        <td >{{ d.health_insurance }}</td>
-                        <td >{{ d.lump_sum_expense }}</td>
-                        <td >{{ d.tax }}</td>
-                        <td >{{ d.saving }}</td>
-                        <td >{{ d.hsa_start }}</td>
-                        <td >{{ d.hsa_cont_limit }}</td>
-                        <td >{{ d.hsa_contribution }}</td>
-                        <td >{{ d.hsa_end }}</td>
-                        <td >{{ d.retirement_start }}</td>
-                        <td >{{ d.retirement_cont_limit }}</td>
-                        <td >{{ d.retirement_contribution }}</td>
-                        <td >{{ d.employer_retirement_contribution }}</td>
-                        <td >{{ d.retirement_end }}</td>
-                        <td >{{ d.ira_start }}</td>
-                        <td >{{ d.ira_cont_limit }}</td>
-                        <td >{{ d.ira_contribution }}</td>
-                        <td >{{ d.ira_end }}</td>
-                        <td >{{ d.iba_start }}</td>
-                        <td >{{ d.iba_contribution }}</td>
-                        <td >{{ d.iba_end }}</td>
-                        <td >{{ d.asset_value }}</td>
-                        <td >{{ d.net_worth }}</td>
-                        <td >{{ d.magic_number }}</td>
-                        <td >{{ d.drawdown }}</td>
+                            <td class="sticky-col sticky-col-1">{{ d.age }}</td>
+                            <td class="sticky-col sticky-col-2">{{ d.year }}</td>
+                            <td >{{ d.salary }}</td>
+                            <td >{{ d.bonus }}</td>
+                            {% if simulation.current_yearly_other_income %}
+                                <td >{{ d.other_income }}</td>
+                            {% endif %}
+                            {% if simulation.estimated_lumpsum_income_amounts %}
+                                <td >{{ d.lump_sum_income }}</td>
+                            {% endif %}
+                            <td >{{ d.fixed_cost }}</td>
+                            <td >{{ d.variable_cost }}</td>
+                            <td >{{ d.health_insurance }}</td>
+                            {% if simulation.estimated_lumpsum_expense_amounts %}
+                                <td >{{ d.lump_sum_expense }}</td>
+                            {% endif %}
+                            <td >{{ d.tax }}</td>
+                            <td >{{ d.saving }}</td>
+                            {% if not simulation.hsa_enrollment_opt_out %}
+                                <td >{{ d.hsa_start }}</td>
+                                <td >{{ d.hsa_cont_limit }}</td>
+                                <td >{{ d.hsa_contribution }}</td>
+                                <td >{{ d.hsa_end }}</td>
+                            {% endif %}
+                            <td >{{ d.retirement_start }}</td>
+                            <td >{{ d.retirement_cont_limit }}</td>
+                            <td >{{ d.retirement_contribution }}</td>
+                            <td >{{ d.employer_retirement_contribution }}</td>
+                            <td >{{ d.retirement_end }}</td>
+                            <td >{{ d.ira_start }}</td>
+                            <td >{{ d.ira_cont_limit }}</td>
+                            <td >{{ d.ira_contribution }}</td>
+                            <td >{{ d.ira_end }}</td>
+                            <td >{{ d.iba_start }}</td>
+                            <td >{{ d.iba_contribution }}</td>
+                            <td >{{ d.iba_end }}</td>
+                            {% if simulation.current_asset_values %}
+                                <td >{{ d.asset_value }}</td>
+                            {% endif %}
+                            <td >{{ d.net_worth }}</td>
+                            <td >{{ d.magic_number }}</td>
+                            <td >{{ d.drawdown }}</td>
                         {% else %}
-                        <td class="sticky-col sticky-col-1">{{ d.age }}</td>
-                        <td class="sticky-col sticky-col-2">{{ d.year }}</td>
-                        <td >{{ d.saving }}</td>
-                        <td >{{ d.hsa_end }}</td>
-                        <td >{{ d.retirement_end }}</td>
-                        <td >{{ d.ira_end }}</td>
-                        <td >{{ d.iba_end }}</td>
-                        <td >{{ d.asset_value }}</td>
-                        <td >{{ d.net_worth }}</td>
-                        <td >{{ d.magic_number }}</td>
-                        <td >{{ d.drawdown }}</td>
+                            <td class="sticky-col sticky-col-1">{{ d.age }}</td>
+                            <td class="sticky-col sticky-col-2">{{ d.year }}</td>
+                            <td >{{ d.total_income }}</td>
+                            <td >{{ d.total_expense }}</td>
+                            <td >{{ d.saving }}</td>
+                            {% if not simulation.hsa_enrollment_opt_out %}
+                                <td >{{ d.hsa_end }}</td>
+                            {% endif %}
+                            <td >{{ d.retirement_end }}</td>
+                            <td >{{ d.ira_end }}</td>
+                            <td >{{ d.iba_end }}</td>
+                            {% if simulation.current_asset_values %}
+                                <td >{{ d.asset_value }}</td>
+                            {% endif %}
+                            <td >{{ d.net_worth }}</td>
+                            <td >{{ d.magic_number }}</td>
+                            <td >{{ d.drawdown }}</td>
                         {% endif %}
                     </tr>
                     {% endfor %}
@@ -970,19 +1017,19 @@
                         {
                             label: 'Income',
                             data: income,
-                            backgroundColor: 'rgb(80, 167, 114, 0.8)',
+                            backgroundColor: '#285C53',
                             stack: 'Stack 0'
                         },
                         {
                             label: 'Expenses',
                             data: expenses,
-                            backgroundColor: 'rgb(175, 61, 35, 0.8)',
+                            backgroundColor: '#E13335',
                             stack: 'Stack 0'
                         },
                         {
                             label: 'Savings',
                             data: savings,
-                            backgroundColor: 'rgb(60, 67, 121, 0.8)',
+                            backgroundColor: '#4A09B5',
                             stack: 'Stack 0'
                         }
                     ]
@@ -1131,11 +1178,11 @@
                     // tension: 0.2
                     label: 'Net Worth',
                     data: net_worths,
-                    borderColor: '#50a772',
-                    backgroundColor: 'rgb(148, 201, 169, 0.1)',
+                    borderColor: '#285C53',
+                    backgroundColor: '#B9FC7225',
                     borderWidth: 3,
                     pointRadius: 3,
-                    pointBackgroundColor: '#50a772',
+                    pointBackgroundColor: '#B9FC72',
                     tension: 0.3,
                     fill: true,
                 },

@@ -1,0 +1,147 @@
+<div id="saving-div">
+    <div class="saving-entry">
+        <div class="accordion">
+            <div class="accordion-saving" data-id="income-accordion-esrp">
+                <h2 class="accordion-header">
+                    <button class="accordion-button accordion-button-savings saving_name_header" type="button" data-bs-toggle="collapse" data-bs-target="#saving-entry-esrp" aria-expanded="true" aria-controls="saving-entry-esrp">
+                        My Employer Retirement Account
+                    </button>
+                </h2>
+                <div id="saving-entry-esrp" class="accordion-collapse savings-accordion collapse show">
+                    <div class="accordion-body accordion-savings-body">
+                        <div class="row g-4 mb-3">
+                            <div class="col-lg-3">
+                                <h5 class="input-name">Account Name</h5>              
+                                <input type="text" class="form-control input-field saving_name" name="saving_name" value="My Employer Retirement Account" required>
+                            </div>
+                            <div class="col-lg-3">
+                                <h5 class="input-name">Category</h5>              
+                                <select class="form-select input-select saving_category" name="saving_category" hx-get="{% url 'saving-fields' %}" hx-target="next .saving-fields" hx-trigger="change" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, entry_count: document.querySelectorAll('.saving-entry').length, esrp_count: document.querySelectorAll('.esrp-entry').length, hsa_count: document.querySelectorAll('.hsa-entry').length, ira_count: document.querySelectorAll('.ira-entry').length, tba_count: document.querySelectorAll('.tba-entry').length}">
+                                    <option value="ESRP">Employer Retirement Account (401k/403b)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="saving-fields">
+                            {% include 'FIRE/partials/fields_savings_esrp.html' %}
+                        </div>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-sm btn-remove" hx-delete hx-target="closest .saving-entry" hx-swap="delete"><i class="bi bi-x"></i> Remove</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <hr>
+    </div>
+    <div class="saving-entry">
+        <div class="accordion">
+            <div class="accordion-saving" data-id="income-accordion-hsa">
+                <h2 class="accordion-header">
+                    <button class="accordion-button accordion-button-savings saving_name_header" type="button" data-bs-toggle="collapse" data-bs-target="#saving-entry-hsa" aria-expanded="true" aria-controls="saving-entry-hsa">
+                        My Health Savings Account
+                    </button>
+                </h2>
+                <div id="saving-entry-hsa" class="accordion-collapse savings-accordion collapse show">
+                    <div class="accordion-body accordion-savings-body">
+                        <div class="row g-4 mb-3">
+                            <div class="col-lg-3">
+                                <h5 class="input-name">Account Name</h5>              
+                                <input type="text" class="form-control input-field saving_name" name="saving_name" value="My Health Savings Account" required>
+                            </div>
+                            <div class="col-lg-3">
+                                <h5 class="input-name">Category</h5>              
+                                <select class="form-select input-select saving_category" name="saving_category" hx-get="{% url 'saving-fields' %}" hx-target="next .saving-fields" hx-trigger="change" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, entry_count: document.querySelectorAll('.saving-entry').length, esrp_count: document.querySelectorAll('.esrp-entry').length, hsa_count: document.querySelectorAll('.hsa-entry').length, ira_count: document.querySelectorAll('.ira-entry').length, tba_count: document.querySelectorAll('.tba-entry').length}">
+                                    <option value="HSA">Health Savings Account (HSA)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="saving-fields">
+                            {% include 'FIRE/partials/fields_savings_hsa.html' %}
+                        </div>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-sm btn-remove" hx-delete hx-target="closest .saving-entry" hx-swap="delete"><i class="bi bi-x"></i> Remove</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <hr>
+    </div>
+    <div class="saving-entry">
+        <div class="accordion">
+            <div class="accordion-saving" data-id="income-accordion-ira">
+                <h2 class="accordion-header">
+                    <button class="accordion-button accordion-button-savings saving_name_header" type="button" data-bs-toggle="collapse" data-bs-target="#saving-entry-ira" aria-expanded="true" aria-controls="saving-entry-ira">
+                        My Individual Retirement Account
+                    </button>
+                </h2>
+                <div id="saving-entry-ira" class="accordion-collapse savings-accordion collapse show">
+                    <div class="accordion-body accordion-savings-body">
+                        <div class="row g-4 mb-3">
+                            <div class="col-lg-3">
+                                <h5 class="input-name">Account Name</h5>              
+                                <input type="text" class="form-control input-field saving_name" name="saving_name" value="My Individual Retirement Account" required>
+                            </div>
+                            <div class="col-lg-3">
+                                <h5 class="input-name">Category</h5>              
+                                <select class="form-select input-select saving_category" name="saving_category" hx-get="{% url 'saving-fields' %}" hx-target="next .saving-fields" hx-trigger="change" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, entry_count: document.querySelectorAll('.saving-entry').length, esrp_count: document.querySelectorAll('.esrp-entry').length, hsa_count: document.querySelectorAll('.hsa-entry').length, ira_count: document.querySelectorAll('.ira-entry').length, tba_count: document.querySelectorAll('.tba-entry').length}">
+                                    <option value="IRA">Individual Retirement Account (IRA)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="saving-fields">
+                            {% include 'FIRE/partials/fields_savings_ira.html' %}
+                        </div>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-sm btn-remove" hx-delete hx-target="closest .saving-entry" hx-swap="delete"><i class="bi bi-x"></i> Remove</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <hr>
+    </div>
+    <div class="saving-entry">
+        <div class="accordion">
+            <div class="accordion-saving" data-id="income-accordion-tba">
+                <h2 class="accordion-header">
+                    <button class="accordion-button accordion-button-savings saving_name_header" type="button" data-bs-toggle="collapse" data-bs-target="#saving-entry-tba" aria-expanded="true" aria-controls="saving-entry-tba">
+                        My Taxable Brokerage Account
+                    </button>
+                </h2>
+                <div id="saving-entry-tba" class="accordion-collapse savings-accordion collapse show">
+                    <div class="accordion-body accordion-savings-body">
+                        <div class="row g-4 mb-3">
+                            <div class="col-lg-3">
+                                <h5 class="input-name">Account Name</h5>              
+                                <input type="text" class="form-control input-field saving_name" name="saving_name" value="My Taxable Brokerage Account" required>
+                            </div>
+                            <div class="col-lg-3">
+                                <h5 class="input-name">Category</h5>              
+                                <select class="form-select input-select saving_category" name="saving_category" hx-get="{% url 'saving-fields' %}" hx-target="next .saving-fields" hx-trigger="change" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, entry_count: document.querySelectorAll('.saving-entry').length, esrp_count: document.querySelectorAll('.esrp-entry').length, hsa_count: document.querySelectorAll('.hsa-entry').length, ira_count: document.querySelectorAll('.ira-entry').length, tba_count: document.querySelectorAll('.tba-entry').length}">
+                                    <option value="TBA">Taxable Brokerage Account (TBA)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="saving-fields">
+                            {% include 'FIRE/partials/fields_savings_tba.html' %}
+                        </div>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-sm btn-remove" hx-delete hx-target="closest .saving-entry" hx-swap="delete"><i class="bi bi-x"></i> Remove</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <hr>
+    </div>
+</div>
+<div class="btn-toolbar" role="toolbar">
+    <div class="btn-group" role="group">
+        <button type="button" class="btn btn-add" hx-get="{% url 'create-saving' %}" hx-target="#saving-div" hx-swap="beforeend" hx-vals="js:{entry_count: document.querySelectorAll('.saving-entry').length, esrp_count: document.querySelectorAll('.esrp-entry').length, hsa_count: document.querySelectorAll('.hsa-entry').length, ira_count: document.querySelectorAll('.ira-entry').length, tba_count: document.querySelectorAll('.tba-entry').length}"><i class="bi bi-plus"></i>  Account</button>
+    </div>
+    <div class="btn-group" role="group">
+        <button type="button" id="expand-savings-entries" class="btn btn-action-empty" onclick="savingsAccordionAction('Expand');"><i class="bi bi-arrows-expand"></i>  Expand All</button>
+        <button type="button" id="collapse-savings-entries" class="btn btn-action-empty" onclick="savingsAccordionAction('Collapse');"><i class="bi bi-arrows-collapse"></i>  Collapse All</button>
+    </div>
+</div>

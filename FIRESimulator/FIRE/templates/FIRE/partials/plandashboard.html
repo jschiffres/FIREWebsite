@@ -1,0 +1,823 @@
+<!-- MAKE INPUTS NOT EDITABLE IF USER IS NOT LOGGED IN -->
+{% if user.is_authenticated %}
+{% else %}
+<style>
+    input {
+        pointer-events:none;
+    }
+</style>
+{% endif %}
+
+<style>
+    table {
+        border-collapse: collapse;
+        position: relative;
+    }  
+    .tbl-container
+    {
+        max-width: fit-content;
+        max-height: fit-content;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+    table th {
+        position: sticky;
+        top: -1px;
+        z-index: 2;
+    }
+    td:first-child, th:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 1;
+    }
+    td:nth-child(2), th:nth-child(2) {
+        position: sticky;
+        left: 50px;
+        z-index: 1;
+    }
+    th:first-child, th:nth-child(2) {
+        z-index: 3;
+    }
+    .tbl-fixed
+    {
+        overflow-x: scroll;
+        overflow-y: scroll;
+        height: fit-content;
+        max-height: 500px;
+    }
+    td {
+        color: rgba(0, 0, 0, 0.87);
+font-feature-settings: 'liga' off, 'clig' off;
+font-family: Inter;
+font-size: var(--font-size-0875-rem, 14px);
+font-style: normal;
+font-weight: var(--fontWeightRegular, 400);
+line-height: 143%; /* 20.02px */
+letter-spacing: 0.17px;
+    }
+    th {
+        white-space: nowrap;
+        color: rgba(0, 0, 0, 0.87);
+font-feature-settings: 'liga' off, 'clig' off;
+font-family: Inter;
+font-size: var(--font-size-0875-rem, 14px);
+font-style: normal;
+font-weight: 600;
+line-height: 24px; /* 171.429% */
+letter-spacing: 0.17px;
+    }
+</style>
+
+<script>
+    function savingInfoValidation() {
+        const saving_entries = document.querySelectorAll('.saving-entry')
+        const savingsButton = document.getElementById('savings-button')
+        saving_entries.forEach(entry => {
+            const saving_name_header = entry.querySelectorAll('.saving_name_header')[0]
+            const saving_name = entry.querySelectorAll('.saving_name')[0].value
+            saving_name_header.textContent = saving_name
+        })
+    }
+
+    document.body.addEventListener('htmx:afterSwap', function (evt) {
+        savingInfoValidation()
+    })
+
+    document.addEventListener('change', function (e) {
+        if (e.target.classList.contains("saving_name")) {
+            savingInfoValidation()
+        }
+    })
+</script>
+
+<form>
+    <!-- MESSAGES -->
+    <div>
+        {% if error %}
+            <div class="alert alert-danger alert-dismissible fade show mb-0" role="alert">
+                <i class="bi bi-exclamation-circle-fill"></i> {{ error }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endif %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-success alert-dismissible fade show mb-0" role="alert">
+                    <i class="bi bi-check-circle-fill"></i> {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+        {% endfor %}
+        {% endif %}   
+    </div>
+    <!-- DASHBOARD NAVBAR -->
+    <nav id="app-navbar" class="navbar sticky-top mt-0 mb-3 shadow-lg navbar-expand-lg">
+        <div class="container">
+            <h1 class="mt-3 mb-3 fs-3 fw-bold" id="nav-header">{{ plan.plan_name }}</h1>
+            {% if user.is_authenticated %}
+            <ul class="nav nav-pills">
+                <li><button type="button" class="btn btn-sm me-2 btn-edit-income" data-bs-toggle="modal" data-bs-target="#income-Modal"><i class="bi bi-pencil icon-income"></i> Income</button></li>
+                <li><button type="button" class="btn btn-sm me-2 btn-edit-expenses" data-bs-toggle="modal" data-bs-target="#expenses-Modal"><i class="bi bi-pencil icon-expenses"></i> Expenses</button></li>
+                <li><button type="button" class="btn btn-sm btn-edit-savings" data-bs-toggle="modal" data-bs-target="#savings-Modal"><i class="bi bi-pencil icon-savings"></i> Savings</button></li>
+            </ul>
+            <ul class="nav nav-pills">
+                <li class="nav-item"><a class="nav-link nav-link-tips" href="{% url 'downloadplan' plan.id %}"><i class="bi bi-download"></i> Download</a></li>
+            </ul>
+            {% else %}
+            <ul class="nav nav-pills">
+                <li class="text text-center align-self-center">Want to save, edit and download this plan? <a class="link-success" href="{% url 'signupsave' plan.id %}">Sign-up to gain access!</a></li>
+            </ul>
+            {% endif %}
+        </div>
+    </nav>
+    <!-- DASHBOARD BODY -->
+    <div class="container">
+        <!-- INCOME MODAL -->
+        <div class="modal fade modal-xl" id="income-Modal" tabindex="-1" aria-labelledby="income-Modal" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content dashboard-modal">
+                    <div class="modal-header">
+                        <h3 class="modal-title section-title-income"><i class="bi bi-arrow-up"></i> Income</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="income-div">
+                            {% for income in FIplan.incomes %}
+                                <div class="income-entry">
+                                    <div class="accordion">
+                                        <div class="accordion-income">
+                                            <h2 class="accordion-header">
+                                                {% if income.income_category == 'Salary' %}
+                                                    <button class="accordion-button accordion-button-income income_name_header collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#income-entry-{{ forloop.counter }}" aria-expanded="true" aria-controls="income-entry-{{ forloop.counter }}" hx-get="{% url 'income-table' %}" hx-target="next .income-table" hx-trigger="click delay 1s" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, starting_amount: {{ income.starting_amount }}, yearly_change: {{ income.yearly_change }}, bonus_rate: {{ income.bonus_rate }}, tax_rate: {{ income.tax_rate }}, tax_rate_change: {{ income.tax_rate_change }}, start_age: '{{ income.start_age }}', stop_age: '{{ income.stop_age }}', income_category: '{{ income.income_category}}' }">
+                                                {% elif income.income_category == 'Recurring' %}
+                                                    <button class="accordion-button accordion-button-income income_name_header collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#income-entry-{{ forloop.counter }}" aria-expanded="true" aria-controls="income-entry-{{ forloop.counter }}" hx-get="{% url 'income-table' %}" hx-target="next .income-table" hx-trigger="click delay:1s" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, starting_amount: {{ income.starting_amount }}, yearly_change: {{ income.yearly_change }}, tax_rate: {{ income.tax_rate }}, tax_rate_change: {{ income.tax_rate_change }}, start_age: '{{ income.start_age }}', stop_age: '{{ income.stop_age }}', income_category: '{{ income.income_category}}' }">
+                                                {% else %}
+                                                    <button class="accordion-button accordion-button-income income_name_header collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#income-entry-{{ forloop.counter }}" aria-expanded="true" aria-controls="income-entry-{{ forloop.counter }}" hx-get="{% url 'income-table' %}" hx-target="next .income-table" hx-trigger="click delay:1s" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, amount: {{ income.amount }}, tax_rate: {{ income.tax_rate }}, age: {{ income.age }}, income_category: '{{ income.income_category}}' }">
+                                                {% endif %}
+                                                    {{ income.income_name }}
+                                                </button>
+                                            </h2>
+                                            <div id="income-entry-{{ forloop.counter }}" class="accordion-collapse collapse ">
+                                                <div class="accordion-body accordion-income-body">
+                                                    {% if user.is_authenticated %}
+                                                    <div class="row">
+                                                        <div class="col-lg-6">
+                                                            <!-- INCOME FIELDS ROW-->
+                                                            <div class="row g-4 mb-3">
+                                                                <div class="col-lg-6">
+                                                                    <h5 class="input-name">Income Name</h5>              
+                                                                    <input type="text" class="form-control input-field income_name" name="income_name" value="{{ income.income_name }}" required>
+                                                                    <div class="form-text text-danger form-error-text income-name-error"><small> Please provide a name for this income.</small></div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <h5 class="input-name">Category</h5>              
+                                                                    <select class="form-select input-select income_category" name="income_category" hx-get="{% url 'income-fields' %}" hx-target="next .income-fields" hx-trigger="change" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, salary_count: document.querySelectorAll('.income-salary-entry').length, recurring_income_count: document.querySelectorAll('.income-recurring-entry').length, one_time_income_count: document.querySelectorAll('.income-one-time-entry').length}">
+                                                                        <option value="Salary" {% if income.income_category == 'Salary' %} selected {% endif %}>Salary</option>
+                                                                        <option value="Recurring" {% if income.income_category == 'Recurring' %} selected {% endif %}>Recurring</option>
+                                                                        <option value="One-time" {% if income.income_category == 'One-time' %} selected {% endif %}>One-time</option>
+                                                                    </select>
+                                                                    <div class="form-text text-danger form-error-text income-category-error"><small> Please select a category.</small></div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="income-fields">
+                                                                {% if income.income_category == "Recurring" %}
+                                                                    {% include 'FIRE/partials/fields_income_recurring_edit.html' with income=income ages=FIplan.ages_display %}
+                                                                {% elif income.income_category == "Salary" %}
+                                                                    {% include 'FIRE/partials/fields_income_salary_edit.html' with income=income ages=FIplan.ages_display %}
+                                                                {% else %}
+                                                                    {% include 'FIRE/partials/fields_income_one_time_edit.html' with income=income ages=FIplan.ages %}
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-lg-6 income-table align-self-center">
+
+                                                        </div>
+                                                    </div>
+                                                    {% else %}
+                                                    <div class="row g-4 mb-3">
+                                                        <div class="col-lg-4">
+                                                            <h5 class="input-name">Income Name</h5>              
+                                                            <input type="text" class="form-control input-field income_name" name="income_name" value="My Income" required>
+                                                            <div class="form-text text-danger form-error-text income-name-error"><small> Please provide a name for this income.</small></div>
+                                                        </div>
+                                                        <div class="col-lg-4">
+                                                            <h5 class="input-name">Category</h5>              
+                                                            <select class="form-select input-select income_category" name="income_category" hx-get="{% url 'income-fields' %}" hx-target="next .income-fields" hx-trigger="change" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, salary_count: document.querySelectorAll('.income-salary-entry').length, recurring_income_count: document.querySelectorAll('.income-recurring-entry').length, one_time_income_count: document.querySelectorAll('.income-one-time-entry').length}">
+                                                                <option value="Salary" {% if income.income_category == 'Salary' %} selected {% endif %}>Salary</option>
+                                                                <option value="Recurring" {% if income.income_category == 'Recurring' %} selected {% endif %}>Recurring</option>
+                                                                <option value="One-time" {% if income.income_category == 'One-time' %} selected {% endif %}>One-time</option>
+                                                            </select>
+                                                            <div class="form-text text-danger form-error-text income-category-error"><small> Please select a category.</small></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="income-fields">
+                                                        {% if income.income_category == "Recurring" %}
+                                                            {% include 'FIRE/partials/fields_income_recurring_edit.html' with income=income ages=FIplan.ages_display %}
+                                                        {% elif income.income_category == "Salary" %}
+                                                            {% include 'FIRE/partials/fields_income_salary_edit.html' with income=income ages=FIplan.ages_display %}
+                                                        {% else %}
+                                                            {% include 'FIRE/partials/fields_income_one_time_edit.html' with income=income ages=FIplan.ages %}
+                                                        {% endif %}
+                                                    </div>
+                                                    {% endif %}
+                                                    <div class="text-end">
+                                                        <button type="button" class="btn btn-sm btn-remove" hx-delete hx-target="closest .income-entry" hx-swap="delete"><i class="bi bi-x"></i> Remove</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-add" hx-get="{% url 'create-income' %}" hx-target="#income-div" hx-swap="beforeend" hx-vals="js:{entry_count: document.querySelectorAll('.income-entry').length}"><i class="bi bi-plus"></i>  Income</button>
+                        </div>  
+                    </div>
+                    <div class="modal-footer dashboard-modal-footer">
+                        <button type="button" class="btn btn-add" data-bs-dismiss="modal" hx-post="{% url 'runplan' plan.id %}" hx-target="#runplan-div" hx-swap="innerHTML" hx-trigger="click"><i class="bi bi-floppy"></i> Save changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- EXPENSES MODAL -->
+        <div class="modal fade modal-xl" id="expenses-Modal" tabindex="-1" aria-labelledby="expenses-Modal" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content dashboard-modal">
+                    <div class="modal-header">
+                        <h3 class="modal-title section-title-expenses"><i class="bi bi-arrow-down"></i> Expenses</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="expense-div">
+                            {% for expense in FIplan.expenses %}
+                                <div class="expense-entry">
+                                    <div class="accordion">
+                                        <div class="accordion-expense">
+                                            <h2 class="accordion-header">
+                                                {% if expense.expense_category == 'Recurring' %}
+                                                    <button class="accordion-button accordion-button-expenses expense_name_header collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#expense-entry-{{ forloop.counter }}" aria-expanded="true" aria-controls="expense-entry-{{ forloop.counter }}" hx-get="{% url 'expense-table' %}" hx-target="next .expense-table" hx-trigger="click delay:1s" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, starting_amount: {{ expense.starting_amount }}, yearly_change: {{ expense.yearly_change }}, start_age: '{{ expense.start_age }}', stop_age: '{{ expense.stop_age }}', expense_category: '{{ expense.expense_category}}' }">
+                                                {% else %}
+                                                    <button class="accordion-button accordion-button-expenses expense_name_header collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#expense-entry-{{ forloop.counter }}" aria-expanded="true" aria-controls="expense-entry-{{ forloop.counter }}" hx-get="{% url 'expense-table' %}" hx-target="next .expense-table" hx-trigger="click delay:1s" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, amount: {{ expense.amount }}, age: {{ expense.age }}, expense_category: '{{ expense.expense_category}}' }">
+                                                {% endif %}
+                                                    {{ expense.expense_name }}
+                                                </button>
+                                            </h2>
+                                            <div id="expense-entry-{{ forloop.counter }}" class="accordion-collapse collapse">
+                                                <div class="accordion-body accordion-expenses-body">
+                                                    {% if user.is_authenticated %}
+                                                    <div class="row">
+                                                        <div class="col-lg-6">
+                                                            <!-- EXPENSE FIELDS ROW-->
+                                                            <div class="row g-4 mb-3">
+                                                                <div class="col-lg-6">
+                                                                    <h5 class="input-name">Expense Name</h5>              
+                                                                    <input type="text" class="form-control input-field expense_name" name="expense_name" value="{{ expense.expense_name }}" required>
+                                                                    <div class="form-text text-danger form-error-text expense-name-error"><small> Please provide a name for this expense.</small></div>
+                                                                </div>
+                                                                <div class="col-lg-6">
+                                                                    <h5 class="input-name">Category</h5>              
+                                                                    <select class="form-select input-select expense_category" name="expense_category" hx-get="{% url 'expense-fields' %}" hx-target="next .expense-fields" hx-trigger="change" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, recurring_expense_count: document.querySelectorAll('.expense-recurring-entry').length, one_time_expense_count: document.querySelectorAll('.expense-one-time-entry').length}">
+                                                                        <option value="Recurring" {% if expense.expense_category == 'Recurring' %} selected {% endif %}>Recurring</option>
+                                                                        <option value="One-time" {% if expense.expense_category == 'One-time' %} selected {% endif %}>One-time</option>
+                                                                    </select>
+                                                                    <div class="form-text text-danger form-error-text expense-category-error"><small> Please select a category.</small></div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="expense-fields">
+                                                                {% if expense.expense_category == "Recurring" %}
+                                                                    {% include 'FIRE/partials/fields_expenses_recurring_edit.html' with expense=expense ages=FIplan.ages_display %}
+                                                                {% else %}
+                                                                    {% include 'FIRE/partials/fields_expenses_one_time_edit.html' with expense=expense ages=FIplan.ages %}
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-lg-6 expense-table align-self-center">
+                                                            
+                                                        </div>
+                                                    </div>
+                                                    {% else %}
+                                                    <div class="row g-4 mb-3">
+                                                        <div class="col-lg-4">
+                                                            <h5 class="input-name">Expense Name</h5>              
+                                                            <input type="text" class="form-control input-field expense_name" name="expense_name" value="{{ expense.expense_name }}" required>
+                                                            <div class="form-text text-danger form-error-text expense-name-error"><small> Please provide a name for this expense.</small></div>
+                                                        </div>
+                                                        <div class="col-lg-4">
+                                                            <h5 class="input-name">Category</h5>              
+                                                            <select class="form-select input-select expense_category" name="expense_category" hx-get="{% url 'expense-fields' %}" hx-target="next .expense-fields" hx-trigger="change" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, recurring_expense_count: document.querySelectorAll('.expense-recurring-entry').length, one_time_expense_count: document.querySelectorAll('.expense-one-time-entry').length}">
+                                                                <option value="Recurring" {% if expense.expense_category == 'Recurring' %} selected {% endif %}>Recurring</option>
+                                                                <option value="One-time" {% if expense.expense_category == 'One-time' %} selected {% endif %}>One-time</option>
+                                                            </select>
+                                                            <div class="form-text text-danger form-error-text expense-category-error"><small> Please select a category.</small></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="expense-fields">
+                                                        {% if expense.expense_category == "Recurring" %}
+                                                            {% include 'FIRE/partials/fields_expenses_recurring_edit.html' with expense=expense ages=FIplan.ages_display %}
+                                                        {% else %}
+                                                            {% include 'FIRE/partials/fields_expenses_one_time_edit.html' with expense=expense ages=FIplan.ages %}
+                                                        {% endif %}
+                                                    </div>
+                                                    {% endif %}
+                                                    <div class="text-end">
+                                                        <button type="button" class="btn btn-sm btn-remove" hx-delete hx-target="closest .expense-entry" hx-swap="delete"><i class="bi bi-x"></i> Remove</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-add" hx-get="{% url 'create-expense' %}" hx-target="#expense-div" hx-swap="beforeend" hx-vals="js:{entry_count: document.querySelectorAll('.expense-entry').length}"><i class="bi bi-plus"></i>  Expense</button>
+                        </div>
+                    </div>
+                    <div class="modal-footer dashboard-modal-footer">
+                        <button type="button" class="btn btn-add" data-bs-dismiss="modal" hx-post="{% url 'runplan' plan.id %}" hx-target="#runplan-div" hx-swap="innerHTML" hx-trigger="click"><i class="bi bi-floppy"></i> Save changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- SAVINGS MODAL -->
+        <div class="modal fade modal-xl" id="savings-Modal" tabindex="-1" aria-labelledby="savings-Modal" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content dashboard-modal">
+                    <div class="modal-header">
+                        <h3 class="modal-title section-title-savings"><i class="bi bi-currency-dollar"></i> Savings</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="m-3">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="saving_option" id="saving_option_simple" value="Simple" {% if FIplan.accounts|first == 'Simple' %} checked {% endif %} hx-get="{% url 'savings-method' %}" hx-target="#savings-method" hx-trigger="click" hx-swap="innerHTML">
+                                <label class="form-check-label" for="saving_option_simple">Simple</label>
+                                <a tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-title="Simple" data-bs-content="Savings will be added to your current net worth and will grow at a singular growth rate."><i class="bi bi-question-circle"></i></a>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="saving_option" id="saving_option_recommended" value="Recommended" {% if FIplan.accounts|first == 'Recommended' %} checked {% endif %} hx-get="{% url 'savings-method' %}" hx-target="#savings-method" hx-trigger="click" hx-swap="innerHTML">
+                                <label class="form-check-label" for="saving_option_fire">Recommended</label>
+                                <a tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-title="Recommended" data-bs-html="true" data-bs-content="Savings will be allocated in the following order*: <ol> <li>401k to recieve employer match</li><li>Max HSA</li><li>Max 401k</li><li>Max IRA</li><li>TBA</li></ol> *Each account is optional"><i class="bi bi-question-circle"></i></a>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="saving_option" id="saving_option_custom" value="Custom" {% if FIplan.accounts|first == 'Custom' %} checked {% endif %} hx-get="{% url 'savings-method' %}" hx-target="#savings-method" hx-trigger="click" hx-swap="innerHTML">
+                                <label class="form-check-label" for="saving_option_advanced">Custom</label>
+                                <a tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-title="Custom" data-bs-content="Savings will be allocated per your priorities. Add as many accounts and order them yourself!"><i class="bi bi-question-circle"></i></a>
+                            </div>
+                        </div>
+                        <div id="savings-method">
+                            {% if FIplan.accounts|first == 'Simple' %}
+                                {% include 'FIRE/partials/savings_method_simple_edit.html' with account=FIplan.accounts|last %}
+                            {% elif FIplan.accounts|first == 'Custom' %}
+                                {% include 'FIRE/partials/savings_method_custom_edit.html' %}
+                            {% else %}
+                                {% include 'FIRE/partials/savings_method_recommended_edit.html' %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="modal-footer dashboard-modal-footer">
+                        <button type="button" class="btn btn-add" data-bs-dismiss="modal" hx-post="{% url 'runplan' plan.id %}" hx-target="#runplan-div" hx-swap="innerHTML" hx-trigger="click"><i class="bi bi-floppy"></i> Save changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- PERSONAL AGE INPUTS -->
+        <div class="row g-4 mb-3">
+            <div class="col-lg-4">
+                <div class="card dashboard-card">
+                    <div class="card-body">
+                        <h5 class="dashboard-input-name">Current Age</h5>              
+                        <input type="number" class="form-control dashboard-input-field" id="current_age" name="current_age" min="1" max='{{ plan.retirement_age|add:"-1" }}' value="{{ plan.current_age }}" required hx-post="{% url 'runplan' plan.id %}" hx-target="#runplan-div" hx-swap="innerHTML" hx-trigger="change delay:1s">
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card dashboard-card">
+                    <div class="card-body">
+                        <h5 class="dashboard-input-name">Retirement Age</h5>              
+                        <input type="number" class="form-control dashboard-input-field" id="retirement_age" name="retirement_age" min='{{ plan.current_age|add:"1" }}'' max="101" value="{{ plan.retirement_age }}" required hx-post="{% url 'runplan' plan.id %}" hx-target="#runplan-div" hx-swap="innerHTML" hx-trigger="change delay:1s">
+                        <!-- <div id="retirement_ageHelp" class="form-text text-danger"><small>Retirement age must be greater than current age.</small></div> -->
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card dashboard-card">
+                    <div class="card-body">
+                        <h5 class="dashboard-input-name">Coast FIRE Age</h5>              
+                        <input type="number" class="form-control dashboard-input-field" id="coast_fire_age" name="coast_fire_age" min='{{ plan.current_age|add:"1" }}' max='{{ plan.retirement_age|add:"-1" }}' {% if plan.coast_fire_age %} value="{{ plan.coast_fire_age }}" {% endif %} hx-post="{% url 'runplan' plan.id %}" hx-target="#runplan-div" hx-swap="innerHTML" hx-trigger="change delay:1s">
+                        <!-- <div id="coast_fire_ageHelp" class="form-text text-danger"><small>Coast FI age must be greater than current age and less than retirement age.</small></div> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- FI INDICATOR CARDS -->
+        <div class="row g-4 mb-3">
+            <div class="col-lg-4">
+                <div class="card dashboard-card">
+                    <div class="card-body">
+                        <h5 class="dashboard-input-name">Final Net Worth</h5>              
+                        <h6 class="dashboard-input-field">{{ FIplan.net_worths_last }}</h6>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card dashboard-card">
+                    <div class="card-body">
+                        <h5 class="dashboard-input-name">Magic Number</h5>              
+                        <h6 class="dashboard-input-field">{{ FIplan.magic_numbers_last }}</h6>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card dashboard-card">
+                    <div class="card-body">
+                        <h5 class="dashboard-input-name">Withdraw Rate</h5>              
+                        <h6 class="dashboard-input-field">{{ FIplan.drawdowns_last }}</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- CHARTS -->
+        <canvas id="NetWorthChart" class="p-3 mb-3" data-ages='{{ FIplan.ages|safe }}' data-networths='{{ FIplan.net_worths|safe }}' data-magicnumbers='{{ FIplan.magic_numbers|safe }}' height="110"></canvas>
+        <div class="row g-4 mb-3">
+            <div class="col-lg-6">
+                <div class="card dashboard-card">
+                    <div class="card-body">
+                        <canvas id="YearlyBreakdownChart" data-ages='{{ FIplan.ages|safe }}' data-income='{{ FIplan.total_net_income|safe }}' data-expenses='{{ FIplan.total_expenses|safe }}' data-savings='{{ FIplan.total_savings|safe }}'></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card dashboard-card">
+                    <div class="card-body">
+                        <canvas id="YearlyInvestmentsChart" data-ages='{{ FIplan.ages|safe }}'></canvas>
+                    </div>
+                </div>
+                <div id="chart-data" style="display: none;">
+                    {{  FIplan.accounts|json_script:"data-accounts" }}
+                </div>
+            </div>
+        </div>
+        <!-- TABLE DETAILED -->
+        <div class="container tbl-container mb-3">
+            <div class="row tbl-fixed">
+                <table class="table table-hover table-striped table-condensed">
+                    <thead>
+                        <tr>
+                            <th><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#B34E82"/></svg> Age</th>
+                            <th><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#B34E82"/></svg> Year</th>
+                            {% for income in FIplan.incomes %}
+                                {% if income.income_category == 'Salary' %}
+                                    <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#285C53"/></svg> {{ income.income_name}}: Gross</th>
+                                    <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#285C53"/></svg> {{ income.income_name}}: Bonus</th>
+                                    <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="5" fill="#EC652B"/></svg> {{ income.income_name}}: Tax</th>
+                                    <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#285C53"/></svg> {{ income.income_name}}: Net</th>
+                                {% else %}
+                                    <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#285C53"/></svg> {{ income.income_name}}: Gross</th>
+                                    <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="5" fill="#EC652B"/></svg> {{ income.income_name}}: Tax</th>
+                                    <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#285C53"/></svg> {{ income.income_name}}: Net</th>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% for expense in FIplan.expenses %}
+                                <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#EC652B"/></svg> {{ expense.expense_name}}</th> 
+                            {% endfor %}
+
+                            <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#000000"/></svg> Savings</th>
+                            {% if FIplan.accounts|first == 'Simple' %}
+                                <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#4F378A"/></svg> Net Worth: Start</th>
+                                <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="5" fill="#4F378A"/></svg> Net Worth: Cont. Amount</th>
+                                <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#4F378A"/></svg> Net Worth: End</th>
+                            {% else %}
+                                {% for account in FIplan.accounts|slice:"1:" %}
+                                    {% if account.saving_category == 'ESRP' %}
+                                        <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#4F378A"/></svg> {{ account.saving_name}}: Start</th>
+                                        <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#4F378A"/></svg> {{ account.saving_name}}: Cont. Limit</th>
+                                        <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="5" fill="#4F378A"/></svg> {{ account.saving_name}}: Cont. Amount</th>
+                                        <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="5" fill="#4F378A"/></svg> {{ account.saving_name}}: Employer Cont. Amount</th>
+                                        <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#4F378A"/></svg> {{ account.saving_name}}: End</th>
+                                    {% elif account.saving_category == 'HSA' or account.saving_category == 'IRA' %}
+                                        <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#4F378A"/></svg> {{ account.saving_name}}: Start</th>
+                                        <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="5" fill="#4F378A"/></svg> {{ account.saving_name}}: Cont. Limit</th>
+                                        <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="5" fill="#4F378A"/></svg> {{ account.saving_name}}: Cont. Amount</th>
+                                        <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#4F378A"/></svg> {{ account.saving_name}}: End</th>
+                                    {% else %}
+                                        <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#4F378A"/></svg> {{ account.saving_name}}: Start</th>
+                                        <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="5" fill="#4F378A"/></svg> {{ account.saving_name}}: Cont. Amount</th>
+                                        <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#4F378A"/></svg> {{ account.saving_name}}: End</th>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+
+                            <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#000000"/></svg> Net Worth</th>
+                            <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#000000"/></svg> Magic Number</th>
+                            <th class="header"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#000000"/></svg> Withdraw Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in FIplan.plan_data %}
+                        <tr>
+                            {% for num in row %}
+                                <td>{{ num }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card dashboard-card mb-3">
+            <div class="card-body">
+                {{ sankey_chart|safe }}
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+    (function() {
+        const chartE2 = document.getElementById('NetWorthChart');
+        const ages = JSON.parse(chartE2.dataset.ages);
+        const net_worths = JSON.parse(chartE2.dataset.networths);
+        const magic_numbers = JSON.parse(chartE2.dataset.magicnumbers);
+
+        new Chart(chartE2.getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: ages,
+            datasets: [
+            {
+                // label: 'Net Worth',
+                // data: net_worths,
+                // borderColor: 'rgb(80, 167, 114)',
+                // backgroundColor: 'rgba(80, 167, 114, 0.2)',
+                // fill: false,
+                // tension: 0.2
+                label: 'Net Worth',
+                data: net_worths,
+                borderColor: '#285C53',
+                backgroundColor: '#DFF5F150',
+                borderWidth: 3,
+                pointRadius: 3,
+                pointBackgroundColor: '#DFF5F1',
+                tension: 0.3,
+                fill: true,
+            },
+            {
+                // label: 'Magic Number',
+                // data: magic_numbers,
+                // borderColor: 'rgb(0, 0, 0)',
+                // backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                // fill: false,
+                // tension: 0.2
+                label: 'Magic Number',
+                data: magic_numbers,
+                borderColor: '#1d1919',
+                backgroundColor: 'rgba(0, 0, 0, 0.08)',
+                borderDash: [8, 4],
+                borderWidth: 2,
+                pointRadius: 2,
+                pointBackgroundColor: '#1d1919',
+                tension: 0.2,
+                fill: false,
+            }
+            ]
+        },
+        options: {
+            responsive: true,
+            // maintainAspectRatio: false,
+            animation: false,
+            plugins: {
+            legend: { position: 'top' },
+            title: { 
+                display: true, 
+                text: 'Net Worth vs. Magic Number',
+                align: 'start',
+                font: {
+                    color: '#777980',
+                    family: 'Inter',
+                    size: '16',
+                    style: 'normal',
+                    weight: '500',
+                }
+
+            },
+            tooltip: {
+                callbacks: {
+                label: function(context) {
+                    let label = context.dataset.label || '';
+                    if (label) label += ': ';
+                    if (context.parsed.y !== null) {
+                    label += '$' + context.parsed.y.toLocaleString();
+                    }
+                    return label;
+                }
+                }
+            }
+            },
+            scales: {
+            x: { title: { display: true, text: 'Age' } },
+            y: { 
+                title: { display: true, text: ' Amount ($)' },
+                ticks: {
+                callback: function(value) {
+                    return '$' + value.toLocaleString();
+                }
+                }
+            }
+            }
+        }
+        });
+    })();
+</script>
+<script>
+    (function() {
+        const ctx = document.getElementById('YearlyBreakdownChart');
+        const ages = JSON.parse(document.getElementById('YearlyBreakdownChart').dataset.ages);
+        const income = JSON.parse(document.getElementById('YearlyBreakdownChart').dataset.income);
+        const expenses = JSON.parse(document.getElementById('YearlyBreakdownChart').dataset.expenses);
+        const savings = JSON.parse(document.getElementById('YearlyBreakdownChart').dataset.savings);
+
+        new Chart(ctx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ages,
+                datasets: [
+                    {
+                        label: 'Income',
+                        data: income,
+                        backgroundColor: '#285C53',
+                        stack: 'Stack 0'
+                    },
+                    {
+                        label: 'Expenses',
+                        data: expenses,
+                        backgroundColor: '#EC652B',
+                        stack: 'Stack 0'
+                    },
+                    {
+                        label: 'Savings',
+                        data: savings,
+                        backgroundColor: '#4F378A',
+                        stack: 'Stack 0'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                animation: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    title: { display: true, 
+                        text: 'Income, Expenses, and Savings Breakdown by Year',
+                        align: 'start',
+                        font: {
+                            color: '#777980',
+                            family: 'Inter',
+                            size: '14',
+                            style: 'normal',
+                            weight: '500',
+                        }
+
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) label += ': ';
+                                if (context.parsed.y !== null) {
+                                label += '$' + context.parsed.y.toLocaleString();
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: { stacked: true, title: { display: true, text: 'Age' } },
+                    y: { 
+                        stacked: true, 
+                        title: { 
+                            display: true, 
+                            text: 'Amount ($)' 
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        },
+                    }
+                }
+            }
+        });
+    })();
+</script>
+<script>
+    (function() {
+        const chartEl = document.getElementById('YearlyInvestmentsChart');
+        const ages = JSON.parse(chartEl.dataset.ages);
+        const accounts = JSON.parse(document.getElementById('data-accounts').textContent);
+        let hsa = null;
+        let esrp = null;
+        let ira = null;
+        let tba = null;
+        for (const account of accounts) {
+            if (account.saving_category ==="HSA") {
+                hsa = account.end_amounts
+            }
+            else if (account.saving_category ==="ESRP") {
+                esrp = account.end_amounts
+            }
+            else if (account.saving_category ==="IRA") {
+                ira = account.end_amounts
+            }
+            else if (account.saving_category ==="TBA") {
+                tba = account.end_amounts
+            }
+        }
+
+
+        new Chart(chartEl.getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: ages,
+            datasets: [
+            {
+                label: 'HSA',
+                data: hsa,
+                borderColor: '#285C53',
+                backgroundColor: '#285C5320',
+                fill: false,
+                tension: 0.2
+            },
+            {
+                label: 'Retirement',
+                data: esrp,
+                borderColor: '#EC652B',
+                backgroundColor: '#EC652B20',
+                fill: false,
+                tension: 0.2
+            },
+            {
+                label: 'IRA',
+                data: ira,
+                borderColor: '#4F378A',
+                backgroundColor: '#4F378A20',
+                fill: false,
+                tension: 0.2
+            },
+            {
+                label: 'TBA',
+                data: tba,
+                borderColor: '#B34E82',
+                backgroundColor: '#B34E8220',
+                fill: false,
+                tension: 0.2
+            }
+            ]
+        },
+        options: {
+            responsive: true,
+            animation: false,
+            plugins: {
+            legend: { position: 'top' },
+            title: { display: true, 
+                    text: 'Yearly Investment Account Balances',
+                    align: 'start',
+                    font: {
+                        color: '#777980',
+                        family: 'Inter',
+                        size: '14',
+                        style: 'normal',
+                        weight: '500',
+                    }
+            },
+            tooltip: {
+                callbacks: {
+                label: function(context) {
+                    let label = context.dataset.label || '';
+                    if (label) label += ': ';
+                    if (context.parsed.y !== null) {
+                    label += '$' + context.parsed.y.toLocaleString();
+                    }
+                    return label;
+                }
+                }
+            }
+            },
+            scales: {
+            x: { title: { display: true, text: 'Age' } },
+            y: { 
+                title: { display: true, text: ' End Balance ($)' },
+                ticks: {
+                callback: function(value) {
+                    return '$' + value.toLocaleString();
+                }
+                }
+            }
+            }
+        }
+        });
+    })();
+</script>

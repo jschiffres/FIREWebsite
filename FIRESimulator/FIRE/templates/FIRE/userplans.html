@@ -1,0 +1,177 @@
+{% extends 'FIRE/base.html' %}
+
+{% block content %}
+
+<style>
+    table {
+        border-collapse: collapse;
+        position: relative;
+    }  
+    .tbl-container
+    {
+        border-radius: 6px;
+        overflow: hidden;
+    }
+    table th {
+        position: sticky;
+        top: -1px;
+        z-index: 2;
+    }
+    td {
+        color: rgba(0, 0, 0, 0.87);
+font-feature-settings: 'liga' off, 'clig' off;
+font-family: Inter;
+font-size: var(--font-size-0875-rem, 14px);
+font-style: normal;
+font-weight: var(--fontWeightRegular, 400);
+line-height: 143%; /* 20.02px */
+letter-spacing: 0.17px;
+    }
+    th {
+        white-space: nowrap;
+        color: rgba(0, 0, 0, 0.87);
+font-feature-settings: 'liga' off, 'clig' off;
+font-family: Inter;
+font-size: var(--font-size-0875-rem, 14px);
+font-style: normal;
+font-weight: 600;
+line-height: 24px; /* 171.429% */
+letter-spacing: 0.17px;
+    }
+</style>
+
+<!-- QUESTIONNAIRE NAVBAR -->
+<nav id="app-navbar" class="navbar mt-0 shadow-lg sticky-top navbar-expand-lg">
+    <div class="container">
+        <h1 class="mt-3 mb-3 fs-3 fw-bold" id="nav-header">My Plans</h1>
+        <ul class="nav nav-pills">
+			<form action="{% url 'newplan' %}">
+				<li><button type="submit" class="btn btn-sm btn-action-filled"><i class="bi bi-plus-circle"></i> New Plan</button></li>
+			</form>
+        </ul>
+    </div>
+</nav>
+
+<div class="container mt-4">
+	{% if plans %}
+	<div class="container tbl-container mb-3">
+        <div class="row tbl-fixed">
+            <table class="table table-hover table-striped table-condensed">
+                <thead>
+					<tr>
+						<th>Name</th>
+						<th>Date Created</th>
+						<th>Retirement Age</th>
+						<th>Net Worth</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+                <tbody>
+					{% for plan in plans %}
+					<tr>
+						<td style="vertical-align: middle;">{{ plan.plan_name }}</td>
+						<td style="vertical-align: middle;">{{ plan.created_at|date:"D d M Y" }}</td>
+						<td style="vertical-align: middle;">{{ plan.retirement_age }}</td>
+						<td style="vertical-align: middle;">{{ plan.final_net_worth }}</td>
+						<td>
+							<div class="btn-group p-1" role="group">
+								<form action="{% url 'runplan' plan.id %}">
+									<button type="submit" class="btn btn-sm btn-edit-savings me-2"><i class="bi bi-play"></i> Run</button>
+								</form>
+								<form action="{% url 'editplan' plan.id %}">
+									<button type="submit" class="btn btn-sm btn-action-empty me-2"><i class="bi bi-pencil"></i> Edit</button>
+								</form>
+								<form action="{% url 'downloadplan' plan.id %}">
+									<button type="submit" class="btn btn-sm me-2"><i class="bi bi-download action-icon"></i></button>
+								</form>
+								<form action="{% url 'copyplan' plan.id %}">
+									<button type="submit" class="btn btn-sm me-2"><i class="bi bi-copy"></i></button>
+								</form>
+								<form method="POST" action="{% url 'deleteplan' plan.id %}">
+								{% csrf_token %}
+									<button type="button" class="btn btn-sm" data-bs-toggle="modal" data-bs-target="#deletePlanModal{{plan.id}}"><i class="bi bi-trash action-icon"></i></button>
+									<div class="modal fade" id="deletePlanModal{{plan.id}}" data-bs-backdrop="delete" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+										<div class="modal-dialog modal-dialog-centered">
+											<div class="modal-content back-modal">
+												<div class="modal-header">
+													<h5 class="modal-title" id="staticBackdropLabel"><i class="bi-exclamation-circle-fill"></i> {{ plan.plan_name }}</h5>
+													<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+												</div>
+												<div class="modal-body">
+													Are you sure you want to <b style="color:red">DELETE</b> this plan?
+												</div>
+												<div class="modal-footer" style="background: #FCFBF9;">
+													<button type="submit" class="btn btn-danger" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill"> </i>Delete</i></button>
+												</div>
+											</div>
+										</div>
+									</div>
+								</form>
+							</div>
+
+							<!-- <ul class="list-group list-group-horizontal d-flex justify-content-start" style="border: none;">
+
+				        		<li class="list-group-item">		
+	          						<form action="{% url 'runplan' plan.id %}">
+	              						<button type="submit" class="btn btn-sm btn-edit-savings"><i class="bi bi-play"></i> Run</button>
+	          						</form>
+	          					</li>
+								
+								<li class="list-group-item">
+					        	    <form action="{% url 'editplan' plan.id %}">
+	              						<button type="submit" class="btn btn-sm btn-action-empty"><i class="bi-pencil-square"></i> Edit</button>
+	          						</form>
+		          				</li>
+
+								<li class="list-group-item">
+					        	    <form action="{% url 'downloadplan' plan.id %}">
+	              						<button type="submit" class="btn btn-sm"><i class="bi bi-download action-icon"></i></button>
+	          						</form>
+		          				</li>
+
+								<li class="list-group-item">
+					        	    <form action="{% url 'copyplan' plan.id %}">
+	              						<button type="submit" class="btn btn-sm"><i class="bi bi-copy"></i></button>
+	          						</form>
+		          				</li>
+
+								<li class="list-group-item">		
+	          						<form method="POST" action="{% url 'deleteplan' plan.id %}">
+									{% csrf_token %}
+										<button type="button" class="btn btn-sm" data-bs-toggle="modal" data-bs-target="#deletePlanModal{{plan.id}}"><i class="bi bi-trash action-icon"></i></button>
+										<div class="modal fade" id="deletePlanModal{{plan.id}}" data-bs-backdrop="delete" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+											<div class="modal-dialog modal-dialog-centered">
+												<div class="modal-content back-modal">
+													<div class="modal-header">
+														<h5 class="modal-title" id="staticBackdropLabel"><i class="bi-exclamation-circle-fill"></i> {{ plan.plan_name }}</h5>
+														<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+													</div>
+													<div class="modal-body">
+														Are you sure you want to <b style="color:red">DELETE</b> this plan?
+													</div>
+													<div class="modal-footer" style="background: #FCFBF9;">
+														<button type="submit" class="btn btn-danger" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill"> </i>Delete</i></button>
+													</div>
+												</div>
+											</div>
+										</div>
+                					</form>
+	          					</li>
+	          				</ul> -->
+						</td>	
+					</tr>
+					{% endfor %}
+				</tbody>
+            </table>
+        </div>
+    </div>
+	{% else %}
+	<div class="text-center">
+		<h2>Looks like you don't have any plans!</h2>
+		<br>
+		<a role="button" class="btn btn-lg btn-action-filled" href="{% url 'newplan' %}"><i class="bi bi-plus-circle"></i> New Plan</a>
+	</div>
+	{% endif %}
+</div>
+
+{% endblock %}
