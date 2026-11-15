@@ -20,6 +20,9 @@ from .emails import welcome_email
 import math
 import csv
 
+def about(request):
+    return render(request, 'FIRE/about.html')
+
 def _is_uuid(value):
     try:
         uuid.UUID(str(value))

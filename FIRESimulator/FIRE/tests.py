@@ -134,6 +134,9 @@ class SurveyAndPermissionTests(TestCase):
         self.assertNotIn('data-networths', page)
         self.assertContains(self.client.get(reverse('userplans')), 'FI Age')
 
+    def test_about_page_is_public(self):
+        self.assertContains(self.client.get(reverse('about')), 'not financial')
+
     def test_compare_plans_requires_own_plans(self):
         self.client.force_login(self.owner)
         first, second = self.create_plan(), self.create_plan()
