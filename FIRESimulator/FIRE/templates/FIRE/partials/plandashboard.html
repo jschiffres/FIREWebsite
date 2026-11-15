@@ -90,8 +90,15 @@ letter-spacing: 0.17px;
     })
 </script>
 
+<style>
+    @media print {
+        #app-navbar, .alert .btn-close, .accordion, .tbl-container, button, .navbar { display: none !important; }
+        .card { break-inside: avoid; }
+        body { background: #fff !important; }
+    }
+</style>
+
 <form>
-    <!-- MESSAGES -->
     <div>
         {% if error %}
             <div class="alert alert-danger alert-dismissible fade show mb-0" role="alert">
@@ -120,6 +127,7 @@ letter-spacing: 0.17px;
             </ul>
             <ul class="nav nav-pills">
                 <li class="nav-item"><a class="nav-link nav-link-tips" href="{% url 'downloadplan' plan.id %}"><i class="bi bi-download"></i> Download</a></li>
+                <li class="nav-item"><a class="nav-link nav-link-tips" href="#" onclick="window.print(); return false;"><i class="bi bi-printer"></i> Print</a></li>
             </ul>
             {% else %}
             <ul class="nav nav-pills">
@@ -479,23 +487,21 @@ letter-spacing: 0.17px;
             </div>
         </div>
         <!-- CHARTS -->
-        <canvas id="NetWorthChart" class="p-3 mb-3" data-ages='{{ FIplan.ages|safe }}' data-networths='{{ FIplan.net_worths|safe }}' data-magicnumbers='{{ FIplan.magic_numbers|safe }}' height="110"></canvas>
+        {{ chart_data|json_script:"plan-chart-data" }}
+        <canvas id="NetWorthChart" class="p-3 mb-3" height="110"></canvas>
         <div class="row g-4 mb-3">
             <div class="col-lg-6">
                 <div class="card dashboard-card">
                     <div class="card-body">
-                        <canvas id="YearlyBreakdownChart" data-ages='{{ FIplan.ages|safe }}' data-income='{{ FIplan.total_net_income|safe }}' data-expenses='{{ FIplan.total_expenses|safe }}' data-savings='{{ FIplan.total_savings|safe }}'></canvas>
+                        <canvas id="YearlyBreakdownChart"></canvas>
                     </div>
                 </div>
             </div>
             <div class="col-lg-6">
                 <div class="card dashboard-card">
                     <div class="card-body">
-                        <canvas id="YearlyInvestmentsChart" data-ages='{{ FIplan.ages|safe }}'></canvas>
+                        <canvas id="YearlyInvestmentsChart"></canvas>
                     </div>
-                </div>
-                <div id="chart-data" style="display: none;">
-                    {{  FIplan.accounts|json_script:"data-accounts" }}
                 </div>
             </div>
         </div>
@@ -578,9 +584,10 @@ letter-spacing: 0.17px;
 <script>
     (function() {
         const chartE2 = document.getElementById('NetWorthChart');
-        const ages = JSON.parse(chartE2.dataset.ages);
-        const net_worths = JSON.parse(chartE2.dataset.networths);
-        const magic_numbers = JSON.parse(chartE2.dataset.magicnumbers);
+        const chartData = JSON.parse(document.getElementById('plan-chart-data').textContent);
+        const ages = chartData.ages;
+        const net_worths = chartData.net_worths;
+        const magic_numbers = chartData.magic_numbers;
 
         new Chart(chartE2.getContext('2d'), {
         type: 'line',
@@ -674,10 +681,11 @@ letter-spacing: 0.17px;
 <script>
     (function() {
         const ctx = document.getElementById('YearlyBreakdownChart');
-        const ages = JSON.parse(document.getElementById('YearlyBreakdownChart').dataset.ages);
-        const income = JSON.parse(document.getElementById('YearlyBreakdownChart').dataset.income);
-        const expenses = JSON.parse(document.getElementById('YearlyBreakdownChart').dataset.expenses);
-        const savings = JSON.parse(document.getElementById('YearlyBreakdownChart').dataset.savings);
+        const chartData = JSON.parse(document.getElementById('plan-chart-data').textContent);
+        const ages = chartData.ages;
+        const income = chartData.income;
+        const expenses = chartData.expenses;
+        const savings = chartData.savings;
 
         new Chart(ctx.getContext('2d'), {
             type: 'bar',
@@ -756,66 +764,21 @@ letter-spacing: 0.17px;
 <script>
     (function() {
         const chartEl = document.getElementById('YearlyInvestmentsChart');
-        const ages = JSON.parse(chartEl.dataset.ages);
-        const accounts = JSON.parse(document.getElementById('data-accounts').textContent);
-        let hsa = null;
-        let esrp = null;
-        let ira = null;
-        let tba = null;
-        for (const account of accounts) {
-            if (account.saving_category ==="HSA") {
-                hsa = account.end_amounts
-            }
-            else if (account.saving_category ==="ESRP") {
-                esrp = account.end_amounts
-            }
-            else if (account.saving_category ==="IRA") {
-                ira = account.end_amounts
-            }
-            else if (account.saving_category ==="TBA") {
-                tba = account.end_amounts
-            }
-        }
-
+        const chartData = JSON.parse(document.getElementById('plan-chart-data').textContent);
+        const palette = ['#285C53', '#EC652B', '#4F378A', '#B34E82'];
 
         new Chart(chartEl.getContext('2d'), {
         type: 'line',
         data: {
-            labels: ages,
-            datasets: [
-            {
-                label: 'HSA',
-                data: hsa,
-                borderColor: '#285C53',
-                backgroundColor: '#285C5320',
+            labels: chartData.ages,
+            datasets: chartData.accounts.map((account, i) => ({
+                label: account.name,
+                data: account.end_amounts,
+                borderColor: palette[i % palette.length],
+                backgroundColor: palette[i % palette.length] + '20',
                 fill: false,
                 tension: 0.2
-            },
-            {
-                label: 'Retirement',
-                data: esrp,
-                borderColor: '#EC652B',
-                backgroundColor: '#EC652B20',
-                fill: false,
-                tension: 0.2
-            },
-            {
-                label: 'IRA',
-                data: ira,
-                borderColor: '#4F378A',
-                backgroundColor: '#4F378A20',
-                fill: false,
-                tension: 0.2
-            },
-            {
-                label: 'TBA',
-                data: tba,
-                borderColor: '#B34E82',
-                backgroundColor: '#B34E8220',
-                fill: false,
-                tension: 0.2
-            }
-            ]
+            }))
         },
         options: {
             responsive: true,

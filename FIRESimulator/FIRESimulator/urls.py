@@ -32,6 +32,7 @@ urlpatterns = [
     path("plan/<str:plan_id>", views.runplan, name="runplan"),
     path("downloadplan/<str:plan_id>", views.downloadplan, name="downloadplan"),
     path("copyplan/<str:plan_id>", views.copyplan, name="copyplan"),
+    path("compare/", views.compareplans, name="compareplans"),
     path("deleteplan/<str:plan_id>", views.deleteplan, name="deleteplan"),
 
     #HTMX: Section, Entry, Fields, Tables

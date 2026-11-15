@@ -59,9 +59,12 @@ letter-spacing: 0.17px;
             <table class="table table-hover table-striped table-condensed">
                 <thead>
 					<tr>
+						<th style="width:1%;"></th>
 						<th>Name</th>
 						<th>Date Created</th>
 						<th>Retirement Age</th>
+						<th>FI Age</th>
+						<th>Funded</th>
 						<th>Net Worth</th>
 						<th>Actions</th>
 					</tr>
@@ -69,9 +72,12 @@ letter-spacing: 0.17px;
                 <tbody>
 					{% for plan in plans %}
 					<tr>
+						<td style="vertical-align: middle;"><input class="form-check-input compare-check" type="checkbox" name="plans" value="{{ plan.id }}" form="compare-form" aria-label="Select {{ plan.plan_name }} to compare"></td>
 						<td style="vertical-align: middle;">{{ plan.plan_name }}</td>
 						<td style="vertical-align: middle;">{{ plan.created_at|date:"D d M Y" }}</td>
 						<td style="vertical-align: middle;">{{ plan.retirement_age }}</td>
+						<td style="vertical-align: middle;">{{ plan.fi_age }}</td>
+						<td style="vertical-align: middle;">{% if plan.funded_percent != None %}{{ plan.funded_percent }}%{% else %}N/A{% endif %}</td>
 						<td style="vertical-align: middle;">{{ plan.final_net_worth }}</td>
 						<td>
 							<div class="btn-group p-1" role="group">
@@ -162,6 +168,17 @@ letter-spacing: 0.17px;
             </table>
         </div>
     </div>
+	<form id="compare-form" method="get" action="{% url 'compareplans' %}">
+		<button type="submit" id="compare-button" class="btn btn-action-empty" disabled><i class="bi bi-bar-chart"></i> Compare selected (2-3)</button>
+	</form>
+	<script>
+		const compareChecks = document.querySelectorAll('.compare-check');
+		function updateCompareButton() {
+			const n = document.querySelectorAll('.compare-check:checked').length;
+			document.getElementById('compare-button').disabled = n < 2 || n > 3;
+		}
+		compareChecks.forEach(c => c.addEventListener('change', updateCompareButton));
+	</script>
 	{% else %}
 	<div class="text-center">
 		<h2>Looks like you don't have any plans!</h2>

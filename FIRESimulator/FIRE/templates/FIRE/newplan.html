@@ -43,6 +43,17 @@
             expenses.classList.add("active")
             savings.classList.remove("active")
         }
+        updateSurveyProgress()
+    }
+
+    function updateSurveyProgress() {
+        const steps = ['personal-nav-link', 'income-nav-link', 'expenses-nav-link', 'savings-nav-link']
+        const current = steps.findIndex(id => document.getElementById(id).classList.contains('active')) + 1
+        const bar = document.getElementById('survey-progress-bar')
+        const label = document.getElementById('survey-progress-label')
+        bar.style.width = (current / steps.length * 100) + '%'
+        bar.parentElement.setAttribute('aria-valuenow', current)
+        label.textContent = 'Step ' + current + ' of ' + steps.length
     }
 
     document.addEventListener('click', function (e) {
@@ -136,9 +147,13 @@
             <li class="nav-item"><a class="nav-link nav-link-tips" href="#"><i class="bi bi-lightbulb"></i> Tips</a></li>
         </ul>
     </div>
+    <div class="container pb-2 d-flex align-items-center gap-3">
+        <div class="progress flex-grow-1" role="progressbar" aria-label="Questionnaire progress" aria-valuenow="1" aria-valuemin="1" aria-valuemax="4" style="height: 6px;">
+            <div id="survey-progress-bar" class="progress-bar" style="width: 25%; background-color: #285C53;"></div>
+        </div>
+        <small id="survey-progress-label" class="text-nowrap">Step 1 of 4</small>
+    </div>
 </nav>
-
-<!-- NAVBAR SCROLL CONTAINER -->
 <div class="container">
     <form method="POST">{% csrf_token %}
         <!-- PERSONAL INFO -->

@@ -11,15 +11,21 @@ from django.http import HttpResponse, Http404
 from django.views.decorators.http import require_POST
 import uuid
 
-from .models import Simulation, Plan, Feedback
-from .forms import SimulationForm, EditSimulationForm, CreateUserForm, FeedbackForm, PlanForm, EditPlanForm
+from .models import Plan, Feedback
+from .forms import CreateUserForm, FeedbackForm, PlanForm, EditPlanForm
 from .engine import PlanObject
 from .plan_input import saveplan
 from .emails import welcome_email
 
 import math
-import json
 import csv
+
+def _is_uuid(value):
+    try:
+        uuid.UUID(str(value))
+        return True
+    except ValueError:
+        return False
 
 def _can_access_plan(request, plan):
     # Unowned (anonymous) plans stay reachable by their unguessable UUID
@@ -116,14 +122,50 @@ def feedback(request):
         messages.success(request, "Feedback submitted successfully!")
         return redirect('feedback')
 
+def _summarize(plan):
+    try:
+        fi = PlanObject(plan).run()
+    except Exception as e:
+        print(f"summary failed for {plan.pk}: {e}")
+        return None
+    return fi
+
 # USER: Plans
 def userplans(request):
     if request.user.is_authenticated:
-        plans = Plan.objects.filter(user=request.user)
+        plans = list(Plan.objects.filter(user=request.user).order_by('-created_at'))
+        for plan in plans:
+            fi = _summarize(plan)
+            plan.fi_age = fi.fi_age if fi else "N/A"
+            plan.funded_percent = fi.funded_percent if fi else None
         return render(request, 'FIRE/userplans.html', {'plans' : plans})
     else:
         messages.warning(request, "You must be logged in to view your plans.")
         return redirect('loginuser')
+
+# PLANS: Compare (2-3 of the user's own plans)
+@login_required
+def compareplans(request):
+    ids = request.GET.getlist('plans')
+    plans = list(Plan.objects.filter(user=request.user, pk__in=[i for i in ids if _is_uuid(i)]))
+    if not 2 <= len(plans) <= 3:
+        messages.warning(request, "Select two or three plans to compare.")
+        return redirect('userplans')
+
+    rows, series = [], []
+    max_age = max(plan.retirement_age for plan in plans)
+    for plan in plans:
+        fi = _summarize(plan)
+        if fi is None:
+            messages.warning(request, f"Could not generate {plan.plan_name}.")
+            return redirect('userplans')
+        rows.append({'plan': plan, 'fi': fi})
+        series.append({
+            'name': plan.plan_name,
+            'points': [{'x': age, 'y': nw} for age, nw in zip(fi.ages, fi.net_worths)],
+            'magic': [{'x': age, 'y': m} for age, m in zip(fi.ages, fi.magic_numbers)],
+        })
+    return render(request, 'FIRE/compareplans.html', {'rows': rows, 'compare_data': {'series': series, 'max_age': max_age}})
 
 def _build_fiplan(plan):
     FIplan = PlanObject(plan).run()
@@ -168,7 +210,7 @@ def runplan(request, plan_id):
         messages.warning(request, error)
         return render(request, 'FIRE/newplan.html', {'form': PlanForm(), 'error': error})
 
-    context = {'plan': plan, 'FIplan': FIplan, 'sankey_chart': sankey}
+    context = {'plan': plan, 'FIplan': FIplan, 'sankey_chart': sankey, 'chart_data': FIplan.chart_data()}
     if error:
         context['error'] = error
     if request.method == "POST":
@@ -524,239 +566,4 @@ def expense_table(request):
             year_dict['amount'] = '${:,}'.format(amounts[age])
             data.append(year_dict)
         return render(request, 'FIRE/partials/table_expense_recurring.html', {'data': data})
-    
-# SIMULATIONS: Run Simulation / Live Edit
-def runsimulation(request, simulation_id):
-    #TO DO:
-        # Run Simulation:
-            # test all data entry possibilities/combos
-            # test sim save and generate fail redirect/message
-        # Logic:
-            # POST RETIREMENT EXPENSE ADJUSTMENT
-            # GAP YEARS YAY!, 
-        # Edit Simulation:
-            # update template
-        # Account view
-            # add logic to delete acocunt/ change username / password
-            # forget password logic
-        # Questionnaire:
-            # add language for accordians
-            # add better transitions and a progress bar
-        #Compare functionality between two plans
-        #discard current plan if user in the middle modal "are you sure you want to leave?"
 
-    # Retrieve simulation object from Django model
-    simulation = get_object_or_404(Simulation, pk=simulation_id)
-
-    # Ensure simulation belongs to requesting user
-    if simulation.user and request.user != simulation.user:
-        return render(request, 'FIRE/newplan.html', {'form': SimulationForm(), 'error': "Not authorized to view simulation."})
-
-    # If post request, update the simulation in the database by saving the form
-    if request.method == "POST":
-        form_save_error = False
-        form = EditSimulationForm(request.POST, instance=simulation)
-        try:
-            updatedsim = savesimulation(form, request)
-            if type(updatedsim) == str:
-                form_save_error = True
-            if request.POST.get("tableDetailedViewSwitch"):
-                toggle = True
-            else:
-                toggle = False         
-        except Exception as e:
-            print(e)
-            form_save_error = True
-
-    # If post or get request, exeucte simulation logic to generate data for firetable       
-    try:
-        # Initialize FIRE object
-        FIREObject = FIRE(simulation)
-
-        # Generate ages and years
-        ages, years = FIREObject.personal_infos()
-
-        # Calculate yearly amounts for income, expenses and savings
-        total_income, salaries, bonuses, other_income, lump_sum_incomes = FIREObject.incomes()
-        total_expenses, fixed_costs, variable_costs, health_insurance, lump_sum_expenses, taxes = FIREObject.expenses()
-        savings = FIREObject.savings()
-
-        # Caluclate yearly contribution limits for retirement accounts based on current limits, step and years until retirement
-        hsa_cont_limits, ira_cont_limits, retirement_cont_limits = FIREObject.yearly_contribution_limits()
-
-
-        # Calculate actual contributions based on yearly savings and contribution limit amounts
-        hsa_contributions,retirement_contributions,employer_retirement_contributions,ira_contributions,iba_contributions = FIREObject.yearly_contributions()
-
-        # Calculate investment account start and end balances based on current balances, contributions and estimated returns
-        hsa_start, hsa_end, retirement_start, retirement_end, ira_start, ira_end, iba_start, iba_end = FIREObject.start_end_balances()
-
-        # Calculate total asset values
-        assets = FIREObject.assets()
-    
-        # Calculate net worth based on ending balances of each investment account
-        net_worths, magic_numbers, drawdowns = FIREObject.fire_indicators()
-
-        # Store all simulation data in a list of dictionaires
-        simulation_data = FIREObject.simulation_data()
-
-        # Create zipped lists of lump sums, adjustments and assets for use in template
-        lump_sum_income, lump_sum_expense_zip, variable_cost_adjustments, fixed_cost_adjustments, assets = FIREObject.zip_objects()
-
-        financial_independence_age = FIREObject.financial_independence_age()
-
-        # Once simulation data is finalized, update simulation within database with new final net worth number
-        simulation.final_net_worth = (simulation_data[-1]['net_worth'])
-        simulation.save()
-
-        import plotly.graph_objects as go
-
-        # Prepare Sankey data
-        labels = [
-            "Total Income", "Salary", "Bonuses", "Other Income", "Lump Sum Income",
-            "Total Expenses", "Fixed Costs", "Variable Costs", "Health Insurance", "Lump Sum Expenses", "Taxes",
-            "Total Savings", "HSA", "401k/403b", "IRA", "TBA", "Employer Contribution"
-        ]
-
-        # Sources and targets for Sankey diagram
-        sources = [
-            1, 2, 3, 4,
-            0, 0,
-            5, 5, 5, 5, 5,
-            11, 11, 11, 11,
-            16
-        ]
-
-        targets = [
-            0, 0, 0, 0,
-            5, 11,
-            6, 7, 8, 9, 10,
-            12, 13, 14, 15,
-            13
-        ]
-
-        # Values for each flow (use sum for the simulation period)
-        income_sum = sum(total_income)
-        salary_sum = sum(salaries)
-        bonus_sum = sum(bonuses)
-        other_income_sum = sum(other_income)
-        lump_sum_income_sum = sum(lump_sum_incomes)
-
-        expenses_sum = sum(total_expenses)
-        fixed_cost_sum = sum(fixed_costs)
-        variable_cost_sum = sum(variable_costs)
-        health_insurance_sum = sum(health_insurance)
-        lump_sum_expense_sum = sum(lump_sum_expenses)
-        tax_sum = sum(taxes)
-
-        savings_sum = sum(savings)
-        hsa_sum = sum(hsa_contributions)
-        retirement_sum = sum(retirement_contributions)
-        ira_sum = sum(ira_contributions)
-        iba_sum = sum(iba_contributions)
-        employer_sum = sum(employer_retirement_contributions)
-
-        values = [
-            salary_sum, bonus_sum, other_income_sum, lump_sum_income_sum, # Income splits
-            expenses_sum, savings_sum,
-            fixed_cost_sum, variable_cost_sum, health_insurance_sum, lump_sum_expense_sum, tax_sum, # Expense splits
-            hsa_sum, retirement_sum, ira_sum, iba_sum, employer_sum # Income to Savings
-        ]
-
-        # Create Sankey chart
-        fig = go.Figure(data=[go.Sankey(
-            node=dict(
-                pad=15,
-                thickness=20,
-                line=dict(color="black", width=0.5),
-                label=labels,
-            ),
-            link=dict(
-                source=sources,
-                target=targets,
-                value=values,
-                color=["#B9FC72"]*4 + ["#F5BDFB"]+ ["#63D8EA"]+ ["#FBE3FD"]*5 + ["#97E4F1"]*5
-            ),
-        )])
-        fig.update_layout(
-            title = {
-                "text": "Total Cash Flow Sankey Diagram",
-                "font": {
-                    "family": "Montserrat",
-                    "size": 24,
-                    "color": "black"
-                },
-            },
-            title_x=0.5,
-            paper_bgcolor="#F7F4EF",
-            plot_bgcolor="#F7F4EF",
-            font=dict(
-                family = "Montserrat",
-                size = 16,
-                color = "black"
-            )
-        )
-        fig.update_traces(
-            node_color=["#285C53"]*5 + ["#E13335"]*6 + ["#4A09B5"]*6
-        )
-
-        sankey_html = fig.to_html(full_html=True)
-
-    # If simulation logic fails, return user to the new simulation screen with error message
-    except Exception as e:
-        print(e)
-        #change to return redirect...?
-        return render(request, 'FIRE/newplan.html', {'form': SimulationForm(), 'error': "Error generating simulation, please try again."})
-
-    # If post reuqest only, return the partial HTML template 
-    if request.method == "POST":
-        if form_save_error:
-            return render(request, 'FIRE/partials/firetable.html', {'toggle': toggle, 'simulation': simulation, "data": simulation_data, 'form' : form, 'ages': json.dumps(ages), 'net_worths': json.dumps(net_worths), 'magic_numbers': json.dumps(magic_numbers), 'total_income': json.dumps(total_income), 'total_expenses': json.dumps(total_expenses), 'savings': json.dumps(savings), 'hsa_end': json.dumps(hsa_end), 'retirement_end': json.dumps(retirement_end), 'ira_end': json.dumps(ira_end), 'iba_end': json.dumps(iba_end), 'lump_sum_incomes': lump_sum_income, 'lump_sum_expenses': lump_sum_expense_zip, 'variable_cost_adjustments': variable_cost_adjustments, 'fixed_cost_adjustments': fixed_cost_adjustments, 'assets': assets, 'sankey': sankey_html, 'financial_independence_age': financial_independence_age, 'error': updatedsim})
-        else:
-           messages.success(request, f"{simulation.name} updated successfully!")
-           return render(request, 'FIRE/partials/firetable.html', {'toggle': toggle, 'simulation': simulation, "data": simulation_data, 'form' : form, 'ages': json.dumps(ages), 'net_worths': json.dumps(net_worths), 'magic_numbers': json.dumps(magic_numbers), 'total_income': json.dumps(total_income), 'total_expenses': json.dumps(total_expenses), 'savings': json.dumps(savings), 'hsa_end': json.dumps(hsa_end), 'retirement_end': json.dumps(retirement_end), 'ira_end': json.dumps(ira_end), 'iba_end': json.dumps(iba_end), 'lump_sum_incomes': lump_sum_income, 'lump_sum_expenses': lump_sum_expense_zip, 'variable_cost_adjustments': variable_cost_adjustments, 'fixed_cost_adjustments': fixed_cost_adjustments, 'assets': assets, 'sankey': sankey_html, 'financial_independence_age': financial_independence_age}) 
-    # If get request, return the whole runsimulation HTML template
-    else:
-        return render(request, "FIRE/runsimulation.html", {'toggle': True, "simulation": simulation, "data": simulation_data, 'form': EditSimulationForm(), 'ages': json.dumps(ages), 'net_worths': json.dumps(net_worths), 'magic_numbers': json.dumps(magic_numbers), 'total_income': json.dumps(total_income), 'total_expenses': json.dumps(total_expenses), 'savings': json.dumps(savings), 'hsa_end': json.dumps(hsa_end), 'retirement_end': json.dumps(retirement_end), 'ira_end': json.dumps(ira_end), 'iba_end': json.dumps(iba_end), 'lump_sum_incomes': lump_sum_income, 'lump_sum_expenses': lump_sum_expense_zip, 'variable_cost_adjustments': variable_cost_adjustments, 'fixed_cost_adjustments': fixed_cost_adjustments, 'assets': assets, 'sankey': sankey_html, 'financial_independence_age': financial_independence_age})
-    
-# HTMX: Add New Lumpsum Input
-def create_lumpsum_income(request):
-    max_age = int(request.GET.get("max_age")) - 1
-    min_age = int(request.GET.get("min_age"))
-    return render(request, 'FIRE/partials/lumpsumincome.html', {'max_age' : max_age, 'min_age' : min_age})
-
-# HTMX: Add New Lumpsum Input
-def create_lumpsum_expense(request):
-    max_age = int(request.GET.get("max_age")) - 1
-    min_age = int(request.GET.get("min_age"))
-    return render(request, 'FIRE/partials/lumpsumexpense.html', {'max_age' : max_age, 'min_age' : min_age})
-
-# HTMX: Add New Asset Input
-def create_asset(request):
-    return render(request, 'FIRE/partials/asset.html')
-
-# HTMX: Add New Expense Adjustment Input
-def create_fixedcost_adjustment(request):
-    max_age = int(request.GET.get("max_age")) - 1
-    min_age = int(request.GET.get("min_age")) + 1
-    return render(request, 'FIRE/partials/adjustment_fixedcosts.html', {'max_age' : max_age, 'min_age' : min_age})
-
-# HTMX: Add New Expense Adjustment Input
-def create_variablecost_adjustment(request):
-    max_age = int(request.GET.get("max_age")) - 1
-    min_age = int(request.GET.get("min_age")) + 1
-    return render(request, 'FIRE/partials/adjustment_variablecosts.html', {'max_age' : max_age, 'min_age' : min_age})
-
-# HTMX: Include HSA input fields
-def hsa_opt_in(request):
-    current_hsa_balance = int(request.GET.get("current_hsa_balance"))
-    esitmated_hsa_yearly_return = float(request.GET.get("esitmated_hsa_yearly_return"))
-    current_hsa_yearly_contribution_limit = int(request.GET.get("current_hsa_yearly_contribution_limit"))
-    estimated_hsa_yearly_contribution_limit_step = int(request.GET.get("estimated_hsa_yearly_contribution_limit_step"))
-    return render(request, 'FIRE/partials/opt_in_hsa.html', {'current_hsa_balance': current_hsa_balance, 'esitmated_hsa_yearly_return': esitmated_hsa_yearly_return, 'current_hsa_yearly_contribution_limit': current_hsa_yearly_contribution_limit, 'estimated_hsa_yearly_contribution_limit_step': estimated_hsa_yearly_contribution_limit_step})
-
-# HTMX: Include Coast FIRE input fields
-def coastfire_opt_in(request):
-    max_age = int(request.GET.get("max_age")) - 1
-    min_age = int(request.GET.get("min_age")) + 1
-    return render(request, 'FIRE/partials/opt_in_coastfire.html', {'max_age' : max_age, 'min_age' : min_age})

@@ -125,3 +125,24 @@ class SurveyAndPermissionTests(TestCase):
             'username': 'dupe', 'email': 'OWNER@example.com', 'password1': 'Str0ng-pass-99', 'password2': 'Str0ng-pass-99'})
         self.assertEqual(User.objects.filter(username='dupe').count(), 0)
         self.assertEqual(response.status_code, 200)
+
+    def test_dashboard_embeds_chart_json_and_lists_show_fi_age(self):
+        self.client.force_login(self.owner)
+        plan = self.create_plan()
+        page = self.client.get(reverse('runplan', args=[plan.id])).content.decode()
+        self.assertIn('id="plan-chart-data"', page)
+        self.assertNotIn('data-networths', page)
+        self.assertContains(self.client.get(reverse('userplans')), 'FI Age')
+
+    def test_compare_plans_requires_own_plans(self):
+        self.client.force_login(self.owner)
+        first, second = self.create_plan(), self.create_plan()
+        ok = self.client.get(reverse('compareplans'), {'plans': [first.id, second.id]})
+        self.assertEqual(ok.status_code, 200)
+        self.assertContains(ok, 'compare-data')
+        self.client.logout()
+        self.client.force_login(self.other)
+        denied = self.client.get(reverse('compareplans'), {'plans': [first.id, second.id]})
+        self.assertEqual(denied.status_code, 302)
+        self.assertEqual(self.client.get(reverse('compareplans'), {'plans': ['nope', first.id]}).status_code, 302)
+
