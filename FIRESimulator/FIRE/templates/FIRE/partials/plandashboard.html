@@ -396,7 +396,7 @@ letter-spacing: 0.17px;
                 <div class="card dashboard-card">
                     <div class="card-body">
                         <h5 class="dashboard-input-name">Retirement Age</h5>              
-                        <input type="number" class="form-control dashboard-input-field" id="retirement_age" name="retirement_age" min='{{ plan.current_age|add:"1" }}'' max="101" value="{{ plan.retirement_age }}" required hx-post="{% url 'runplan' plan.id %}" hx-target="#runplan-div" hx-swap="innerHTML" hx-trigger="change delay:1s">
+                        <input type="number" class="form-control dashboard-input-field" id="retirement_age" name="retirement_age" min='{{ plan.current_age|add:"1" }}' max="101" value="{{ plan.retirement_age }}" required hx-post="{% url 'runplan' plan.id %}" hx-target="#runplan-div" hx-swap="innerHTML" hx-trigger="change delay:1s">
                         <!-- <div id="retirement_ageHelp" class="form-text text-danger"><small>Retirement age must be greater than current age.</small></div> -->
                     </div>
                 </div>
@@ -411,28 +411,68 @@ letter-spacing: 0.17px;
                 </div>
             </div>
         </div>
+        <!-- FI STATUS + WARNINGS -->
+        <div class="alert {% if FIplan.fi_reached %}alert-success{% else %}alert-warning{% endif %} mb-3" role="alert">
+            {% if FIplan.fi_reached %}
+                <strong>On track.</strong> Your projected net worth covers your Magic Number{% if FIplan.fi_years_away != None %}, reaching financial independence at age {{ FIplan.fi_age }} ({{ FIplan.fi_years_away }} years away){% endif %}.
+            {% else %}
+                <strong>Not yet on track.</strong> At retirement you are {{ FIplan.funded_percent }}% funded, a shortfall of {{ FIplan.funded_gap_display }} against your Magic Number.
+            {% endif %}
+        </div>
+        {% if FIplan.unallocated_total > 0 %}
+        <div class="alert alert-info mb-3" role="alert">Some savings are not assigned to any account (over contribution limits and no taxable account). They are not counted in your net worth. Add a taxable brokerage account to include them.</div>
+        {% endif %}
+        {% if FIplan.has_shortfall_years %}
+        <div class="alert alert-warning mb-3" role="alert">In some years your expenses exceed your income; the difference is withdrawn from your accounts.</div>
+        {% endif %}
         <!-- FI INDICATOR CARDS -->
         <div class="row g-4 mb-3">
-            <div class="col-lg-4">
+            <div class="col-lg-3 col-sm-6">
                 <div class="card dashboard-card">
                     <div class="card-body">
-                        <h5 class="dashboard-input-name">Final Net Worth</h5>              
+                        <h5 class="dashboard-input-name">Projected net worth</h5>
                         <h6 class="dashboard-input-field">{{ FIplan.net_worths_last }}</h6>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-4">
+            <div class="col-lg-3 col-sm-6">
                 <div class="card dashboard-card">
                     <div class="card-body">
-                        <h5 class="dashboard-input-name">Magic Number</h5>              
+                        <h5 class="dashboard-input-name">Magic Number</h5>
                         <h6 class="dashboard-input-field">{{ FIplan.magic_numbers_last }}</h6>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-4">
+            <div class="col-lg-3 col-sm-6">
                 <div class="card dashboard-card">
                     <div class="card-body">
-                        <h5 class="dashboard-input-name">Withdraw Rate</h5>              
+                        <h5 class="dashboard-input-name">FI age</h5>
+                        <h6 class="dashboard-input-field">{{ FIplan.fi_age }}</h6>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-sm-6">
+                <div class="card dashboard-card">
+                    <div class="card-body">
+                        <h5 class="dashboard-input-name">Avg. savings rate</h5>
+                        <h6 class="dashboard-input-field">{{ FIplan.average_savings_rate }}%</h6>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card dashboard-card">
+                    <div class="card-body">
+                        <h5 class="dashboard-input-name">Funded: {{ FIplan.funded_percent }}%</h5>
+                        <div class="progress" role="progressbar" aria-valuenow="{{ FIplan.funded_percent }}" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar {% if FIplan.fi_reached %}bg-success{% endif %}" style="width: {% if FIplan.funded_percent > 100 %}100{% else %}{{ FIplan.funded_percent }}{% endif %}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card dashboard-card">
+                    <div class="card-body">
+                        <h5 class="dashboard-input-name">Withdraw Rate</h5>
                         <h6 class="dashboard-input-field">{{ FIplan.drawdowns_last }}</h6>
                     </div>
                 </div>

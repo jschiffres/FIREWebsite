@@ -27,10 +27,9 @@ urlpatterns = [
     path("myplans/", views.userplans, name="userplans"),
     path('feedback/', views.feedback, name='feedback'),
 
-    #PLAN: New, Run, Edit, Download, Copy, Delete
+    #PLAN: New, Run, Download, Copy, Delete
     path("new/", views.newplan, name="newplan"),
     path("plan/<str:plan_id>", views.runplan, name="runplan"),
-    path("editplan/<str:plan_id>", views.editplan, name="editplan"),
     path("downloadplan/<str:plan_id>", views.downloadplan, name="downloadplan"),
     path("copyplan/<str:plan_id>", views.copyplan, name="copyplan"),
     path("deleteplan/<str:plan_id>", views.deleteplan, name="deleteplan"),
@@ -52,14 +51,4 @@ urlpatterns = [
     #Admin, Landing
     path("admin/", admin.site.urls),
     path("", views.landing, name="landing"),
-
-    # To Delete
-    path("firesimulation/<str:simulation_id>", views.runsimulation, name="runsimulation"),
-    path('newlumpsumincome/', views.create_lumpsum_income, name="create-lumpsum-income"),
-    path('newlumpsumexpense/', views.create_lumpsum_expense, name="create-lumpsum-expense"),
-    path('newasset/', views.create_asset, name="create-asset"),
-    path('newfixedcostadjustment/', views.create_fixedcost_adjustment, name="create-fixedcost-adjustment"),
-    path('newvariablecostadjustment/', views.create_variablecost_adjustment, name="create-variablecost-adjustment"),
-    path('hsaoptin/', views.hsa_opt_in, name="hsa-opt-in"),
-    path('coastfireoptin/', views.coastfire_opt_in, name="coastfire-opt-in"),
 ]

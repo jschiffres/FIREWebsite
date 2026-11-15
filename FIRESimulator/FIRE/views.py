@@ -7,16 +7,47 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
 from django.db import IntegrityError
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
+from django.views.decorators.http import require_POST
+import uuid
 
 from .models import Simulation, Plan, Feedback
 from .forms import SimulationForm, EditSimulationForm, CreateUserForm, FeedbackForm, PlanForm, EditPlanForm
-from .functions import saveplan, FIRE, PlanObject
+from .engine import PlanObject
+from .plan_input import saveplan
 from .emails import welcome_email
 
 import math
 import json
 import csv
+
+def _can_access_plan(request, plan):
+    # Unowned (anonymous) plans stay reachable by their unguessable UUID
+    return plan.user is None or plan.user == request.user
+
+def _create_account(request, plan=None):
+    """Shared signup logic; returns (redirect_response, None) or (None, error_response)."""
+    form = CreateUserForm(request.POST)
+    template = 'FIRE/signupuser.html'
+    if request.POST.get('password1') != request.POST.get('password2'):
+        return None, render(request, template, {'form': form, 'error': 'Passwords did not match.'})
+    email = (request.POST.get('email') or '').strip()
+    if email and User.objects.filter(email__iexact=email).exists():
+        return None, render(request, template, {'form': form, 'error': 'Email provided is already associated with an account.'})
+    if not form.is_valid():
+        errors = " ".join(e for errs in form.errors.values() for e in errs)
+        return None, render(request, template, {'form': form, 'error': errors})
+    try:
+        user = form.save()
+    except IntegrityError:
+        return None, render(request, template, {'form': form, 'error': 'Username has already been taken.'})
+    if plan is not None:
+        plan.user = user
+        plan.save()
+    login(request, user)
+    messages.success(request, "User created successfully!")
+    welcome_email(user)
+    return redirect('userplans'), None
 
 # LANDING PAGE
 def landing(request):
@@ -26,49 +57,19 @@ def landing(request):
 def signupuser(request):
     if request.method == "GET":
         return render(request, 'FIRE/signupuser.html', {'form':CreateUserForm()})
-    else:
-        if request.POST.get('password1') == request.POST.get('password2'):
-            try:
-                if 1 == 2:
-                # if User.objects.filter(email=request.POST.get('email')).exists():
-                    return render(request, 'FIRE/signupuser.html', {'form':CreateUserForm(), 'error':'Email provided is already associated with an account.'})
-                else:
-                    user = User.objects.create_user(username=request.POST.get('username'), email=request.POST.get('email'), password=request.POST.get('password1')) 
-                    user.save()
-                    login(request, user)
-                    messages.success(request, "User created successfully!")
-                    welcome_email(user)
-                    return redirect('userplans')
-            except IntegrityError: 
-                return render(request, 'FIRE/signupuser.html', {'form':CreateUserForm(), 'error':'Username has already been taken.'})
-        else:
-            return render(request, 'FIRE/signupuser.html', {'form':CreateUserForm(), 'error':'Passwords did not match.'})
+    response, error = _create_account(request)
+    return response or error
 
 # USER: Signup & Save Plan            
 def signupsave(request, plan_id):
+    plan = get_object_or_404(Plan, pk=plan_id)
+    if plan.user is not None:
+        messages.warning(request, "This plan already belongs to an account.")
+        return redirect('loginuser')
     if request.method == "GET":
         return render(request, 'FIRE/signupuser.html', {'form':CreateUserForm()})
-    else:
-        if request.POST.get('password1') == request.POST.get('password2'):
-            try:
-                if 1 == 2:
-                # if User.objects.filter(email=request.POST.get('email')).exists():
-                    return render(request, 'FIRE/signupuser.html', {'form':CreateUserForm(), 'error':'Email provided is already associated with an account.'})
-                else:
-                    user = User.objects.create_user(username=request.POST.get('username'), email=request.POST.get('email'), password=request.POST.get('password1')) 
-                    user.save()
-                    plan_id = request.path_info.split("/")[2]
-                    plan = get_object_or_404(Plan, pk=plan_id)
-                    plan.user = user
-                    plan.save()
-                    login(request, user)
-                    messages.success(request, "User created successfully!")
-                    welcome_email(user)
-                    return redirect('userplans')
-            except IntegrityError: 
-                return render(request, 'FIRE/signupuser.html', {'form':CreateUserForm(), 'error':'Username has already been taken.'})
-        else:
-            return render(request, 'FIRE/signupuser.html', {'form':CreateUserForm(), 'error':'Passwords did not match.'})
+    response, error = _create_account(request, plan)
+    return response or error
 
 # USER: Login
 def loginuser(request):
@@ -105,8 +106,11 @@ def feedback(request):
         return render(request, 'FIRE/feedback.html', {'form': FeedbackForm()})
     else:
         form = FeedbackForm(request.POST)
+        if not form.is_valid():
+            messages.warning(request, "Please provide your feedback before submitting.")
+            return redirect('feedback')
         newfeedback = form.save(commit=False)
-        if str(request.user) != "AnonymousUser":
+        if request.user.is_authenticated:
             newfeedback.user = request.user
         newfeedback.save()
         messages.success(request, "Feedback submitted successfully!")
@@ -121,161 +125,122 @@ def userplans(request):
         messages.warning(request, "You must be logged in to view your plans.")
         return redirect('loginuser')
 
+def _build_fiplan(plan):
+    FIplan = PlanObject(plan).run()
+    FIplan.update_final_net_worth()
+    return FIplan
+
 # PLANS: Run
 def runplan(request, plan_id):
     # Retrieve plan object from Django model
     plan = get_object_or_404(Plan, pk=plan_id)
 
-    # Ensure simulation belongs to requesting user
-    if plan.user and request.user != plan.user:
-        return render(request, 'FIRE/newplan.html', {'form': PlanForm(), 'error': "Not authorized to view simulation."})
+    # Ensure plan belongs to requesting user
+    if not _can_access_plan(request, plan):
+        messages.warning(request, "You are not authorized to view that plan.")
+        return redirect('userplans' if request.user.is_authenticated else 'loginuser')
 
-    error_status = False
-    # If post request, update the simulation in the database by saving the form
+    error = None
+    form = None
+    # If post request, update the plan in the database by saving the form
     if request.method == "POST":
         form = EditPlanForm(request.POST, instance=plan)
         try:
             updatedplan = saveplan(form, request, dashboard_edit=True)
-            if type(updatedplan) == str:
-                error_status = True
-                error = updatedplan        
+            if isinstance(updatedplan, str):
+                error = updatedplan
+                plan.refresh_from_db()
         except Exception as e:
             print(f"Error updating: {e}")
-            error_status = True
-            error = f"Error updaing {plan.plan_name}."
+            error = f"Error updating {plan.plan_name}."
+            plan.refresh_from_db()
 
+    FIplan = None
+    sankey = None
     try:
-        # Initialize FIplan object
-        FIplan = PlanObject(plan)
-
-        # Execute FIplan methods to create necessary attributes
-        FIplan.personal_infos()
-        FIplan.incomes()
-        FIplan.expenses()
-        FIplan.savings()
-        FIplan.yearly_contribution_limits()
-        FIplan.yearly_contributions()
-        FIplan.start_end_amounts()
-        FIplan.fi_indicators()
-        FIplan.template_data()
-        FIplan.update_final_net_worth()
+        FIplan = _build_fiplan(plan)
         sankey = FIplan.sankey_chart()
-
-    # If plan logic fails, return user to the new plan screen with error message
     except Exception as e:
         print(f"Error generating: {e}")
-        error_status = True
-        error = f"Error generating {plan.plan_name}."
-    
-    # If post request only, return the partial HTML template 
+        error = error or f"Error generating {plan.plan_name}."
+
+    if FIplan is None:
+        messages.warning(request, error)
+        return render(request, 'FIRE/newplan.html', {'form': PlanForm(), 'error': error})
+
+    context = {'plan': plan, 'FIplan': FIplan, 'sankey_chart': sankey}
+    if error:
+        context['error'] = error
     if request.method == "POST":
-        if error_status:
-            return render(request, 'FIRE/partials/plandashboard.html', {'plan': plan, 'FIplan': FIplan, 'form' : form, 'error': error})
-        else:
+        context['form'] = form
+        if not error:
             messages.success(request, f"{plan.plan_name} updated successfully!")
-            return render(request, 'FIRE/partials/plandashboard.html', {'plan': plan, 'FIplan': FIplan, 'form' : form, 'sankey_chart': sankey})
-    # If get request, return the whole HTML template
-    else:
-        if error_status:
-            return render(request, "FIRE/runplan.html", {'plan': plan, 'FIplan': FIplan, 'form': EditPlanForm(), 'error': error})
-        else:
-            return render(request, "FIRE/runplan.html", {'plan': plan, 'FIplan': FIplan, 'form': EditPlanForm(), 'sankey_chart': sankey})
+        return render(request, 'FIRE/partials/plandashboard.html', context)
+    context['form'] = EditPlanForm()
+    return render(request, "FIRE/runplan.html", context)
 
 # PLANS: Create New
 def newplan(request):
 
     if request.method == "GET":
         return render(request, 'FIRE/newplan.html', {'form': PlanForm()})
-    else:
-        try:
-            form = PlanForm(request.POST)
-            newplan = saveplan(form, request)
-            if type(newplan) == str:
-                return render(request, 'FIRE/newplan.html', {'form': form, 'error': newplan})
-            id = newplan.id
-            return redirect(f'/plan/{id}')
-        except Exception as e:
-            print(e)
-            return render(request, 'FIRE/newplan.html', {'form': form, 'error': "Error saving plan, please try again."})
+    form = PlanForm(request.POST)
+    try:
+        newplan = saveplan(form, request)
+        if isinstance(newplan, str):
+            return render(request, 'FIRE/newplan.html', {'form': form, 'error': newplan})
+        return redirect('runplan', plan_id=newplan.id)
+    except Exception as e:
+        print(e)
+        return render(request, 'FIRE/newplan.html', {'form': form, 'error': "Error saving plan, please try again."})
 
-# PLANS: Edit  
-@login_required
-def editplan(request, plan_id):
-    plan = get_object_or_404(Simulation, pk=plan_id)
-    if request.method == "GET":
-        form = SimulationForm(instance=plan)
-        return render(request, 'FIRE/editsimulation.html', {'simulation': plan, 'form' : form})
-    else:
-        try:   
-            form = SimulationForm(request.POST, instance=plan)
-            newsim = saveplan(form, request)
-            if type(newsim) == str:
-                return render(request, 'FIRE/editsimulation.html', {'simulation': plan, 'form': form, 'error': newsim})
-            id = newsim.id
-            return redirect(f'/firesimulation/{id}')
-        except Exception as e:
-            return render(request, 'FIRE/newplan.html', {'simulation': plan, 'form': form, 'error': "Error creating simulation, please try again"})
+def _owned_plan(request, plan_id):
+    plan = get_object_or_404(Plan, pk=plan_id)
+    if plan.user != request.user:
+        raise Http404("Plan not found.")
+    return plan
 
 # PLANS: Delete        
 @login_required
+@require_POST
 def deleteplan(request, plan_id):
-    # Retrieve plan object from Django model
-    plan = get_object_or_404(Plan, pk=plan_id) 
-
-    # Delete plan
+    plan = _owned_plan(request, plan_id)
+    name = plan.plan_name
     try:
         plan.delete()
-        messages.success(request, f"{plan.plan_name} deleted successfully!")
-        return redirect('userplans')
+        messages.success(request, f"{name} deleted successfully!")
     except Exception as e:
-        messages.warning(request, f"Error deleting {plan.plan_name}.")
-        return redirect('userplans')
+        messages.warning(request, f"Error deleting {name}.")
+    return redirect('userplans')
     
 # PLANS: Copy
 @login_required
 def copyplan(request, plan_id):
-    # Retrieve plan object from Django model
-    plan = get_object_or_404(Plan, id=plan_id)
+    plan = _owned_plan(request, plan_id)
+    plan_name = plan.plan_name
 
     try:
-        # Set pk and id to none
         plan.pk = None
-        plan.id = None
-
-        # Rename plan name and save to model
-        plan_name = plan.plan_name
-        plan.plan_name = str(plan_name) + " (copy)"
+        plan.id = uuid.uuid4()
+        plan._state.adding = True
+        plan.plan_name = f"{plan_name} (copy)"[:50]
         plan.save()
-
-        # Return user's plans
         messages.success(request, f"{plan_name} copied successfully!")
-        return redirect('userplans')
     except Exception as e:
-        messages.warning(request, f"Error copying {plan.plan_name}.")
-        return redirect('userplans')
+        print(f"copyplan: {e}")
+        messages.warning(request, f"Error copying {plan_name}.")
+    return redirect('userplans')
 
 
 # PLANS: Download
-@login_required
 def downloadplan(request, plan_id):
     # Retrieve plan object from Django model
     plan = get_object_or_404(Plan, id=plan_id)
+    if not _can_access_plan(request, plan):
+        raise Http404("Plan not found.")
 
     try:
-      # Initialize FIplan object
-        FIplan = PlanObject(plan)
-
-        # Execute FIplan methods to create necessary attributes
-        FIplan.personal_infos()
-        FIplan.incomes()
-        FIplan.expenses()
-        FIplan.savings()
-        FIplan.yearly_contribution_limits()
-        FIplan.yearly_contributions()
-        FIplan.start_end_amounts()
-        FIplan.fi_indicators()
-        FIplan.template_data()
-        FIplan.update_final_net_worth()
+        FIplan = _build_fiplan(plan)
 
         # Set up response object for return of csv file
         response = HttpResponse(content_type='text/csv')
@@ -298,13 +263,15 @@ def downloadplan(request, plan_id):
         
         header_row.extend(['Savings'])
         
-        for account in FIplan.accounts:
-            if account['saving_category'] == "ESRP":
-                header_row.extend([account['saving_name'] + ": Start", account['saving_name'] + ": Cont. Limit", account['saving_name'] + ": Cont. Amount", account['saving_name'] + ": Employer Cont. Amount", account['saving_name'] + ": End"])
-            elif account['saving_category'] == "HSA" or account['saving_category'] == "IRA":
-                header_row.extend([account['saving_name'] + ": Start", account['saving_name'] + ": Cont. Limit", account['saving_name'] + ": Cont. Amount", account['saving_name'] + ": End"])
+        for account in FIplan.accounts[1:]:
+            category = account.get('saving_category')
+            name = account.get('saving_name', 'Investments')
+            if category == "ESRP":
+                header_row.extend([name + ": Start", name + ": Cont. Limit", name + ": Cont. Amount", name + ": Employer Cont. Amount", name + ": End"])
+            elif category in ("HSA", "IRA"):
+                header_row.extend([name + ": Start", name + ": Cont. Limit", name + ": Cont. Amount", name + ": End"])
             else:
-                header_row.extend([account['saving_name'] + ": Start", account['saving_name'] + ": Cont. Amount", account['saving_name'] + ": End",])
+                header_row.extend([name + ": Start", name + ": Cont. Amount", name + ": End"])
         
         header_row.extend(['Net Worth', 'Magic Number', 'Withdraw Rate'])
         
@@ -318,6 +285,7 @@ def downloadplan(request, plan_id):
         # Return csv response
         return response
     except Exception as e:
+        print(f"downloadplan: {e}")
         messages.warning(request, f"Error downloading {plan.plan_name}.")
         return redirect('userplans')
     
