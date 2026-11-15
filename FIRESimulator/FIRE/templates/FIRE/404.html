@@ -1,0 +1,9 @@
+{% extends 'FIRE/base.html' %}
+{% block title %}Page not found | FIRE Simulator{% endblock %}
+{% block content %}
+<div class="col-11 col-md-6 mx-auto mt-5 text-center">
+    <h1 class="mb-3">Page not found</h1>
+    <p>We couldn't find what you were looking for. The plan may have been deleted, or the link may be mistyped.</p>
+    <a class="btn btn-action-filled" href="{% url 'landing' %}">Go home</a>
+</div>
+{% endblock %}

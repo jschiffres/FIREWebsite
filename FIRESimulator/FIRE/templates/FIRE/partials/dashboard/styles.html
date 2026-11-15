@@ -1,0 +1,44 @@
+{% if not user.is_authenticated %}
+<style>
+    input { pointer-events: none; }
+</style>
+{% endif %}
+<style>
+    table { border-collapse: collapse; position: relative; }
+    .tbl-container { max-width: fit-content; max-height: fit-content; border-radius: 6px; overflow: hidden; }
+    table th { position: sticky; top: -1px; z-index: 2; }
+    td:first-child, th:first-child { position: sticky; left: 0; z-index: 1; }
+    td:nth-child(2), th:nth-child(2) { position: sticky; left: 50px; z-index: 1; }
+    th:first-child, th:nth-child(2) { z-index: 3; }
+    .tbl-fixed { overflow-x: scroll; overflow-y: scroll; height: fit-content; max-height: 500px; }
+    td {
+        color: rgba(0, 0, 0, 0.87);
+        font-feature-settings: 'liga' off, 'clig' off;
+        font-family: Inter;
+        font-size: var(--font-size-0875-rem, 14px);
+        font-weight: var(--fontWeightRegular, 400);
+        line-height: 143%;
+        letter-spacing: 0.17px;
+    }
+    th {
+        white-space: nowrap;
+        color: rgba(0, 0, 0, 0.87);
+        font-feature-settings: 'liga' off, 'clig' off;
+        font-family: Inter;
+        font-size: var(--font-size-0875-rem, 14px);
+        font-weight: 600;
+        line-height: 24px;
+        letter-spacing: 0.17px;
+    }
+    .whatif-value { font-variant-numeric: tabular-nums; }
+    @media (max-width: 767.98px) {
+        #app-navbar .container { flex-wrap: wrap; gap: .25rem; }
+        #app-navbar .nav { flex-wrap: wrap; }
+        .tbl-container { max-width: 100%; }
+    }
+    @media print {
+        #app-navbar, .alert .btn-close, .accordion, .tbl-container, .no-print, button, .navbar { display: none !important; }
+        .card { break-inside: avoid; }
+        body { background: #fff !important; }
+    }
+</style>

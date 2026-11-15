@@ -53,20 +53,36 @@ letter-spacing: 0.17px;
 </nav>
 
 <div class="container mt-4">
+	{% if total_plans %}
+	<form method="get" action="{% url 'userplans' %}" class="row g-2 mb-3" role="search">
+		<div class="col-sm-8 col-md-6">
+			<label for="plan-search" class="visually-hidden">Search plans by name</label>
+			<input type="search" class="form-control" id="plan-search" name="q" value="{{ q }}" placeholder="Search plans by name">
+		</div>
+		<input type="hidden" name="sort" value="{{ sort }}">
+		<input type="hidden" name="dir" value="{{ dir }}">
+		<div class="col-auto">
+			<button type="submit" class="btn btn-action-filled"><i class="bi bi-search" aria-hidden="true"></i> Search</button>
+			{% if q %}<a class="btn btn-action-empty" href="{% url 'userplans' %}">Clear</a>{% endif %}
+		</div>
+		<div class="col-12 text-muted small" role="status">Showing {{ plans|length }} of {{ total_plans }} plan{{ total_plans|pluralize }}.</div>
+	</form>
+	{% endif %}
 	{% if plans %}
 	<div class="container tbl-container mb-3">
         <div class="row tbl-fixed">
             <table class="table table-hover table-striped table-condensed">
+                <caption class="visually-hidden">Your saved plans</caption>
                 <thead>
 					<tr>
-						<th style="width:1%;"></th>
-						<th>Name</th>
-						<th>Date Created</th>
-						<th>Retirement Age</th>
-						<th>FI Age</th>
-						<th>Funded</th>
-						<th>Net Worth</th>
-						<th>Actions</th>
+						<th scope="col" style="width:1%;"><span class="visually-hidden">Compare</span></th>
+						{% for key, label in sort_columns %}
+						<th scope="col" aria-sort="{% if sort == key %}{% if dir == 'asc' %}ascending{% else %}descending{% endif %}{% else %}none{% endif %}">
+							<a class="text-decoration-none text-dark" href="?q={{ q|urlencode }}&sort={{ key }}&dir={% if sort == key and dir == 'asc' %}desc{% else %}asc{% endif %}">{{ label }}{% if sort == key %} <i class="bi bi-caret-{% if dir == 'asc' %}up{% else %}down{% endif %}-fill" aria-hidden="true"></i>{% endif %}</a>
+						</th>
+						{% endfor %}
+						<th scope="col">Net Worth</th>
+						<th scope="col">Actions</th>
 					</tr>
 				</thead>
                 <tbody>
@@ -85,10 +101,10 @@ letter-spacing: 0.17px;
 									<button type="submit" class="btn btn-sm btn-edit-savings me-2"><i class="bi bi-play"></i> Run</button>
 								</form>
 								<form action="{% url 'downloadplan' plan.id %}">
-									<button type="submit" class="btn btn-sm me-2"><i class="bi bi-download action-icon"></i></button>
+									<button type="submit" class="btn btn-sm me-2" aria-label="Download {{ plan.plan_name }}"><i class="bi bi-download action-icon" aria-hidden="true"></i></button>
 								</form>
 								<form action="{% url 'copyplan' plan.id %}">
-									<button type="submit" class="btn btn-sm me-2"><i class="bi bi-copy"></i></button>
+									<button type="submit" class="btn btn-sm me-2" aria-label="Copy {{ plan.plan_name }}"><i class="bi bi-copy" aria-hidden="true"></i></button>
 								</form>
 								<form method="POST" action="{% url 'deleteplan' plan.id %}">
 								{% csrf_token %}
@@ -179,6 +195,11 @@ letter-spacing: 0.17px;
 		}
 		compareChecks.forEach(c => c.addEventListener('change', updateCompareButton));
 	</script>
+	{% elif total_plans %}
+	<div class="text-center">
+		<h2>No plans match "{{ q }}"</h2>
+		<a class="btn btn-action-empty" href="{% url 'userplans' %}">Clear search</a>
+	</div>
 	{% else %}
 	<div class="text-center">
 		<h2>Looks like you don't have any plans!</h2>

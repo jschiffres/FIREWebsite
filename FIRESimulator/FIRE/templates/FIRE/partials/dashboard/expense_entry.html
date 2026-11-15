@@ -1,0 +1,46 @@
+<div class="expense-entry">
+    <div class="accordion">
+        <div class="accordion-expense">
+            <h2 class="accordion-header">
+                <button class="accordion-button accordion-button-expenses expense_name_header collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#expense-entry-{{ forloop.counter }}" aria-expanded="false" aria-controls="expense-entry-{{ forloop.counter }}" hx-get="{% url 'expense-table' %}" hx-target="next .expense-table" hx-trigger="click delay:1s" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, expense_category: '{{ expense.expense_category }}', {% if expense.expense_category == 'Recurring' %}starting_amount: {{ expense.starting_amount }}, yearly_change: {{ expense.yearly_change }}, start_age: '{{ expense.start_age }}', stop_age: '{{ expense.stop_age }}'{% else %}amount: {{ expense.amount }}, age: {{ expense.age }}{% endif %}}">
+                    {{ expense.expense_name }}
+                </button>
+            </h2>
+            <div id="expense-entry-{{ forloop.counter }}" class="accordion-collapse collapse">
+                <div class="accordion-body accordion-expenses-body">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="row g-4 mb-3">
+                                <div class="col-lg-6">
+                                    <h5 class="input-name">Expense Name</h5>
+                                    <input type="text" class="form-control input-field expense_name" name="expense_name" aria-label="Expense name" value="{{ expense.expense_name }}" required>
+                                    <div class="form-text text-danger form-error-text expense-name-error"><small> Please provide a name for this expense.</small></div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <h5 class="input-name">Category</h5>
+                                    <select class="form-select input-select expense_category" name="expense_category" aria-label="Expense category" hx-get="{% url 'expense-fields' %}" hx-target="next .expense-fields" hx-trigger="change" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, recurring_expense_count: document.querySelectorAll('.expense-recurring-entry').length, one_time_expense_count: document.querySelectorAll('.expense-one-time-entry').length}">
+                                        <option value="Recurring" {% if expense.expense_category == 'Recurring' %} selected {% endif %}>Recurring</option>
+                                        <option value="One-time" {% if expense.expense_category == 'One-time' %} selected {% endif %}>One-time</option>
+                                    </select>
+                                    <div class="form-text text-danger form-error-text expense-category-error"><small> Please select a category.</small></div>
+                                </div>
+                            </div>
+                            <div class="expense-fields">
+                                {% if expense.expense_category == "Recurring" %}
+                                    {% include 'FIRE/partials/fields_expenses_recurring_edit.html' with expense=expense ages=FIplan.ages_display %}
+                                {% else %}
+                                    {% include 'FIRE/partials/fields_expenses_one_time_edit.html' with expense=expense ages=FIplan.ages %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-lg-6 expense-table align-self-center"></div>
+                    </div>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-sm btn-remove" hx-delete hx-target="closest .expense-entry" hx-swap="delete"><i class="bi bi-x" aria-hidden="true"></i> Remove</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr>
+</div>

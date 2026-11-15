@@ -208,6 +208,64 @@
     </form>
 </div>
 
+<div id="draft-banner" class="container mt-3" hidden>
+    <div class="alert alert-info d-flex flex-wrap align-items-center gap-2 mb-0" role="alert">
+        <span>You have a saved draft of your personal info.</span>
+        <button type="button" class="btn btn-sm btn-action-filled" id="draft-restore">Restore draft</button>
+        <button type="button" class="btn btn-sm btn-action-empty" id="draft-discard">Discard</button>
+    </div>
+</div>
+<script>
+(function () {
+    const KEY = 'fire-survey-draft-v1';
+    const form = document.querySelector('form[method="POST"]');
+    const banner = document.getElementById('draft-banner');
+    const fields = ['plan_name', 'current_age', 'retirement_age', 'coast_fire_age'];
+    let dirty = false;
+    let submitting = false;
+
+    function read() {
+        const draft = {};
+        fields.forEach(id => { draft[id] = document.getElementById(id).value; });
+        return draft;
+    }
+    function store() {
+        try { localStorage.setItem(KEY, JSON.stringify(read())); } catch (e) {}
+    }
+
+    try {
+        if (localStorage.getItem(KEY)) banner.hidden = false;
+    } catch (e) {}
+
+    document.getElementById('draft-restore').addEventListener('click', () => {
+        try {
+            const draft = JSON.parse(localStorage.getItem(KEY));
+            fields.forEach(id => {
+                const el = document.getElementById(id);
+                el.value = draft[id] || '';
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+        } catch (e) {}
+        banner.hidden = true;
+    });
+    document.getElementById('draft-discard').addEventListener('click', () => {
+        try { localStorage.removeItem(KEY); } catch (e) {}
+        banner.hidden = true;
+    });
+
+    form.addEventListener('input', () => { dirty = true; store(); });
+    form.addEventListener('change', () => { dirty = true; store(); });
+    form.addEventListener('submit', () => {
+        submitting = true;
+        try { localStorage.removeItem(KEY); } catch (e) {}
+    });
+    window.addEventListener('beforeunload', e => {
+        if (dirty && !submitting) { e.preventDefault(); e.returnValue = ''; }
+    });
+})();
+</script>
+
 <style>
     /* Fade transition for HTMX */
     .htmx-swapping {

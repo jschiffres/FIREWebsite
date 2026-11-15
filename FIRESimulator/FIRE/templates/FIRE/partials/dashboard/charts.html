@@ -1,0 +1,245 @@
+{{ chart_data|json_script:"plan-chart-data" }}
+<div class="card dashboard-card mb-3">
+    <div class="card-body">
+        <canvas id="NetWorthChart" height="110" role="img" aria-label="Line chart of projected net worth by age compared with your Magic Number. Net worth reaches {{ FIplan.net_worths_last }} at retirement against a Magic Number of {{ FIplan.magic_numbers_last }}.">
+            Projected net worth reaches {{ FIplan.net_worths_last }} at retirement against a Magic Number of {{ FIplan.magic_numbers_last }}.
+        </canvas>
+        <p class="text-muted small mb-0 mt-2">Shaded band: likely range (10th&ndash;90th percentile of {{ chart_data.scenarios.volatility|floatformat:0 }}% volatility Monte Carlo runs). Dashed lines: returns {{ chart_data.scenarios.shift|floatformat:0 }} points lower and higher than assumed.</p>
+    </div>
+</div>
+
+<div class="card dashboard-card mb-3 no-print" id="whatif-panel">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+            <h2 class="dashboard-input-name fs-5 mb-0">What if&hellip;</h2>
+            <button type="button" class="btn btn-sm btn-action-empty" id="whatif-reset">Reset</button>
+        </div>
+        <p class="text-muted small">Explore changes without editing your plan. Nothing here is saved.</p>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <label for="whatif-retirement" class="form-label">Retirement age: <output id="whatif-retirement-out" class="whatif-value fw-bold"></output></label>
+                <input type="range" class="form-range" id="whatif-retirement" step="1">
+            </div>
+            <div class="col-md-4">
+                <label for="whatif-savings" class="form-label">Extra savings per year: <output id="whatif-savings-out" class="whatif-value fw-bold"></output></label>
+                <input type="range" class="form-range" id="whatif-savings" min="-20000" max="50000" step="1000" value="0">
+            </div>
+            <div class="col-md-4">
+                <label for="whatif-return" class="form-label">Investment return: <output id="whatif-return-out" class="whatif-value fw-bold"></output></label>
+                <input type="range" class="form-range" id="whatif-return" min="-4" max="4" step="0.5" value="0">
+            </div>
+        </div>
+        <p class="mb-0 mt-2" id="whatif-summary" role="status" aria-live="polite"></p>
+    </div>
+</div>
+
+<div class="row g-4 mb-3">
+    <div class="col-lg-6">
+        <div class="card dashboard-card"><div class="card-body">
+            <canvas id="YearlyBreakdownChart" role="img" aria-label="Stacked bar chart of income, expenses and savings by year. The detailed table below lists the same numbers."></canvas>
+        </div></div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card dashboard-card"><div class="card-body">
+            <canvas id="YearlyInvestmentsChart" role="img" aria-label="Line chart of each investment account balance by year. The detailed table below lists the same numbers."></canvas>
+        </div></div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const data = JSON.parse(document.getElementById('plan-chart-data').textContent);
+    const palette = ['#285C53', '#EC652B', '#4F378A', '#B34E82'];
+    const currency = v => '$' + Number(v).toLocaleString();
+    const font = { family: 'Inter', size: 14, weight: '500' };
+
+    const markerPlugin = {
+        id: 'markers',
+        afterDatasetsDraw(chart, args, opts) {
+            const { ctx, chartArea, scales } = chart;
+            ((opts && opts.lines) || []).forEach(line => {
+                if (line.age === null || line.age === undefined) return;
+                const x = scales.x.getPixelForValue(line.age);
+                if (x < chartArea.left || x > chartArea.right) return;
+                ctx.save();
+                ctx.strokeStyle = line.color;
+                ctx.lineWidth = 2;
+                ctx.setLineDash([6, 4]);
+                ctx.beginPath();
+                ctx.moveTo(x, chartArea.top);
+                ctx.lineTo(x, chartArea.bottom);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.fillStyle = line.color;
+                ctx.font = '12px Inter, sans-serif';
+                ctx.textAlign = line.align || 'left';
+                ctx.fillText(line.label, x + (line.align === 'right' ? -4 : 4), chartArea.top + 12 + (line.row || 0) * 14);
+                ctx.restore();
+            });
+        }
+    };
+
+    function options(title, extra) {
+        return Object.assign({
+            responsive: true,
+            animation: false,
+            plugins: {
+                legend: { position: 'top' },
+                title: { display: true, text: title, align: 'start', font: font },
+                tooltip: { callbacks: { label: c => (c.dataset.label || '') + ': ' + currency(c.parsed.y) } }
+            }
+        }, extra || {});
+    }
+
+    const points = (ages, values) => ages.map((age, i) => ({ x: age, y: values[i] }));
+    const scenarios = data.scenarios;
+    const retirementAge = data.retirement_age;
+    const markers = () => [
+        { age: data.fi_age, label: 'FI age ' + data.fi_age, color: '#285C53', align: 'right', row: 0 },
+        { age: retirementAge, label: 'Retirement', color: '#777980', align: 'right', row: 1 }
+    ];
+
+    const netWorthChart = new Chart(document.getElementById('NetWorthChart').getContext('2d'), {
+        type: 'line',
+        plugins: [markerPlugin],
+        data: {
+            datasets: [
+                { label: 'Likely range low', data: points(data.ages, scenarios.p10), borderWidth: 0, pointRadius: 0, fill: false },
+                { label: 'Likely range (10th-90th percentile)', data: points(data.ages, scenarios.p90), borderWidth: 0, pointRadius: 0, backgroundColor: 'rgba(40, 92, 83, 0.15)', fill: '-1' },
+                { label: 'Net Worth', data: points(data.ages, data.net_worths), borderColor: '#285C53', backgroundColor: '#285C53', borderWidth: 3, pointRadius: 2, tension: 0.3 },
+                { label: 'Magic Number', data: points(data.ages, data.magic_numbers), borderColor: '#1d1919', borderDash: [8, 4], borderWidth: 2, pointRadius: 0, tension: 0.2 },
+                { label: 'Lower returns', data: points(data.ages, scenarios.conservative), borderColor: '#EC652B', borderDash: [3, 3], borderWidth: 1.5, pointRadius: 0, tension: 0.3 },
+                { label: 'Higher returns', data: points(data.ages, scenarios.optimistic), borderColor: '#4F378A', borderDash: [3, 3], borderWidth: 1.5, pointRadius: 0, tension: 0.3 },
+                { label: 'What-if net worth', data: [], borderColor: '#B34E82', backgroundColor: '#B34E82', borderWidth: 3, pointRadius: 0, tension: 0.3, hidden: true }
+            ]
+        },
+        options: (function () {
+            const base = options('Net Worth vs. Magic Number', {
+                interaction: { mode: 'nearest', axis: 'x', intersect: false },
+                scales: {
+                    x: { type: 'linear', title: { display: true, text: 'Age' }, ticks: { precision: 0 } },
+                    y: { title: { display: true, text: 'Amount ($)' }, ticks: { callback: currency } }
+                }
+            });
+            base.plugins.legend.labels = { filter: item => item.datasetIndex !== 0 };
+            base.plugins.markers = { lines: markers() };
+            return base;
+        })()
+    });
+
+    new Chart(document.getElementById('YearlyBreakdownChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: data.ages,
+            datasets: [
+                { label: 'Income', data: data.income, backgroundColor: '#285C53', stack: 'Stack 0' },
+                { label: 'Expenses', data: data.expenses, backgroundColor: '#EC652B', stack: 'Stack 0' },
+                { label: 'Savings', data: data.savings, backgroundColor: '#4F378A', stack: 'Stack 0' }
+            ]
+        },
+        options: options('Income, Expenses, and Savings Breakdown by Year', {
+            scales: {
+                x: { stacked: true, title: { display: true, text: 'Age' } },
+                y: { stacked: true, title: { display: true, text: 'Amount ($)' }, ticks: { callback: currency } }
+            }
+        })
+    });
+
+    new Chart(document.getElementById('YearlyInvestmentsChart').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: data.ages,
+            datasets: data.accounts.map((account, i) => ({
+                label: account.name,
+                data: account.end_amounts,
+                borderColor: palette[i % palette.length],
+                backgroundColor: palette[i % palette.length] + '20',
+                fill: false,
+                tension: 0.2
+            }))
+        },
+        options: options('Yearly Investment Account Balances', {
+            scales: {
+                x: { title: { display: true, text: 'Age' } },
+                y: { title: { display: true, text: 'End Balance ($)' }, ticks: { callback: currency } }
+            }
+        })
+    });
+
+    // What-if sliders
+    const currentAge = data.ages[0];
+    const planRetirement = retirementAge + 1;
+    const retirementInput = document.getElementById('whatif-retirement');
+    const savingsInput = document.getElementById('whatif-savings');
+    const returnInput = document.getElementById('whatif-return');
+    const summary = document.getElementById('whatif-summary');
+    retirementInput.min = Math.max(currentAge + 1, planRetirement - 10);
+    retirementInput.max = Math.min(101, planRetirement + 10);
+    retirementInput.value = planRetirement;
+
+    function labels() {
+        document.getElementById('whatif-retirement-out').textContent = retirementInput.value;
+        const savings = Number(savingsInput.value);
+        document.getElementById('whatif-savings-out').textContent = (savings < 0 ? '-' : '+') + currency(Math.abs(savings));
+        const delta = Number(returnInput.value);
+        document.getElementById('whatif-return-out').textContent = (delta > 0 ? '+' : '') + delta.toFixed(1) + ' pts';
+    }
+
+    let timer = null;
+    let controller = null;
+    function isDefault() {
+        return Number(retirementInput.value) === planRetirement && Number(savingsInput.value) === 0 && Number(returnInput.value) === 0;
+    }
+
+    function showResult(result) {
+        const whatIf = netWorthChart.data.datasets[6];
+        whatIf.data = points(result.ages, result.net_worths);
+        whatIf.hidden = false;
+        netWorthChart.options.plugins.markers.lines = [
+            { age: result.fi_age, label: 'FI age ' + result.fi_age, color: '#285C53', align: 'right', row: 0 },
+            { age: result.ages[result.ages.length - 1], label: 'Retirement', color: '#777980', align: 'right', row: 1 }
+        ];
+        netWorthChart.update();
+        summary.textContent = 'With these changes: net worth ' + result.net_worth_display + ' vs. Magic Number ' + result.magic_number_display +
+            ' (' + result.funded_percent + '% funded). FI age: ' + (result.fi_age === null ? 'not reached' : result.fi_age) + '.';
+    }
+
+    function run() {
+        labels();
+        if (isDefault()) {
+            const whatIf = netWorthChart.data.datasets[6];
+            whatIf.data = [];
+            whatIf.hidden = true;
+            netWorthChart.options.plugins.markers.lines = markers();
+            netWorthChart.update();
+            summary.textContent = '';
+            return;
+        }
+        if (controller) controller.abort();
+        controller = new AbortController();
+        const params = new URLSearchParams({
+            retirement_age: retirementInput.value,
+            extra_savings: savingsInput.value,
+            return_delta: returnInput.value
+        });
+        summary.textContent = 'Calculating...';
+        fetch('{% url "whatif" plan.id %}?' + params, { signal: controller.signal, headers: { 'Accept': 'application/json' } })
+            .then(response => response.ok ? response.json() : Promise.reject())
+            .then(showResult)
+            .catch(error => { if (!error || error.name !== 'AbortError') summary.textContent = 'Could not calculate this scenario.'; });
+    }
+
+    [retirementInput, savingsInput, returnInput].forEach(input => input.addEventListener('input', () => {
+        labels();
+        clearTimeout(timer);
+        timer = setTimeout(run, 250);
+    }));
+    document.getElementById('whatif-reset').addEventListener('click', () => {
+        retirementInput.value = planRetirement;
+        savingsInput.value = 0;
+        returnInput.value = 0;
+        run();
+    });
+    labels();
+})();
+</script>

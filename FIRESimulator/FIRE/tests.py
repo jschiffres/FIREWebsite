@@ -137,6 +137,56 @@ class SurveyAndPermissionTests(TestCase):
     def test_about_page_is_public(self):
         self.assertContains(self.client.get(reverse('about')), 'not financial')
 
+    def test_whatif_returns_projection_and_enforces_access(self):
+        self.client.force_login(self.owner)
+        plan = self.create_plan()
+        url = reverse('whatif', args=[plan.id])
+        base = self.client.get(url).json()
+        more = self.client.get(url, {'extra_savings': 20000}).json()
+        self.assertEqual(set(['ages', 'net_worths', 'magic_numbers', 'fi_age']) - set(more), set())
+        self.assertGreater(more['net_worths'][-1], base['net_worths'][-1])
+        self.client.logout()
+        self.client.force_login(self.other)
+        self.assertEqual(self.client.get(url).status_code, 404)
+
+    def test_dashboard_has_scenarios_and_whatif_panel(self):
+        self.client.force_login(self.owner)
+        plan = self.create_plan()
+        page = self.client.get(reverse('runplan', args=[plan.id])).content.decode()
+        self.assertIn('whatif-panel', page)
+        self.assertIn('"p10"', page)
+        self.assertIn('success_probability', page)
+
+    def test_userplans_search_and_sort(self):
+        self.client.force_login(self.owner)
+        first = self.create_plan()
+        first.plan_name = 'Alpha'
+        first.save()
+        second = self.create_plan()
+        second.plan_name = 'Zeta'
+        second.save()
+        found = self.client.get(reverse('userplans'), {'q': 'zet'}).content.decode()
+        self.assertIn('Zeta', found)
+        self.assertNotIn('Alpha', found)
+        ordered = self.client.get(reverse('userplans'), {'sort': 'name', 'dir': 'desc'}).content.decode()
+        self.assertLess(ordered.index('Zeta'), ordered.index('Alpha'))
+
+    def test_anonymous_plan_limit(self):
+        from .views import MAX_ANONYMOUS_PLANS
+        for _ in range(MAX_ANONYMOUS_PLANS):
+            self.assertEqual(self.client.post(reverse('newplan'), survey_post()).status_code, 302)
+        self.assertEqual(Plan.objects.count(), MAX_ANONYMOUS_PLANS)
+        blocked = self.client.post(reverse('newplan'), survey_post())
+        self.assertEqual(Plan.objects.count(), MAX_ANONYMOUS_PLANS)
+        self.assertNotEqual(blocked.status_code, 500)
+
+    def test_password_reset_pages_and_custom_404(self):
+        self.assertContains(self.client.get(reverse('password_reset')), 'Reset password')
+        self.assertContains(self.client.get(reverse('loginuser')), 'Forgot your password?')
+        self.client.raise_request_exception = False
+        missing = self.client.get('/no-such-page/')
+        self.assertContains(missing, 'Page not found', status_code=404)
+
     def test_compare_plans_requires_own_plans(self):
         self.client.force_login(self.owner)
         first, second = self.create_plan(), self.create_plan()

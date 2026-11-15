@@ -1,0 +1,49 @@
+<div class="income-entry">
+    <div class="accordion">
+        <div class="accordion-income">
+            <h2 class="accordion-header">
+                <button class="accordion-button accordion-button-income income_name_header collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#income-entry-{{ forloop.counter }}" aria-expanded="false" aria-controls="income-entry-{{ forloop.counter }}" hx-get="{% url 'income-table' %}" hx-target="next .income-table" hx-trigger="click delay:1s" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, income_category: '{{ income.income_category }}', {% if income.income_category == 'Salary' %}starting_amount: {{ income.starting_amount }}, yearly_change: {{ income.yearly_change }}, bonus_rate: {{ income.bonus_rate }}, tax_rate: {{ income.tax_rate }}, tax_rate_change: {{ income.tax_rate_change }}, start_age: '{{ income.start_age }}', stop_age: '{{ income.stop_age }}'{% elif income.income_category == 'Recurring' %}starting_amount: {{ income.starting_amount }}, yearly_change: {{ income.yearly_change }}, tax_rate: {{ income.tax_rate }}, tax_rate_change: {{ income.tax_rate_change }}, start_age: '{{ income.start_age }}', stop_age: '{{ income.stop_age }}'{% else %}amount: {{ income.amount }}, tax_rate: {{ income.tax_rate }}, age: {{ income.age }}{% endif %}}">
+                    {{ income.income_name }}
+                </button>
+            </h2>
+            <div id="income-entry-{{ forloop.counter }}" class="accordion-collapse collapse">
+                <div class="accordion-body accordion-income-body">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="row g-4 mb-3">
+                                <div class="col-lg-6">
+                                    <h5 class="input-name">Income Name</h5>
+                                    <input type="text" class="form-control input-field income_name" name="income_name" aria-label="Income name" value="{{ income.income_name }}" required>
+                                    <div class="form-text text-danger form-error-text income-name-error"><small> Please provide a name for this income.</small></div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <h5 class="input-name">Category</h5>
+                                    <select class="form-select input-select income_category" name="income_category" aria-label="Income category" hx-get="{% url 'income-fields' %}" hx-target="next .income-fields" hx-trigger="change" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, salary_count: document.querySelectorAll('.income-salary-entry').length, recurring_income_count: document.querySelectorAll('.income-recurring-entry').length, one_time_income_count: document.querySelectorAll('.income-one-time-entry').length}">
+                                        <option value="Salary" {% if income.income_category == 'Salary' %} selected {% endif %}>Salary</option>
+                                        <option value="Recurring" {% if income.income_category == 'Recurring' %} selected {% endif %}>Recurring</option>
+                                        <option value="One-time" {% if income.income_category == 'One-time' %} selected {% endif %}>One-time</option>
+                                    </select>
+                                    <div class="form-text text-danger form-error-text income-category-error"><small> Please select a category.</small></div>
+                                </div>
+                            </div>
+                            <div class="income-fields">
+                                {% if income.income_category == "Recurring" %}
+                                    {% include 'FIRE/partials/fields_income_recurring_edit.html' with income=income ages=FIplan.ages_display %}
+                                {% elif income.income_category == "Salary" %}
+                                    {% include 'FIRE/partials/fields_income_salary_edit.html' with income=income ages=FIplan.ages_display %}
+                                {% else %}
+                                    {% include 'FIRE/partials/fields_income_one_time_edit.html' with income=income ages=FIplan.ages %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-lg-6 income-table align-self-center"></div>
+                    </div>
+                    <div class="text-end">
+                        <button type="button" class="btn btn-sm btn-remove" hx-delete hx-target="closest .income-entry" hx-swap="delete"><i class="bi bi-x" aria-hidden="true"></i> Remove</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr>
+</div>

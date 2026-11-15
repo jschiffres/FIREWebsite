@@ -12,6 +12,20 @@ body {
     height: 100vh;
 }
 
+/* ACCESSIBILITY */
+:focus-visible { outline: 3px solid var(--Primary-Purple); outline-offset: 2px; }
+.skip-link { position: absolute; z-index: 2000; background: #fff; padding: .5rem 1rem; }
+#main:focus { outline: none; }
+.htmx-status { position: fixed; right: 1rem; bottom: 1rem; z-index: 2000; font-size: .9rem; }
+@media (max-width: 767.98px) {
+    .container, .container-fluid { padding-left: .75rem; padding-right: .75rem; }
+    .table-responsive-sm, .tbl-container { overflow-x: auto; }
+    h1 { font-size: 1.6rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
+}
+
 /* COLOR VARIABLES */
 :root {
   --Primary-Green: #285C53;

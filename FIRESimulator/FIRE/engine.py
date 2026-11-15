@@ -6,6 +6,7 @@ mutated: all computed series live on the PlanObject.
 """
 import copy
 import math
+import random
 from datetime import date
 
 import plotly.graph_objects as go
@@ -29,9 +30,18 @@ def sum_series(series, length):
     return [sum(values) for values in zip(*series)] if series else [0] * length
 
 
+SCENARIO_RETURN_SHIFT = 2.0
+MONTE_CARLO_TRIALS = 400
+MONTE_CARLO_VOLATILITY = 10.0
+
+
 class PlanObject:
-    def __init__(self, plan):
+    def __init__(self, plan, return_delta=0.0, extra_savings=0):
+        """``return_delta`` (percentage points) and ``extra_savings`` ($/year while working)
+        support what-if projections without touching the stored plan."""
         self.plan = plan
+        self.return_delta = float(return_delta)
+        self.extra_savings = int(extra_savings)
         self.years_until_retirement = plan.retirement_age - plan.current_age
         if self.years_until_retirement < 1:
             raise ValueError("Retirement age must be greater than current age.")
@@ -159,7 +169,8 @@ class PlanObject:
 
     def compute_savings(self):
         self.total_savings = [
-            self.total_net_income[year] - self.total_expenses[year] if year < self.years_until_coast_fire else 0
+            self.total_net_income[year] - self.total_expenses[year] + self.extra_savings
+            if year < self.years_until_coast_fire else 0
             for year in range(self.years_until_retirement)
         ]
 
@@ -255,10 +266,61 @@ class PlanObject:
             balance = opening
             for year in range(n):
                 start.append(balance)
-                balance = math.floor((balance + account['contribution_amounts'][year] + employer[year]) * (1 + pct(growth)))
+                balance = math.floor(
+                    (balance + account['contribution_amounts'][year] + employer[year])
+                    * (1 + pct(growth + self.return_delta))
+                )
                 end.append(balance)
             account['start_amounts'] = start
             account['end_amounts'] = end
+
+    def _net_worth_path(self, growth_fn):
+        """Net worth per year when each year's return is ``growth_fn(base_growth_pct, year)`` percent."""
+        n = self.years_until_retirement
+        totals = [0] * n
+        for account in self.accounts[1:]:
+            if self.is_simple:
+                balance, base = account['simple_net_worth'], account['simple_yearly_growth']
+            else:
+                balance, base = account['current_value'], account['yearly_growth']
+            employer = account.get('employer_contribution_amounts', [0] * n)
+            for year in range(n):
+                balance = math.floor(
+                    (balance + account['contribution_amounts'][year] + employer[year])
+                    * (1 + pct(growth_fn(base, year)))
+                )
+                totals[year] += balance
+        return totals
+
+    def scenario_bands(self):
+        """Conservative/optimistic return scenarios plus a seeded Monte Carlo range."""
+        shift = SCENARIO_RETURN_SHIFT
+        conservative = self._net_worth_path(lambda base, year: base + self.return_delta - shift)
+        optimistic = self._net_worth_path(lambda base, year: base + self.return_delta + shift)
+
+        rng = random.Random(str(self.plan.pk))
+        n = self.years_until_retirement
+        paths = []
+        for _ in range(MONTE_CARLO_TRIALS):
+            shocks = [rng.gauss(0, MONTE_CARLO_VOLATILITY) for _ in range(n)]
+            paths.append(self._net_worth_path(lambda base, year: base + self.return_delta + shocks[year]))
+
+        def percentile(values, q):
+            ordered = sorted(values)
+            return ordered[min(len(ordered) - 1, int(q * len(ordered)))]
+
+        target = self.magic_numbers[-1]
+        hits = sum(1 for path in paths if path[-1] >= target) if target > 0 else None
+        return {
+            'conservative': conservative,
+            'optimistic': optimistic,
+            'p10': [percentile([p[y] for p in paths], 0.10) for y in range(n)],
+            'p50': [percentile([p[y] for p in paths], 0.50) for y in range(n)],
+            'p90': [percentile([p[y] for p in paths], 0.90) for y in range(n)],
+            'success_probability': None if hits is None else round(hits / len(paths) * 100),
+            'shift': shift,
+            'volatility': MONTE_CARLO_VOLATILITY,
+        }
 
     # -------------------------------------------------------------- indicators
     def fi_indicators(self):
@@ -309,7 +371,22 @@ class PlanObject:
             'expenses': self.total_expenses,
             'savings': self.total_savings,
             'fi_age': self.fi_age if isinstance(self.fi_age, int) else None,
+            'retirement_age': self.ages[-1],
             'accounts': accounts,
+            'scenarios': self.scenario_bands(),
+        }
+
+    def whatif_data(self):
+        """Light-weight payload for the what-if sliders."""
+        return {
+            'ages': self.ages,
+            'net_worths': self.net_worths,
+            'magic_numbers': self.magic_numbers,
+            'fi_age': self.fi_age if isinstance(self.fi_age, int) else None,
+            'net_worth_display': self.net_worths_last,
+            'magic_number_display': self.magic_numbers_last,
+            'funded_percent': self.funded_percent,
+            'fi_reached': self.fi_reached,
         }
 
     # ------------------------------------------------------------ table / csv

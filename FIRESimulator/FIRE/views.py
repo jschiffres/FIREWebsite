@@ -7,8 +7,9 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
 from django.db import IntegrityError
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, JsonResponse
 from django.views.decorators.http import require_POST
+import copy
 import uuid
 
 from .models import Plan, Feedback
@@ -22,6 +23,12 @@ import csv
 
 def about(request):
     return render(request, 'FIRE/about.html')
+
+def not_found(request, exception=None):
+    return render(request, 'FIRE/404.html', status=404)
+
+def server_error(request):
+    return render(request, 'FIRE/500.html', status=500)
 
 def _is_uuid(value):
     try:
@@ -133,15 +140,37 @@ def _summarize(plan):
         return None
     return fi
 
+PLAN_SORTS = {
+    'name': lambda p: p.plan_name.lower(),
+    'created': lambda p: p.created_at,
+    'retirement': lambda p: p.retirement_age,
+    'fi_age': lambda p: (not isinstance(p.fi_age, int), p.fi_age if isinstance(p.fi_age, int) else 0),
+    'funded': lambda p: -1 if p.funded_percent is None else p.funded_percent,
+}
+
 # USER: Plans
 def userplans(request):
     if request.user.is_authenticated:
-        plans = list(Plan.objects.filter(user=request.user).order_by('-created_at'))
+        query = request.GET.get('q', '').strip()
+        sort = request.GET.get('sort', 'created')
+        if sort not in PLAN_SORTS:
+            sort = 'created'
+        descending = request.GET.get('dir', 'desc' if sort == 'created' else 'asc') == 'desc'
+
+        queryset = Plan.objects.filter(user=request.user)
+        if query:
+            queryset = queryset.filter(plan_name__icontains=query)
+        plans = list(queryset)
         for plan in plans:
             fi = _summarize(plan)
             plan.fi_age = fi.fi_age if fi else "N/A"
             plan.funded_percent = fi.funded_percent if fi else None
-        return render(request, 'FIRE/userplans.html', {'plans' : plans})
+        plans.sort(key=PLAN_SORTS[sort], reverse=descending)
+        return render(request, 'FIRE/userplans.html', {
+            'plans': plans, 'q': query, 'sort': sort, 'dir': 'desc' if descending else 'asc',
+            'total_plans': Plan.objects.filter(user=request.user).count(),
+            'sort_columns': [('name', 'Name'), ('created', 'Date Created'), ('retirement', 'Retirement Age'), ('fi_age', 'FI Age'), ('funded', 'Funded')],
+        })
     else:
         messages.warning(request, "You must be logged in to view your plans.")
         return redirect('loginuser')
@@ -225,19 +254,62 @@ def runplan(request, plan_id):
     return render(request, "FIRE/runplan.html", context)
 
 # PLANS: Create New
+MAX_ANONYMOUS_PLANS = 5
+MAX_USER_PLANS = 50
+
+def _plan_limit_error(request):
+    if request.user.is_authenticated:
+        if Plan.objects.filter(user=request.user).count() >= MAX_USER_PLANS:
+            return f"You have reached the limit of {MAX_USER_PLANS} plans. Delete one to create another."
+    elif len(request.session.get('anonymous_plans', [])) >= MAX_ANONYMOUS_PLANS:
+        return f"You have created {MAX_ANONYMOUS_PLANS} plans without an account. Sign up to save more."
+    return None
+
 def newplan(request):
 
     if request.method == "GET":
         return render(request, 'FIRE/newplan.html', {'form': PlanForm()})
+    limit_error = _plan_limit_error(request)
+    if limit_error:
+        return render(request, 'FIRE/newplan.html', {'form': PlanForm(request.POST), 'error': limit_error})
     form = PlanForm(request.POST)
     try:
         newplan = saveplan(form, request)
         if isinstance(newplan, str):
             return render(request, 'FIRE/newplan.html', {'form': form, 'error': newplan})
+        if not request.user.is_authenticated:
+            request.session['anonymous_plans'] = request.session.get('anonymous_plans', []) + [str(newplan.id)]
         return redirect('runplan', plan_id=newplan.id)
     except Exception as e:
         print(e)
         return render(request, 'FIRE/newplan.html', {'form': form, 'error': "Error saving plan, please try again."})
+
+# PLANS: What-if projection (never saved)
+def whatif(request, plan_id):
+    plan = get_object_or_404(Plan, pk=plan_id)
+    if not _can_access_plan(request, plan):
+        raise Http404("Plan not found.")
+
+    def number(name, default, low, high):
+        try:
+            return min(max(float(request.GET.get(name, default)), low), high)
+        except (TypeError, ValueError):
+            return default
+
+    scenario = copy.copy(plan)
+    scenario.retirement_age = int(number('retirement_age', plan.retirement_age, plan.current_age + 1, 101))
+    if scenario.coast_fire_age and scenario.coast_fire_age >= scenario.retirement_age:
+        scenario.coast_fire_age = None
+    try:
+        fi = PlanObject(
+            scenario,
+            return_delta=number('return_delta', 0, -10, 10),
+            extra_savings=number('extra_savings', 0, -1_000_000, 1_000_000),
+        ).run()
+    except Exception as e:
+        print(f"what-if failed for {plan.pk}: {e}")
+        return JsonResponse({'error': 'Could not calculate this scenario.'}, status=400)
+    return JsonResponse(fi.whatif_data())
 
 def _owned_plan(request, plan_id):
     plan = get_object_or_404(Plan, pk=plan_id)
@@ -263,7 +335,10 @@ def deleteplan(request, plan_id):
 def copyplan(request, plan_id):
     plan = _owned_plan(request, plan_id)
     plan_name = plan.plan_name
-
+    limit_error = _plan_limit_error(request)
+    if limit_error:
+        messages.warning(request, limit_error)
+        return redirect('userplans')
     try:
         plan.pk = None
         plan.id = uuid.uuid4()

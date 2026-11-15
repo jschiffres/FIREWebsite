@@ -1,0 +1,54 @@
+<div class="container tbl-container mb-3">
+    <div class="row tbl-fixed" tabindex="0" role="region" aria-label="Year-by-year projection table">
+        <table class="table table-hover table-striped table-condensed">
+            <caption class="visually-hidden">Year-by-year income, expenses, savings, account balances and net worth</caption>
+            <thead>
+                <tr>
+                    {% include 'FIRE/partials/dashboard/th.html' with color='#B34E82' label='Age' %}
+                    {% include 'FIRE/partials/dashboard/th.html' with color='#B34E82' label='Year' %}
+                    {% for income in FIplan.incomes %}
+                        {% with name=income.income_name %}
+                        <th class="header" scope="col">{{ name }}: Gross</th>
+                        {% if income.income_category == 'Salary' %}<th class="header" scope="col">{{ name }}: Bonus</th>{% endif %}
+                        <th class="header" scope="col">{{ name }}: Tax</th>
+                        <th class="header" scope="col">{{ name }}: Net</th>
+                        {% endwith %}
+                    {% endfor %}
+                    {% for expense in FIplan.expenses %}
+                        {% include 'FIRE/partials/dashboard/th.html' with color='#EC652B' label=expense.expense_name %}
+                    {% endfor %}
+                    {% include 'FIRE/partials/dashboard/th.html' with color='#000000' label='Savings' %}
+                    {% if FIplan.accounts|first == 'Simple' %}
+                        <th class="header" scope="col">Net Worth: Start</th>
+                        <th class="header" scope="col">Net Worth: Cont. Amount</th>
+                        <th class="header" scope="col">Net Worth: End</th>
+                    {% else %}
+                        {% for account in FIplan.accounts|slice:"1:" %}
+                            {% with name=account.saving_name %}
+                            <th class="header" scope="col">{{ name }}: Start</th>
+                            {% if account.saving_category == 'ESRP' or account.saving_category == 'HSA' or account.saving_category == 'IRA' %}
+                                <th class="header" scope="col">{{ name }}: Cont. Limit</th>
+                            {% endif %}
+                            <th class="header" scope="col">{{ name }}: Cont. Amount</th>
+                            {% if account.saving_category == 'ESRP' %}
+                                <th class="header" scope="col">{{ name }}: Employer Cont. Amount</th>
+                            {% endif %}
+                            <th class="header" scope="col">{{ name }}: End</th>
+                            {% endwith %}
+                        {% endfor %}
+                    {% endif %}
+                    {% include 'FIRE/partials/dashboard/th.html' with color='#000000' label='Net Worth' %}
+                    {% include 'FIRE/partials/dashboard/th.html' with color='#000000' label='Magic Number' %}
+                    {% include 'FIRE/partials/dashboard/th.html' with color='#000000' label='Withdraw Rate' %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in FIplan.plan_data %}
+                <tr>
+                    {% for num in row %}<td>{{ num }}</td>{% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

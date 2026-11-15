@@ -1,0 +1,87 @@
+<div class="modal fade modal-xl" id="income-Modal" tabindex="-1" aria-labelledby="income-Modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content dashboard-modal">
+            <div class="modal-header">
+                <h3 class="modal-title section-title-income" id="income-Modal-title"><i class="bi bi-arrow-up" aria-hidden="true"></i> Income</h3>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="income-div">
+                    {% for income in FIplan.incomes %}
+                        {% include 'FIRE/partials/dashboard/income_entry.html' %}
+                    {% endfor %}
+                </div>
+                <div>
+                    <button type="button" class="btn btn-add" hx-get="{% url 'create-income' %}" hx-target="#income-div" hx-swap="beforeend" hx-vals="js:{entry_count: document.querySelectorAll('.income-entry').length}"><i class="bi bi-plus" aria-hidden="true"></i> Income</button>
+                </div>
+            </div>
+            <div class="modal-footer dashboard-modal-footer">
+                {% include 'FIRE/partials/dashboard/modal_save_button.html' %}
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade modal-xl" id="expenses-Modal" tabindex="-1" aria-labelledby="expenses-Modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content dashboard-modal">
+            <div class="modal-header">
+                <h3 class="modal-title section-title-expenses" id="expenses-Modal-title"><i class="bi bi-arrow-down" aria-hidden="true"></i> Expenses</h3>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="expense-div">
+                    {% for expense in FIplan.expenses %}
+                        {% include 'FIRE/partials/dashboard/expense_entry.html' %}
+                    {% endfor %}
+                </div>
+                <div>
+                    <button type="button" class="btn btn-add" hx-get="{% url 'create-expense' %}" hx-target="#expense-div" hx-swap="beforeend" hx-vals="js:{entry_count: document.querySelectorAll('.expense-entry').length}"><i class="bi bi-plus" aria-hidden="true"></i> Expense</button>
+                </div>
+            </div>
+            <div class="modal-footer dashboard-modal-footer">
+                {% include 'FIRE/partials/dashboard/modal_save_button.html' %}
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade modal-xl" id="savings-Modal" tabindex="-1" aria-labelledby="savings-Modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content dashboard-modal">
+            <div class="modal-header">
+                <h3 class="modal-title section-title-savings" id="savings-Modal-title"><i class="bi bi-currency-dollar" aria-hidden="true"></i> Savings</h3>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="m-3" role="radiogroup" aria-label="Savings method">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="saving_option" id="saving_option_simple" value="Simple" {% if FIplan.accounts|first == 'Simple' %} checked {% endif %} hx-get="{% url 'savings-method' %}" hx-target="#savings-method" hx-trigger="click" hx-swap="innerHTML">
+                        <label class="form-check-label" for="saving_option_simple">Simple</label>
+                        <a tabindex="0" role="button" aria-label="About the Simple method" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-title="Simple" data-bs-content="Savings will be added to your current net worth and will grow at a singular growth rate."><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="saving_option" id="saving_option_recommended" value="Recommended" {% if FIplan.accounts|first == 'Recommended' %} checked {% endif %} hx-get="{% url 'savings-method' %}" hx-target="#savings-method" hx-trigger="click" hx-swap="innerHTML">
+                        <label class="form-check-label" for="saving_option_recommended">Recommended</label>
+                        <a tabindex="0" role="button" aria-label="About the Recommended method" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-title="Recommended" data-bs-html="true" data-bs-content="Savings will be allocated in the following order*: <ol> <li>401k to recieve employer match</li><li>Max HSA</li><li>Max 401k</li><li>Max IRA</li><li>TBA</li></ol> *Each account is optional"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="saving_option" id="saving_option_custom" value="Custom" {% if FIplan.accounts|first == 'Custom' %} checked {% endif %} hx-get="{% url 'savings-method' %}" hx-target="#savings-method" hx-trigger="click" hx-swap="innerHTML">
+                        <label class="form-check-label" for="saving_option_custom">Custom</label>
+                        <a tabindex="0" role="button" aria-label="About the Custom method" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-title="Custom" data-bs-content="Savings will be allocated per your priorities. Add as many accounts and order them yourself!"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+                    </div>
+                </div>
+                <div id="savings-method">
+                    {% if FIplan.accounts|first == 'Simple' %}
+                        {% include 'FIRE/partials/savings_method_simple_edit.html' with account=FIplan.accounts|last %}
+                    {% elif FIplan.accounts|first == 'Custom' %}
+                        {% include 'FIRE/partials/savings_method_custom_edit.html' %}
+                    {% else %}
+                        {% include 'FIRE/partials/savings_method_recommended_edit.html' %}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="modal-footer dashboard-modal-footer">
+                {% include 'FIRE/partials/dashboard/modal_save_button.html' %}
+            </div>
+        </div>
+    </div>
+</div>
