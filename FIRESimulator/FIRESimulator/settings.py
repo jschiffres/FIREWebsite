@@ -129,19 +129,29 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Credentials come from the environment; without them emails print to the console.
+# Credentials come from the environment; without a password emails print to the console.
+# Google Workspace: sign in as the mailbox, create an App Password (requires 2-Step Verification),
+# then set EMAIL_HOST_USER=hello@fiplanner.app and EMAIL_HOST_PASSWORD=<app password>.
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '').replace(' ', '')
 EMAIL_BACKEND = (
     'django.core.mail.backends.smtp.EmailBackend'
     if EMAIL_HOST_PASSWORD
     else 'django.core.mail.backends.console.EmailBackend'
 )
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER or 'noreply@localhost'
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_TIMEOUT = 15
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
+# Gmail rewrites the From address to the authenticated mailbox, so keep them the same.
+DEFAULT_FROM_EMAIL = os.environ.get(
+    'DEFAULT_FROM_EMAIL',
+    f'FI Planner <{EMAIL_HOST_USER}>' if EMAIL_HOST_USER else 'FI Planner <noreply@localhost>',
+)
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+# Base URL used for links inside emails; set to https://fiplanner.app in production.
+SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')
 
 # Premium tier. Without a payment provider wired in, self-service upgrade is a demo that only works in DEBUG
 # (or when explicitly enabled); production upgrades should go through a real checkout.
