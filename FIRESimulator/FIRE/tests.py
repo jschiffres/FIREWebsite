@@ -122,6 +122,15 @@ class SurveyAndPermissionTests(TestCase):
         self.assertIn('id="kpi-coast-fi"', page)
         self.assertNotIn('name="coast_fire_age"', page)
 
+    def test_dashboard_modals_have_guard_and_hidden_errors(self):
+        self.client.force_login(self.owner)
+        plan = self.create_plan()
+        page = self.client.get(reverse('runplan', args=[plan.id])).content.decode()
+        self.assertIn('fireModalGuard', page)
+        self.assertIn('data-method="Simple"', page)
+        self.assertNotIn('name="saving_option" id="saving_option_custom" value="Custom"  hx-get', page)
+        self.assertIn('Coast FI age', page)
+
     def test_csv_download(self):
         plan = self.create_plan()
         response = self.client.get(reverse('downloadplan', args=[plan.id]))

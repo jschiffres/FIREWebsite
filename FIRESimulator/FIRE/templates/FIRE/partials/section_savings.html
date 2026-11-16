@@ -6,6 +6,11 @@
             const saving_name_header = entry.querySelectorAll('.saving_name_header')[0]
             const saving_name = entry.querySelectorAll('.saving_name')[0].value
             saving_name_header.textContent = saving_name + " - Investment Priority: " + String(i + 1)
+            const nameError = entry.querySelector('.saving-name-error')
+            if (nameError) nameError.style.display = saving_name.trim() === '' ? 'block' : 'none'
+            const categoryError = entry.querySelector('.saving-category-error')
+            const category = entry.querySelector('.saving_category')
+            if (categoryError && category) categoryError.style.display = (category.value === 'None' || category.value === '') ? 'block' : 'none'
         })
     }
 

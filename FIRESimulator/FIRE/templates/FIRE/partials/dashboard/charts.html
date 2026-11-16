@@ -94,10 +94,12 @@
     const points = (ages, values) => ages.map((age, i) => ({ x: age, y: values[i] }));
     const scenarios = data.scenarios;
     const retirementAge = data.retirement_age;
-    const markers = () => [
-        { age: data.fi_age, label: 'FI age ' + data.fi_age, color: '#285C53', align: 'right', row: 0 },
-        { age: retirementAge, label: 'Retirement', color: '#777980', align: 'right', row: 1 }
+    const buildMarkers = (fiAge, coastAge, retireAge) => [
+        { age: fiAge, label: 'FI age ' + fiAge, color: '#285C53', align: 'right', row: 0 },
+        { age: retireAge, label: 'Retirement', color: '#777980', align: 'right', row: 1 },
+        { age: coastAge, label: 'Coast FI age ' + coastAge, color: '#B8860B', align: 'right', row: 2 }
     ];
+    const markers = () => buildMarkers(data.fi_age, data.coast_fi_age, retirementAge);
 
     const netWorthChart = new Chart(document.getElementById('NetWorthChart').getContext('2d'), {
         type: 'line',
@@ -195,13 +197,10 @@
         const whatIf = netWorthChart.data.datasets[6];
         whatIf.data = points(result.ages, result.net_worths);
         whatIf.hidden = false;
-        netWorthChart.options.plugins.markers.lines = [
-            { age: result.fi_age, label: 'FI age ' + result.fi_age, color: '#285C53', align: 'right', row: 0 },
-            { age: result.ages[result.ages.length - 1], label: 'Retirement', color: '#777980', align: 'right', row: 1 }
-        ];
+        netWorthChart.options.plugins.markers.lines = buildMarkers(result.fi_age, result.coast_fi_age, result.ages[result.ages.length - 1]);
         netWorthChart.update();
         summary.textContent = 'With these changes: net worth ' + result.net_worth_display + ' vs. Magic Number ' + result.magic_number_display +
-            ' (' + result.funded_percent + '% funded). FI age: ' + (result.fi_age === null ? 'not reached' : result.fi_age) + '.';
+            ' (' + result.funded_percent + '% funded). FI age: ' + (result.fi_age === null ? 'not reached' : result.fi_age) + '. Coast FI age: ' + (result.coast_fi_age === null ? 'not reached' : result.coast_fi_age) + '.';
     }
 
     function run() {

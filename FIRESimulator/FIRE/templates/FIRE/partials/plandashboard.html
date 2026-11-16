@@ -55,6 +55,7 @@
     <div class="container">
         {% if user.is_authenticated %}
             {% include 'FIRE/partials/dashboard/modals.html' %}
+            {% include 'FIRE/partials/dashboard/modal_guard.html' %}
         {% endif %}
         {% include 'FIRE/partials/dashboard/age_inputs.html' %}
         {% include 'FIRE/partials/dashboard/kpis.html' %}
