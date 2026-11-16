@@ -70,34 +70,51 @@
   </div>
 </div>
 
-{% if not user.is_authenticated %}
-<div class="container my-5">
-  <div class="row g-4">
-    <div class="col-lg-6">
-      <h3>Quick estimate</h3>
-      <p class="text-muted">A rough FI age in seconds, no signup needed. Assumes 7% return and the 4% rule.</p>
-      <form id="quick-calc" class="row g-2" onsubmit="return false;">
-        <div class="col-6"><label class="form-label small" for="qc-age">Current age</label><input id="qc-age" type="number" min="16" max="80" value="30" class="form-control"></div>
-        <div class="col-6"><label class="form-label small" for="qc-saved">Invested so far ($)</label><input id="qc-saved" type="number" min="0" value="50000" class="form-control"></div>
-        <div class="col-6"><label class="form-label small" for="qc-contrib">Saved per month ($)</label><input id="qc-contrib" type="number" min="0" value="1500" class="form-control"></div>
-        <div class="col-6"><label class="form-label small" for="qc-spend">Spending per year ($)</label><input id="qc-spend" type="number" min="1" value="40000" class="form-control"></div>
-      </form>
-      <p id="qc-result" class="fs-5 mt-3 mb-0" aria-live="polite"></p>
+{% if not is_premium %}
+<section class="container my-5" aria-labelledby="pricing-heading">
+  <h2 id="pricing-heading" class="text-center mb-1">Start free, go further with Premium</h2>
+  <p class="text-center text-muted mb-4">Everything you need to find your FI age is free. Premium unlocks deeper planning tools.</p>
+  <div class="row g-4 justify-content-center">
+    <div class="col-md-6 col-lg-5 d-flex">
+      <div class="pricing-card pricing-free p-4 w-100 d-flex flex-column">
+        <h3 class="pricing-title">Free</h3>
+        <p class="pricing-price">$0 <span>forever</span></p>
+        <ul class="pricing-list list-unstyled flex-grow-1">
+          <li><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Up to {{ free_plan_limit }} saved plans</li>
+          <li><i class="bi bi-check-circle-fill" aria-hidden="true"></i> FI age and Coast FI age</li>
+          <li><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Interactive net worth charts</li>
+          <li><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Edit income, expenses and savings anytime</li>
+        </ul>
+        {% if user.is_authenticated %}
+        <span class="btn btn-action-empty disabled w-100">Your current plan</span>
+        {% else %}
+        <a href="{% url 'signupuser' %}" class="btn btn-action-empty w-100">Sign up free</a>
+        {% endif %}
+      </div>
     </div>
-    <div class="col-lg-6">
-      <h3>Free vs Premium</h3>
-      <table class="table table-sm align-middle">
-        <thead><tr><th></th><th>Free</th><th>Premium</th></tr></thead>
-        <tbody>
-          <tr><td>Saved plans</td><td>{{ free_plan_limit }}</td><td>Unlimited</td></tr>
-          <tr><td>FI age, Coast FI and charts</td><td><i class="bi bi-check-lg"></i></td><td><i class="bi bi-check-lg"></i></td></tr>
-          <tr><td>Withdrawal-phase modeling</td><td>&ndash;</td><td><i class="bi bi-check-lg"></i></td></tr>
-          <tr><td>Plan comparison and more</td><td>&ndash;</td><td><i class="bi bi-check-lg"></i></td></tr>
-        </tbody>
-      </table>
+    <div class="col-md-6 col-lg-5 d-flex">
+      <div class="pricing-card pricing-premium p-4 w-100 d-flex flex-column">
+        <span class="pricing-ribbon"><i class="bi bi-star-fill" aria-hidden="true"></i> Most popular</span>
+        <h3 class="pricing-title">Premium</h3>
+        <p class="pricing-price">Everything in Free, plus</p>
+        <ul class="pricing-list list-unstyled flex-grow-1">
+          {% for name, description in premium_features %}
+          <li><i class="bi bi-star-fill" aria-hidden="true"></i> <strong>{{ name }}</strong><br><small>{{ description }}</small></li>
+          {% endfor %}
+        </ul>
+        {% if user.is_authenticated %}
+        <a href="{% url 'myaccount' %}#premium" class="btn btn-action-filled btn-lg w-100"><i class="bi bi-star" aria-hidden="true"></i> Upgrade to Premium</a>
+        {% else %}
+        <a href="{% url 'signupuser' %}" class="btn btn-action-filled btn-lg w-100"><i class="bi bi-rocket-takeoff" aria-hidden="true"></i> Sign up to get Premium</a>
+        <p class="small text-center mt-2 mb-0">Create a free account first, then upgrade anytime.</p>
+        {% endif %}
+      </div>
     </div>
   </div>
-</div>
+</section>
+{% endif %}
+
+{% if not user.is_authenticated %}
 <div class="container mb-5">
   <h3>FAQ</h3>
   <div class="accordion" id="landing-faq">
@@ -109,23 +126,6 @@
     {% endfor %}
   </div>
 </div>
-<script>
-(function () {
-  const ids = ['qc-age', 'qc-saved', 'qc-contrib', 'qc-spend'];
-  const out = document.getElementById('qc-result');
-  function calc() {
-    const [age, saved, contrib, spend] = ids.map(i => parseFloat(document.getElementById(i).value) || 0);
-    if (spend <= 0 || age <= 0) { out.textContent = ''; return; }
-    const target = spend * 25;
-    let bal = saved, years = 0;
-    while (bal < target && years < 70) { bal = bal * 1.07 + contrib * 12; years++; }
-    out.textContent = years >= 70 ? 'Increase your savings to reach FI within 70 years.'
-      : (years === 0 ? 'You are already at your FI number of $' : 'Estimated FI at age ' + Math.round(age + years) + ' (target $') + target.toLocaleString() + (years === 0 ? '.' : ').');
-  }
-  ids.forEach(i => document.getElementById(i).addEventListener('input', calc));
-  calc();
-})();
-</script>
 {% endif %}
 
 {% endblock %}

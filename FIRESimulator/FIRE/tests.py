@@ -291,13 +291,15 @@ class SurveyAndPermissionTests(TestCase):
 
     def test_landing_varies_by_auth_state(self):
         anon = self.client.get(reverse('landing')).content.decode()
-        self.assertIn('Quick estimate', anon)
-        self.assertIn('Free vs Premium', anon)
+        self.assertNotIn('Quick estimate', anon)
+        self.assertIn('Sign up to get Premium', anon)
         self.client.force_login(self.owner)
         self.create_plan()
         page = self.client.get(reverse('landing')).content.decode()
         self.assertIn('Open dashboard', page)
-        self.assertNotIn('Quick estimate', page)
+        self.assertIn('Upgrade to Premium', page)
+        self.make_premium(self.owner)
+        self.assertNotIn('Upgrade to Premium', self.client.get(reverse('landing')).content.decode())
 
     def test_dashboard_embeds_chart_json_and_lists_show_fi_age(self):
         self.client.force_login(self.owner)

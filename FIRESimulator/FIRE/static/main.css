@@ -215,6 +215,38 @@ body {
     font-size: 76px;
   }
 
+  /* PRICING */
+  .pricing-card {
+    position: relative;
+    border-radius: 16px;
+    font-family: Inter;
+    color: var(--Primary-Black);
+  }
+  .pricing-free { background: var(--Muted-Green); }
+  .pricing-premium {
+    background: var(--Muted-Purple);
+    border: 2px solid var(--Primary-Purple);
+    box-shadow: 0 8px 24px rgba(79, 55, 138, 0.18);
+  }
+  .pricing-title { font-weight: 600; letter-spacing: -0.24px; }
+  .pricing-price { font-size: 20px; font-weight: 600; }
+  .pricing-price span { font-size: 14px; font-weight: 400; color: var(--Light-Black); }
+  .pricing-list li { margin-bottom: 12px; }
+  .pricing-list small { color: var(--Light-Black); }
+  .pricing-free .pricing-list i { color: var(--Primary-Green); }
+  .pricing-premium .pricing-list i { color: var(--Primary-Purple); }
+  .pricing-ribbon {
+    position: absolute;
+    top: -14px;
+    right: 20px;
+    background: var(--Primary-Orange);
+    color: #FFF;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 999px;
+  }
+
   /* NEW PLAN */
   .nav-link-personal.active { 
     background-color: var(--Muted-Berry) !important; 
