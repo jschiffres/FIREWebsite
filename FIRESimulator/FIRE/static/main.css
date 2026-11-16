@@ -216,36 +216,30 @@ body {
   }
 
   /* PRICING */
-  .pricing-card {
-    position: relative;
+  .pricing-table-wrap {
+    overflow-x: auto;
     border-radius: 16px;
+    border: 2px solid var(--Muted-Purple);
     font-family: Inter;
-    color: var(--Primary-Black);
   }
-  .pricing-free { background: var(--Muted-Green); }
-  .pricing-premium {
-    background: var(--Muted-Purple);
-    border: 2px solid var(--Primary-Purple);
-    box-shadow: 0 8px 24px rgba(79, 55, 138, 0.18);
-  }
-  .pricing-title { font-weight: 600; letter-spacing: -0.24px; }
-  .pricing-price { font-size: 20px; font-weight: 600; }
-  .pricing-price span { font-size: 14px; font-weight: 400; color: var(--Light-Black); }
-  .pricing-list li { margin-bottom: 12px; }
-  .pricing-list small { color: var(--Light-Black); }
-  .pricing-free .pricing-list i { color: var(--Primary-Green); }
-  .pricing-premium .pricing-list i { color: var(--Primary-Purple); }
-  .pricing-ribbon {
-    position: absolute;
-    top: -14px;
-    right: 20px;
-    background: var(--Primary-Orange);
-    color: #FFF;
-    font-size: 13px;
+  .pricing-table { --bs-table-bg: transparent; margin: 0; min-width: 560px; }
+  .pricing-table thead th {
+    font-size: 20px;
     font-weight: 600;
-    padding: 4px 12px;
-    border-radius: 999px;
+    padding: 16px;
+    border-bottom: 2px solid var(--Muted-Purple);
   }
+  .pricing-table th[scope="row"] { font-weight: 500; }
+  .pricing-table td, .pricing-table th { padding: 14px 16px; vertical-align: middle; }
+  .pricing-col-free { background: var(--Muted-Green) !important; width: 22%; }
+  .pricing-col-premium { background: var(--Muted-Purple) !important; width: 28%; }
+  thead .pricing-col-premium { background: var(--Primary-Purple) !important; color: #FFF; }
+  .pricing-sub { font-size: 13px; font-weight: 400; color: var(--Light-Black); }
+  thead .pricing-col-premium .pricing-sub { color: #FFF; }
+  .pricing-yes { color: var(--Primary-Green); font-size: 22px; }
+  .pricing-col-premium .pricing-yes { color: var(--Primary-Purple); }
+  .pricing-no { color: var(--Muted-Black); font-size: 22px; }
+  .pricing-table tfoot td { border-bottom: 0; }
 
   /* NEW PLAN */
   .nav-link-personal.active { 

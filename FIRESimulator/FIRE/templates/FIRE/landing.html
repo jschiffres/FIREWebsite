@@ -74,42 +74,41 @@
 <section class="container my-5" aria-labelledby="pricing-heading">
   <h2 id="pricing-heading" class="text-center mb-1">Start free, go further with Premium</h2>
   <p class="text-center text-muted mb-4">Everything you need to find your FI age is free. Premium unlocks deeper planning tools.</p>
-  <div class="row g-4 justify-content-center">
-    <div class="col-md-6 col-lg-5 d-flex">
-      <div class="pricing-card pricing-free p-4 w-100 d-flex flex-column">
-        <h3 class="pricing-title">Free</h3>
-        <p class="pricing-price">$0 <span>forever</span></p>
-        <ul class="pricing-list list-unstyled flex-grow-1">
-          <li><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Up to {{ free_plan_limit }} saved plans</li>
-          <li><i class="bi bi-check-circle-fill" aria-hidden="true"></i> FI age and Coast FI age</li>
-          <li><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Interactive net worth charts</li>
-          <li><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Edit income, expenses and savings anytime</li>
-        </ul>
-        {% if user.is_authenticated %}
-        <span class="btn btn-action-empty disabled w-100">Your current plan</span>
-        {% else %}
-        <a href="{% url 'signupuser' %}" class="btn btn-action-empty w-100">Sign up free</a>
+  <div class="pricing-table-wrap">
+    <table class="table pricing-table align-middle text-center mb-0">
+      <thead>
+        <tr>
+          <th scope="col" class="text-start">Features</th>
+          <th scope="col" class="pricing-col-free">Free<div class="pricing-sub">$0 forever</div></th>
+          <th scope="col" class="pricing-col-premium"><i class="bi bi-star-fill" aria-hidden="true"></i> Premium</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><th scope="row" class="text-start">Saved plans</th><td class="pricing-col-free fw-bold">{{ free_plan_limit }}</td><td class="pricing-col-premium fw-bold">{{ premium_plan_limit }}</td></tr>
+        <tr><th scope="row" class="text-start">FI age and Coast FI age</th><td class="pricing-col-free"><i class="bi bi-check-square-fill pricing-yes" aria-label="Included"></i></td><td class="pricing-col-premium"><i class="bi bi-check-square-fill pricing-yes" aria-label="Included"></i></td></tr>
+        <tr><th scope="row" class="text-start">Interactive net worth charts</th><td class="pricing-col-free"><i class="bi bi-check-square-fill pricing-yes" aria-label="Included"></i></td><td class="pricing-col-premium"><i class="bi bi-check-square-fill pricing-yes" aria-label="Included"></i></td></tr>
+        <tr><th scope="row" class="text-start">Edit income, expenses and savings</th><td class="pricing-col-free"><i class="bi bi-check-square-fill pricing-yes" aria-label="Included"></i></td><td class="pricing-col-premium"><i class="bi bi-check-square-fill pricing-yes" aria-label="Included"></i></td></tr>
+        {% for name, description in premium_features %}
+        {% if name != 'More saved plans' %}
+        <tr><th scope="row" class="text-start">{{ name }}<div class="pricing-sub fw-normal">{{ description }}</div></th><td class="pricing-col-free"><i class="bi bi-square pricing-no" aria-label="Not included"></i></td><td class="pricing-col-premium"><i class="bi bi-check-square-fill pricing-yes" aria-label="Included"></i></td></tr>
         {% endif %}
-      </div>
-    </div>
-    <div class="col-md-6 col-lg-5 d-flex">
-      <div class="pricing-card pricing-premium p-4 w-100 d-flex flex-column">
-        <span class="pricing-ribbon"><i class="bi bi-star-fill" aria-hidden="true"></i> Most popular</span>
-        <h3 class="pricing-title">Premium</h3>
-        <p class="pricing-price">Everything in Free, plus</p>
-        <ul class="pricing-list list-unstyled flex-grow-1">
-          {% for name, description in premium_features %}
-          <li><i class="bi bi-star-fill" aria-hidden="true"></i> <strong>{{ name }}</strong><br><small>{{ description }}</small></li>
-          {% endfor %}
-        </ul>
-        {% if user.is_authenticated %}
-        <a href="{% url 'myaccount' %}#premium" class="btn btn-action-filled btn-lg w-100"><i class="bi bi-star" aria-hidden="true"></i> Upgrade to Premium</a>
-        {% else %}
-        <a href="{% url 'signupuser' %}" class="btn btn-action-filled btn-lg w-100"><i class="bi bi-rocket-takeoff" aria-hidden="true"></i> Sign up to get Premium</a>
-        <p class="small text-center mt-2 mb-0">Create a free account first, then upgrade anytime.</p>
-        {% endif %}
-      </div>
-    </div>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td></td>
+          <td class="pricing-col-free">
+            {% if user.is_authenticated %}<span class="btn btn-action-empty disabled w-100">Your current plan</span>
+            {% else %}<a href="{% url 'signupuser' %}" class="btn btn-action-empty w-100">Sign up free</a>{% endif %}
+          </td>
+          <td class="pricing-col-premium">
+            {% if user.is_authenticated %}<a href="{% url 'myaccount' %}#premium" class="btn btn-action-filled w-100"><i class="bi bi-star" aria-hidden="true"></i> Upgrade to Premium</a>
+            {% else %}<a href="{% url 'signupuser' %}" class="btn btn-action-filled w-100"><i class="bi bi-rocket-takeoff" aria-hidden="true"></i> Sign up to get Premium</a>
+            <div class="pricing-sub mt-1">Create a free account, then upgrade anytime.</div>{% endif %}
+          </td>
+        </tr>
+      </tfoot>
+    </table>
   </div>
 </section>
 {% endif %}

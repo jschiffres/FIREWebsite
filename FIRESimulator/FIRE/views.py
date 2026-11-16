@@ -169,7 +169,7 @@ LANDING_FAQ = [
 ]
 
 def landing(request):
-    context = {'faq': LANDING_FAQ, 'premium_features': PREMIUM_FEATURES}
+    context = {'faq': LANDING_FAQ, 'premium_features': PREMIUM_FEATURES, 'premium_plan_limit': MAX_USER_PLANS}
     if request.user.is_authenticated:
         plans = Plan.objects.filter(user=request.user).order_by('-id')
         latest = plans.first()
