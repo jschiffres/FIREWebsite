@@ -347,7 +347,11 @@ def _plan_limit_error(request):
 def newplan(request):
 
     if request.method == "GET":
-        return render(request, 'FIRE/newplan.html', {'form': PlanForm()})
+        limit_error = _plan_limit_error(request)
+        if limit_error and request.user.is_authenticated:
+            messages.warning(request, limit_error)
+            return redirect('userplans' if user_is_premium(request.user) else 'myaccount')
+        return render(request, 'FIRE/newplan.html', {'form': PlanForm(), 'error': limit_error})
     limit_error = _plan_limit_error(request)
     if limit_error:
         return render(request, 'FIRE/newplan.html', {'form': PlanForm(request.POST), 'error': limit_error})

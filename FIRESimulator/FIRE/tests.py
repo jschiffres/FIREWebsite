@@ -158,6 +158,7 @@ class SurveyAndPermissionTests(TestCase):
             self.create_plan()
         blocked = self.client.post(reverse('newplan'), survey_post())
         self.assertEqual(blocked.status_code, 200)
+        self.assertRedirects(self.client.get(reverse('newplan')), reverse('myaccount'), fetch_redirect_response=False)
         self.assertEqual(Plan.objects.filter(user=self.owner).count(), 3)
         self.make_premium(self.owner)
         self.assertEqual(self.client.post(reverse('newplan'), survey_post()).status_code, 302)
