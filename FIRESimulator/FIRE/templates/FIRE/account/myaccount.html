@@ -25,6 +25,10 @@
                             <label for="id_email">Email</label>
                         </div>
                         {% if errors.email %}<div class="form-text text-danger mb-2" id="email-error" role="alert">{{ errors.email }}</div>{% endif %}
+                        <p class="small mt-2 mb-1">
+                            {% if profile.email_verified %}<span class="badge text-bg-success"><i class="bi bi-patch-check-fill" aria-hidden="true"></i> Email confirmed</span>
+                            {% else %}<span class="badge text-bg-warning">Email not confirmed</span> <span class="text-muted">Use the banner above to resend the link.</span>{% endif %}
+                        </p>
                         <p class="text-muted small mt-2 mb-3">Member since {{ user.date_joined|date:"F j, Y" }}</p>
                         <button type="submit" class="btn btn-action-filled">Save details</button>
                     </form>
@@ -48,7 +52,7 @@
                     <div class="progress mb-3" role="progressbar" aria-label="Saved plans used" aria-valuenow="{{ plan_count }}" aria-valuemin="0" aria-valuemax="{{ plan_limit }}">
                         <div class="progress-bar" style="width: {% widthratio plan_count plan_limit 100 %}%"></div>
                     </div>
-                    <a class="btn btn-action-empty me-2 mb-2" href="{% url 'password_change' %}"><i class="bi bi-key" aria-hidden="true"></i> Change password</a>
+                    {% if user.has_usable_password %}<a class="btn btn-action-empty me-2 mb-2" href="{% url 'password_change' %}"><i class="bi bi-key" aria-hidden="true"></i> Change password</a>{% else %}<a class="btn btn-action-empty me-2 mb-2" href="{% url 'password_reset' %}"><i class="bi bi-key" aria-hidden="true"></i> Set a password</a>{% endif %}
                     <a class="btn btn-action-empty mb-2" href="{% url 'userplans' %}"><i class="bi bi-list-ul" aria-hidden="true"></i> My plans</a>
                 </div>
             </section>
@@ -96,8 +100,13 @@
                         <input type="hidden" name="action" value="delete">
                         <div class="col-sm-6 col-md-4">
                             <div class="form-floating">
+                                {% if user.has_usable_password %}
                                 <input type="password" class="form-control{% if errors.delete %} is-invalid{% endif %}" id="id_delete_password" name="password" placeholder="Password" autocomplete="current-password" required>
                                 <label for="id_delete_password">Confirm password</label>
+                                {% else %}
+                                <input type="text" class="form-control{% if errors.delete %} is-invalid{% endif %}" id="id_delete_password" name="password" placeholder="Username" autocomplete="off" required>
+                                <label for="id_delete_password">Type your username to confirm</label>
+                                {% endif %}
                             </div>
                             {% if errors.delete %}<div class="form-text text-danger" role="alert">{{ errors.delete }}</div>{% endif %}
                         </div>

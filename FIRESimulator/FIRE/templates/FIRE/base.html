@@ -119,6 +119,16 @@
           </div>
         {% endfor %}
       {% endif %}
+      {% if email_unverified %}
+        <div class="alert alert-warning mb-0 d-flex flex-wrap align-items-center justify-content-between gap-2 no-print" role="status">
+          <span><i class="bi bi-envelope-exclamation" aria-hidden="true"></i> Please confirm your email address ({{ user.email }}).</span>
+          <form method="POST" action="{% url 'resend_verification' %}" class="m-0">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button type="submit" class="btn btn-sm btn-action-empty">Resend confirmation email</button>
+          </form>
+        </div>
+      {% endif %}
       {% block content %}
       {% endblock %}
     </main>  

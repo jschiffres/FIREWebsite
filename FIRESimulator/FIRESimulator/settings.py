@@ -144,3 +144,8 @@ EMAIL_USE_SSL = False
 # (or when explicitly enabled); production upgrades should go through a real checkout.
 FREE_PLAN_LIMIT = 3
 PREMIUM_DEMO_UPGRADE = os.environ.get('PREMIUM_DEMO_UPGRADE', str(DEBUG)).lower() == 'true'
+
+# Google sign-in (OAuth 2.0). The button only appears when both values are set.
+# Authorized redirect URI to register in Google Cloud: <SITE_URL>/auth/google/callback/
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
+GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')

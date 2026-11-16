@@ -21,6 +21,7 @@ from .forms import CreateUserForm, FeedbackForm, PlanForm, EditPlanForm
 from .engine import PlanObject
 from .plan_input import saveplan
 from .emails import welcome_email
+from . import auth_flows
 
 import math
 import csv
@@ -65,9 +66,93 @@ def _create_account(request, plan=None):
         plan.user = user
         plan.save()
     login(request, user)
-    messages.success(request, "User created successfully!")
+    messages.success(request, "User created successfully! Check your email to confirm your address.")
     welcome_email(user)
+    auth_flows.send_verification_email(user)
     return redirect('userplans'), None
+
+# USER: Email verification
+def verify_email(request, token):
+    user = auth_flows.read_verification_token(token)
+    if user is None:
+        messages.error(request, "That confirmation link is invalid or has expired. Request a new one from My Account.")
+        return redirect('myaccount' if request.user.is_authenticated else 'loginuser')
+    profile, _ = Profile.objects.get_or_create(user=user)
+    profile.email_verified = True
+    profile.save(update_fields=['email_verified'])
+    messages.success(request, "Thanks! Your email address is confirmed.")
+    return redirect('myaccount' if request.user.is_authenticated else 'loginuser')
+
+@login_required
+@require_POST
+def resend_verification(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    if profile.email_verified:
+        messages.info(request, "Your email is already confirmed.")
+    elif not request.user.email:
+        messages.warning(request, "Add an email address first.")
+    elif auth_flows.send_verification_email(request.user):
+        messages.success(request, f"Confirmation email sent to {request.user.email}.")
+    else:
+        messages.error(request, "We couldn't send the email right now. Please try again later.")
+    return redirect(request.POST.get('next') if request.POST.get('next', '').startswith('/') and not request.POST.get('next', '').startswith('//') else 'myaccount')
+
+# USER: Google sign-in
+def google_login(request):
+    if not auth_flows.google_enabled():
+        messages.warning(request, "Google sign-in isn't configured on this site.")
+        return redirect('loginuser')
+    state = auth_flows.new_state()
+    request.session['google_state'] = state
+    plan_id = request.GET.get('plan')
+    if plan_id and _is_uuid(plan_id):
+        request.session['google_plan'] = plan_id
+    else:
+        request.session.pop('google_plan', None)
+    return redirect(auth_flows.google_authorize_url(state))
+
+def google_callback(request):
+    expected = request.session.pop('google_state', None)
+    plan_id = request.session.pop('google_plan', None)
+    if not expected or request.GET.get('state') != expected or not request.GET.get('code'):
+        messages.error(request, "Google sign-in was cancelled or could not be verified.")
+        return redirect('loginuser')
+    info = auth_flows.fetch_google_profile(request.GET['code'])
+    if info is None:
+        messages.error(request, "Google sign-in failed. Make sure your Google email is verified and try again.")
+        return redirect('loginuser')
+
+    email = info['email'].strip()
+    user = User.objects.filter(email__iexact=email).first()
+    if user is None:
+        user = User.objects.create_user(
+            username=auth_flows.unique_username(email),
+            email=email,
+            first_name=(info.get('given_name') or '')[:150],
+        )
+        user.set_unusable_password()
+        user.save()
+        welcome_email(user)
+    elif not user.is_active:
+        messages.error(request, "This account is disabled.")
+        return redirect('loginuser')
+    profile, _ = Profile.objects.get_or_create(user=user)
+    if not profile.email_verified:
+        # An unverified account may have been registered by someone else with this address; drop any password it had
+        if user.has_usable_password():
+            user.set_unusable_password()
+            user.save(update_fields=['password'])
+            messages.info(request, "For security your old password was cleared. Use 'Forgot your password?' to set a new one.")
+        profile.email_verified = True
+        profile.save(update_fields=['email_verified'])
+    login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+    if plan_id:
+        plan = Plan.objects.filter(pk=plan_id, user__isnull=True).first()
+        if plan is not None:
+            plan.user = user
+            plan.save()
+    messages.success(request, "Signed in with Google.")
+    return redirect('userplans')
 
 # LANDING PAGE
 def landing(request):
@@ -87,7 +172,7 @@ def signupsave(request, plan_id):
         messages.warning(request, "This plan already belongs to an account.")
         return redirect('loginuser')
     if request.method == "GET":
-        return render(request, 'FIRE/signupuser.html', {'form':CreateUserForm()})
+        return render(request, 'FIRE/signupuser.html', {'form':CreateUserForm(), 'plan': plan})
     response, error = _create_account(request, plan)
     return response or error
 
@@ -178,14 +263,23 @@ def myaccount(request):
                 if User.objects.filter(email__iexact=email).exclude(pk=request.user.pk).exists():
                     errors['email'] = 'That email is already associated with another account.'
             if not errors:
+                email_changed = email.lower() != request.user.email.lower()
                 request.user.email = email
                 request.user.first_name = first_name
                 request.user.save(update_fields=['email', 'first_name'])
-                messages.success(request, "Your details were updated.")
+                if email_changed:
+                    profile.email_verified = False
+                    profile.save(update_fields=['email_verified'])
+                    auth_flows.send_verification_email(request.user)
+                    messages.success(request, "Your details were updated. We sent a confirmation link to your new email.")
+                else:
+                    messages.success(request, "Your details were updated.")
                 return redirect('myaccount')
         elif action == 'upgrade':
             if not settings.PREMIUM_DEMO_UPGRADE:
                 messages.error(request, "Online upgrades are not available yet.")
+            elif not profile.email_verified:
+                messages.warning(request, "Please confirm your email address before upgrading.")
             elif not profile.is_premium:
                 profile.is_premium = True
                 profile.premium_since = timezone.now()
@@ -200,13 +294,17 @@ def myaccount(request):
                 messages.success(request, "Your account is back on the Free plan. Your saved plans are untouched.")
             return redirect('myaccount')
         elif action == 'delete':
-            if request.user.check_password(request.POST.get('password', '')):
+            if request.user.has_usable_password():
+                confirmed = request.user.check_password(request.POST.get('password', ''))
+            else:
+                confirmed = request.POST.get('password', '').strip() == request.user.username
+            if confirmed:
                 user = request.user
                 logout(request)
                 user.delete()
                 messages.success(request, "Your account and plans were deleted.")
                 return redirect('landing')
-            errors['delete'] = 'Incorrect password. Your account was not deleted.'
+            errors['delete'] = 'Incorrect confirmation. Your account was not deleted.'
 
     plan_count = Plan.objects.filter(user=request.user).count()
     return render(request, 'FIRE/account/myaccount.html', {

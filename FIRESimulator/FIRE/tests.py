@@ -92,6 +92,67 @@ def survey_post(**overrides):
     return data
 
 
+class EmailVerificationAndGoogleTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user('sam', 'sam@example.com', 'pw-12345-xyz')
+
+    def test_token_verifies_and_goes_stale_when_email_changes(self):
+        from . import auth_flows
+        token = auth_flows.make_verification_token(self.user)
+        self.assertFalse(Profile.objects.get_or_create(user=self.user)[0].email_verified)
+        self.client.get(reverse('verify_email', args=[token]))
+        self.assertTrue(Profile.objects.get(user=self.user).email_verified)
+        self.user.email = 'new@example.com'
+        self.user.save()
+        self.assertIsNone(auth_flows.read_verification_token(token))
+        self.assertIsNone(auth_flows.read_verification_token('garbage'))
+
+    def test_signup_sends_verification_and_blocks_upgrade_until_verified(self):
+        from django.core import mail
+        self.client.post(reverse('signupuser'), {'username': 'newbie', 'email': 'newbie@example.com',
+                                                 'password1': 'Str0ng-pass-99', 'password2': 'Str0ng-pass-99'})
+        self.assertTrue(any('Confirm your FI Planner email' in m.subject for m in mail.outbox))
+        user = User.objects.get(username='newbie')
+        with self.settings(PREMIUM_DEMO_UPGRADE=True):
+            self.client.post(reverse('myaccount'), {'action': 'upgrade'})
+            self.assertFalse(Profile.objects.get(user=user).is_premium)
+            Profile.objects.filter(user=user).update(email_verified=True)
+            self.client.post(reverse('myaccount'), {'action': 'upgrade'})
+            self.assertTrue(Profile.objects.get(user=user).is_premium)
+
+    def test_google_login_disabled_without_credentials(self):
+        response = self.client.get(reverse('google_login'))
+        self.assertRedirects(response, reverse('loginuser'), fetch_redirect_response=False)
+
+    def test_google_callback_creates_and_links_accounts(self):
+        from unittest import mock
+        session = self.client.session
+        session['google_state'] = 'abc'
+        session.save()
+        info = {'email': 'sam@example.com', 'email_verified': True, 'given_name': 'Sam'}
+        with mock.patch('FIRE.auth_flows.fetch_google_profile', return_value=info):
+            self.client.get(reverse('google_callback'), {'state': 'wrong', 'code': 'x'})
+            self.assertNotIn('_auth_user_id', self.client.session)
+            session = self.client.session
+            session['google_state'] = 'abc'
+            session.save()
+            self.client.get(reverse('google_callback'), {'state': 'abc', 'code': 'x'})
+        self.assertEqual(int(self.client.session['_auth_user_id']), self.user.pk)
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.has_usable_password())
+        self.assertTrue(Profile.objects.get(user=self.user).email_verified)
+
+        self.client.logout()
+        session = self.client.session
+        session['google_state'] = 'def'
+        session.save()
+        info = {'email': 'fresh@example.com', 'email_verified': True}
+        with mock.patch('FIRE.auth_flows.fetch_google_profile', return_value=info):
+            self.client.get(reverse('google_callback'), {'state': 'def', 'code': 'x'})
+        fresh = User.objects.get(email='fresh@example.com')
+        self.assertTrue(Profile.objects.get(user=fresh).email_verified)
+
+
 class SurveyAndPermissionTests(TestCase):
     def setUp(self):
         self.owner = User.objects.create_user('owner', 'owner@example.com', 'pw-12345-xyz')
@@ -99,7 +160,7 @@ class SurveyAndPermissionTests(TestCase):
 
     def make_premium(self, *users):
         for user in users:
-            Profile.objects.update_or_create(user=user, defaults={'is_premium': True})
+            Profile.objects.update_or_create(user=user, defaults={'is_premium': True, 'email_verified': True})
 
     def create_plan(self):
         response = self.client.post(reverse('newplan'), survey_post())
@@ -167,6 +228,9 @@ class SurveyAndPermissionTests(TestCase):
         self.assertEqual(self.client.get(reverse('myaccount')).status_code, 302)
         self.client.force_login(self.owner)
         self.assertContains(self.client.get(reverse('myaccount')), 'Upgrade to Premium')
+        self.client.post(reverse('myaccount'), {'action': 'upgrade'})
+        self.assertFalse(Profile.objects.get(user=self.owner).is_premium)
+        Profile.objects.filter(user=self.owner).update(email_verified=True)
         self.client.post(reverse('myaccount'), {'action': 'upgrade'})
         self.assertTrue(Profile.objects.get(user=self.owner).is_premium)
         with self.settings(PREMIUM_DEMO_UPGRADE=False):

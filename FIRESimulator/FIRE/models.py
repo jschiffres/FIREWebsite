@@ -7,6 +7,7 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     is_premium = models.BooleanField(default=False)
     premium_since = models.DateTimeField(null=True, blank=True)
+    email_verified = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.user.username} ({'Premium' if self.is_premium else 'Free'})"

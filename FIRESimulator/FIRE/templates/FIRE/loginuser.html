@@ -32,6 +32,13 @@
 
         </form>
 
+        {% if google_enabled %}
+        <div class="d-flex align-items-center my-3"><hr class="flex-grow-1"><span class="px-2 text-muted small">or</span><hr class="flex-grow-1"></div>
+        <div class="d-flex justify-content-center">
+            <a class="btn btn-action-empty" href="{% url 'google_login' %}"><i class="bi bi-google" aria-hidden="true"></i> Continue with Google</a>
+        </div>
+        {% endif %}
+
         <p class="text-center mt-3"><a class="link-success" href="{% url 'password_reset' %}">Forgot your password?</a></p>
 
         <p class="text-center">Don't have an account? <a  class="link-success" href="{% url 'signupuser' %}">Sign-up</a></p>
