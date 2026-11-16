@@ -95,7 +95,7 @@
                 if (!chosen) message = 'Select a savings method to continue.';
                 else if (chosen.value === 'Custom' && !section.querySelector('.saving-entry')) message = 'Add at least one account to continue.';
                 button.disabled = message !== '';
-                hint.textContent = message;
+                if (hint.textContent !== message) hint.textContent = message;
             }
             section.addEventListener('change', update);
             section.addEventListener('click', () => setTimeout(update, 0));
