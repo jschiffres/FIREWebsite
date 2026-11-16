@@ -25,6 +25,25 @@ body {
 @media (prefers-reduced-motion: reduce) {
     * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
+/* Darker muted text for AA contrast on the cream background */
+.text-muted, .form-text { color: #565d66 !important; }
+.text-danger { color: #b02a37 !important; }
+.table-responsive { -webkit-overflow-scrolling: touch; }
+img, svg { max-width: 100%; height: auto; }
+@media (max-width: 767.98px) {
+    /* 16px inputs stop iOS from zooming on focus; 44px targets for touch */
+    .form-control, .form-select { font-size: 16px; }
+    .btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: .35rem; }
+    .btn-sm { min-height: 38px; }
+    .nav-link, .dropdown-item { padding-top: .6rem; padding-bottom: .6rem; }
+    .landing-card-icon { font-size: 52px; }
+    #landing-card, #landing-card2, #landing-card3 { padding: 2rem 1rem !important; }
+    .landing-card-text { padding-left: 0 !important; padding-right: 0 !important; padding-bottom: 1rem !important; }
+    .modal-dialog { margin: .5rem; }
+    .modal-xl { --bs-modal-width: auto; }
+    .pricing-table { min-width: 480px; }
+    footer .nav { gap: .25rem .75rem; }
+}
 
 /* COLOR VARIABLES */
 :root {

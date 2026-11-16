@@ -160,7 +160,7 @@
             <button id="expenses-button" type="button" class="btn btn-action-empty btn-lg" hx-get="{% url 'create-expenses-section' %}" hx-target="#expenses-div" hx-swap="beforeend transition:true" hx-on::before-request="document.getElementById('income').hidden = true">Expenses <i class="bi bi-arrow-right"></i></button>
         </div>
     </div>
-    <div class="modal fade" id="income-Back-Modal" data-bs-backdrop="delete" data-bs-keyboard="false" tabindex="-1" aria-labelledby="income-Back-Modal" aria-hidden="true">
+    <div class="modal fade" id="income-Back-Modal" data-bs-backdrop="delete" data-bs-keyboard="false" tabindex="-1" aria-label="Leave incomes?" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content back-modal">
                 <div class="modal-header">
