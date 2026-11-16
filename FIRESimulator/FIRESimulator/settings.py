@@ -160,5 +160,13 @@ PREMIUM_DEMO_UPGRADE = os.environ.get('PREMIUM_DEMO_UPGRADE', str(DEBUG)).lower(
 
 # Google sign-in (OAuth 2.0). The button only appears when both values are set.
 # Authorized redirect URI to register in Google Cloud: <SITE_URL>/auth/google/callback/
-GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
-GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
+def _clean_client_id(value):
+    value = value.strip().strip('"\'')
+    for prefix in ('https://', 'http://'):
+        if value.startswith(prefix):
+            value = value[len(prefix):]
+    return value.rstrip('/')
+
+
+GOOGLE_CLIENT_ID = _clean_client_id(os.environ.get('GOOGLE_CLIENT_ID', ''))
+GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '').strip().strip('"\'')
