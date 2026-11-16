@@ -67,11 +67,26 @@
                         {% endfor %}
                     </ul>
                     {% if profile.is_premium %}
+                    {% if stripe_enabled and has_customer %}
+                    <form method="POST" action="{% url 'billing_portal' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-action-filled"><i class="bi bi-credit-card" aria-hidden="true"></i> Manage billing</button>
+                        <p class="text-muted small mt-2 mb-0">Update your card, view invoices or cancel anytime.</p>
+                    </form>
+                    {% elif not stripe_enabled %}
                     <form method="POST" onsubmit="return confirm('Switch back to the Free plan? Premium features will be locked, but your saved plans are kept.');">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="downgrade">
                         <button type="submit" class="btn btn-action-empty">Switch to Free</button>
                     </form>
+                    {% endif %}
+                    {% elif stripe_enabled and billing_intervals %}
+                    <form method="POST" action="{% url 'start_checkout' %}" class="d-flex flex-wrap gap-2">
+                        {% csrf_token %}
+                        {% if 'month' in billing_intervals %}<button type="submit" name="interval" value="month" class="btn btn-action-filled"><i class="bi bi-star" aria-hidden="true"></i> Upgrade &ndash; monthly</button>{% endif %}
+                        {% if 'year' in billing_intervals %}<button type="submit" name="interval" value="year" class="btn btn-action-empty"><i class="bi bi-star" aria-hidden="true"></i> Upgrade &ndash; yearly</button>{% endif %}
+                    </form>
+                    <p class="text-muted small mt-2 mb-0">Secure checkout by Stripe. Cancel anytime.</p>
                     {% elif can_upgrade %}
                     <form method="POST">
                         {% csrf_token %}

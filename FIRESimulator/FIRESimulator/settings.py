@@ -158,6 +158,18 @@ SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')
 FREE_PLAN_LIMIT = 3
 PREMIUM_DEMO_UPGRADE = os.environ.get('PREMIUM_DEMO_UPGRADE', str(DEBUG)).lower() == 'true'
 
+# Stripe billing. Real payments are enabled whenever a secret key is set (the demo upgrade is then disabled).
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '').strip()
+STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', '').strip()
+# Either give price IDs (price_...) directly, or product IDs (prod_...) and the default price is looked up.
+STRIPE_MONTHLY_PRICE_ID = os.environ.get('STRIPE_MONTHLY_PRICE_ID', '').strip()
+STRIPE_YEARLY_PRICE_ID = os.environ.get('STRIPE_YEARLY_PRICE_ID', '').strip()
+STRIPE_MONTHLY_PRODUCT_ID = os.environ.get('STRIPE_MONTHLY_PRODUCT_ID', '').strip()
+STRIPE_YEARLY_PRODUCT_ID = os.environ.get('STRIPE_YEARLY_PRODUCT_ID', '').strip()
+STRIPE_ENABLED = bool(STRIPE_SECRET_KEY)
+if STRIPE_ENABLED:
+    PREMIUM_DEMO_UPGRADE = False
+
 # Google sign-in (OAuth 2.0). The button only appears when both values are set.
 # Authorized redirect URI to register in Google Cloud: <SITE_URL>/auth/google/callback/
 def _clean_client_id(value):

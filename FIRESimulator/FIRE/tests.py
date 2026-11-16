@@ -1,8 +1,9 @@
 from types import SimpleNamespace
 
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
+from unittest import mock
 
 from django.test import client as _test_client
 
@@ -177,6 +178,7 @@ class EmailVerificationAndGoogleTests(TestCase):
         self.assertTrue(Profile.objects.get(user=fresh).email_verified)
 
 
+@override_settings(STRIPE_ENABLED=False, PREMIUM_DEMO_UPGRADE=True)
 class SurveyAndPermissionTests(TestCase):
     def setUp(self):
         self.owner = User.objects.create_user('owner', 'owner@example.com', 'pw-12345-xyz')
@@ -394,3 +396,42 @@ class SurveyAndPermissionTests(TestCase):
         self.assertEqual(denied.status_code, 302)
         self.assertEqual(self.client.get(reverse('compareplans'), {'plans': ['nope', first.id]}).status_code, 302)
 
+
+
+@override_settings(STRIPE_ENABLED=True, STRIPE_SECRET_KEY='sk_test_x', STRIPE_WEBHOOK_SECRET='whsec_x',
+                   STRIPE_MONTHLY_PRICE_ID='price_m', STRIPE_YEARLY_PRICE_ID='price_y', PREMIUM_DEMO_UPGRADE=False)
+class StripeBillingTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user('payer', 'payer@example.com', 'Str0ng-pass-99')
+        Profile.objects.update_or_create(user=self.user, defaults={'email_verified': True, 'stripe_customer_id': 'cus_1'})
+        self.client.force_login(self.user)
+
+    def test_checkout_redirects_to_stripe_and_requires_verified_email(self):
+        with mock.patch('FIRE.billing.create_checkout_url', return_value='https://checkout.stripe.test/s') as create:
+            response = self.client.post(reverse('start_checkout'), {'interval': 'year'})
+        self.assertEqual(response['Location'], 'https://checkout.stripe.test/s')
+        create.assert_called_once()
+        self.assertEqual(create.call_args[0][1], 'year')
+        Profile.objects.filter(user=self.user).update(email_verified=False)
+        with mock.patch('FIRE.billing.create_checkout_url') as create:
+            response = self.client.post(reverse('start_checkout'), {'interval': 'month'})
+        create.assert_not_called()
+        self.assertRedirects(response, reverse('myaccount'), fetch_redirect_response=False)
+
+    def test_webhook_grants_and_revokes_premium(self):
+        def send(event_type, status):
+            event = {'type': event_type, 'data': {'object': {'id': 'sub_1', 'customer': 'cus_1', 'status': status}}}
+            with mock.patch('stripe.Webhook.construct_event', return_value=event):
+                return self.client.post(reverse('stripe_webhook'), '{}', content_type='application/json',
+                                        HTTP_STRIPE_SIGNATURE='sig')
+        self.assertEqual(send('customer.subscription.created', 'active').status_code, 200)
+        self.assertTrue(Profile.objects.get(user=self.user).is_premium)
+        send('customer.subscription.deleted', 'canceled')
+        profile = Profile.objects.get(user=self.user)
+        self.assertFalse(profile.is_premium)
+        self.assertEqual(profile.stripe_status, 'canceled')
+
+    def test_webhook_rejects_bad_signature(self):
+        response = self.client.post(reverse('stripe_webhook'), '{}', content_type='application/json',
+                                    HTTP_STRIPE_SIGNATURE='bad')
+        self.assertEqual(response.status_code, 400)

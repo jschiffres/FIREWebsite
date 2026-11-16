@@ -54,6 +54,9 @@ urlpatterns = [
     path("auth/google/callback/", views.google_callback, name="google_callback"),
     path("myplans/", views.userplans, name="userplans"),
     path("account/", views.myaccount, name="myaccount"),
+    path("billing/checkout/", views.start_checkout, name="start_checkout"),
+    path("billing/portal/", views.billing_portal, name="billing_portal"),
+    path("stripe/webhook/", views.stripe_webhook, name="stripe_webhook"),
     path('feedback/', views.feedback, name='feedback'),
 
     #PLAN: New, Run, Download, Copy, Delete

@@ -11,6 +11,9 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.http import HttpResponse, Http404, JsonResponse
 from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+import logging
+logger = logging.getLogger(__name__)
 import copy
 import uuid
 
@@ -21,7 +24,7 @@ from .forms import CreateUserForm, FeedbackForm, PlanForm, EditPlanForm
 from .engine import PlanObject
 from .plan_input import saveplan
 from .emails import welcome_email
-from . import auth_flows
+from . import auth_flows, billing
 
 import math
 import csv
@@ -316,7 +319,9 @@ def myaccount(request):
                 messages.success(request, "Welcome to Premium! All premium features are now unlocked.")
             return redirect('myaccount')
         elif action == 'downgrade':
-            if profile.is_premium:
+            if settings.STRIPE_ENABLED:
+                messages.info(request, "Use 'Manage billing' to cancel your subscription.")
+            elif profile.is_premium:
                 profile.is_premium = False
                 profile.premium_since = None
                 profile.save()
@@ -343,7 +348,65 @@ def myaccount(request):
         'plan_limit': MAX_USER_PLANS if profile.is_premium else settings.FREE_PLAN_LIMIT,
         'premium_features': PREMIUM_FEATURES,
         'can_upgrade': settings.PREMIUM_DEMO_UPGRADE,
+        'stripe_enabled': settings.STRIPE_ENABLED,
+        'billing_intervals': billing.available_intervals() if settings.STRIPE_ENABLED else [],
+        'has_customer': bool(profile.stripe_customer_id),
     })
+
+
+@login_required
+@require_POST
+def start_checkout(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    if not settings.STRIPE_ENABLED:
+        messages.error(request, "Online payments are not available yet.")
+    elif not profile.email_verified:
+        messages.warning(request, "Please confirm your email address before upgrading.")
+    elif profile.is_premium:
+        messages.info(request, "You already have Premium.")
+    else:
+        interval = 'year' if request.POST.get('interval') == 'year' else 'month'
+        try:
+            url = billing.create_checkout_url(profile, interval)
+        except Exception:
+            logger.exception("Stripe checkout failed")
+            url = None
+        if url:
+            return redirect(url)
+        messages.error(request, "We couldn't start checkout. Please try again shortly.")
+    return redirect('myaccount')
+
+
+@login_required
+@require_POST
+def billing_portal(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    if settings.STRIPE_ENABLED and profile.stripe_customer_id:
+        try:
+            return redirect(billing.create_portal_url(profile))
+        except Exception:
+            logger.exception("Stripe portal failed")
+    messages.error(request, "We couldn't open billing right now. Please try again shortly.")
+    return redirect('myaccount')
+
+
+@csrf_exempt
+@require_POST
+def stripe_webhook(request):
+    import stripe
+    if not settings.STRIPE_WEBHOOK_SECRET:
+        return HttpResponse(status=503)
+    try:
+        event = stripe.Webhook.construct_event(
+            request.body, request.META.get('HTTP_STRIPE_SIGNATURE', ''), settings.STRIPE_WEBHOOK_SECRET)
+    except (ValueError, stripe.error.SignatureVerificationError):
+        return HttpResponse(status=400)
+    try:
+        billing.handle_event(event)
+    except Exception:
+        logger.exception("Stripe webhook handling failed")
+        return HttpResponse(status=500)
+    return HttpResponse(status=200)
 
 # USER: Plans
 def userplans(request):

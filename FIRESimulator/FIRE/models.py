@@ -8,6 +8,9 @@ class Profile(models.Model):
     is_premium = models.BooleanField(default=False)
     premium_since = models.DateTimeField(null=True, blank=True)
     email_verified = models.BooleanField(default=False)
+    stripe_customer_id = models.CharField(max_length=64, blank=True, default='')
+    stripe_subscription_id = models.CharField(max_length=64, blank=True, default='')
+    stripe_status = models.CharField(max_length=32, blank=True, default='')
 
     def __str__(self):
         return f"{self.user.username} ({'Premium' if self.is_premium else 'Free'})"

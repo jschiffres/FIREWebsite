@@ -1,5 +1,6 @@
-django==4.2.30
-django-bootstrap-v5
-plotly
-numpy
-
+Django==4.2.30
+django-bootstrap-v5==1.0.11
+plotly==7.1.0
+numpy==2.5.5
+stripe==17.0.0
+psycopg2==2.9.13
