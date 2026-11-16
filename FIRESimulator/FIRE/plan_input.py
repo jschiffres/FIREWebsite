@@ -36,20 +36,9 @@ def _parse_ages(request):
     if not 1 <= current_age <= 100 or not 1 <= retirement_age <= 101:
         raise PlanInputError("Ages must be between 1 and 100.")
 
-    coast_fire_age = None
-    raw_coast = request.POST.get('coast_fire_age')
-    if raw_coast:
-        try:
-            coast_fire_age = int(raw_coast)
-        except ValueError:
-            raise PlanInputError("Invalid Coast FIRE age provided.")
-        if current_age >= coast_fire_age:
-            raise PlanInputError("Current age must be less than Coast FIRE age.")
-        if retirement_age <= coast_fire_age:
-            raise PlanInputError("Retirement age must be greater than Coast FIRE age.")
-    elif retirement_age <= current_age:
+    if retirement_age <= current_age:
         raise PlanInputError("Retirement age must be greater than current age.")
-    return current_age, retirement_age, coast_fire_age
+    return current_age, retirement_age
 
 
 def _parse_recurring_ages(request, prefix, idx, label, current_age, retirement_age):
@@ -195,7 +184,7 @@ def saveplan(form, request, dashboard_edit=False):
     try:
         if not request.POST.get('plan_name') and not dashboard_edit:
             return "Please provide a name for this plan."
-        current_age, retirement_age, coast_fire_age = _parse_ages(request)
+        current_age, retirement_age = _parse_ages(request)
         incomes = _parse_incomes(request, current_age, retirement_age)
         expenses = _parse_expenses(request, current_age, retirement_age)
         savings = _parse_savings(request)
@@ -206,7 +195,6 @@ def saveplan(form, request, dashboard_edit=False):
         if not form.is_valid():
             return " ".join(error for errors in form.errors.values() for error in errors)
         plan = form.save(commit=False)
-        plan.coast_fire_age = coast_fire_age
         if request.user.is_authenticated:
             plan.user = request.user
         plan.incomes = incomes

@@ -1,20 +1,14 @@
 <div class="row g-4 mb-3">
-    <div class="col-lg-4">
+    <div class="col-lg-6">
         <div class="card dashboard-card"><div class="card-body">
             <label class="dashboard-input-name h5" for="current_age">Current Age</label>
             <input type="number" class="form-control dashboard-input-field age-input" id="current_age" name="current_age" min="1" max="100" value="{{ plan.current_age }}" required aria-describedby="age-error" hx-post="{% url 'runplan' plan.id %}" hx-target="#runplan-div" hx-swap="innerHTML" hx-trigger="change[validateAges()] delay:1s">
         </div></div>
     </div>
-    <div class="col-lg-4">
+    <div class="col-lg-6">
         <div class="card dashboard-card"><div class="card-body">
             <label class="dashboard-input-name h5" for="retirement_age">Retirement Age</label>
             <input type="number" class="form-control dashboard-input-field age-input" id="retirement_age" name="retirement_age" min="2" max="101" value="{{ plan.retirement_age }}" required aria-describedby="age-error" hx-post="{% url 'runplan' plan.id %}" hx-target="#runplan-div" hx-swap="innerHTML" hx-trigger="change[validateAges()] delay:1s">
-        </div></div>
-    </div>
-    <div class="col-lg-4">
-        <div class="card dashboard-card"><div class="card-body">
-            <label class="dashboard-input-name h5" for="coast_fire_age">Coast FIRE Age</label>
-            <input type="number" class="form-control dashboard-input-field age-input" id="coast_fire_age" name="coast_fire_age" min="2" max="100" {% if plan.coast_fire_age %}value="{{ plan.coast_fire_age }}"{% endif %} aria-describedby="age-error" hx-post="{% url 'runplan' plan.id %}" hx-target="#runplan-div" hx-swap="innerHTML" hx-trigger="change[validateAges()] delay:1s">
         </div></div>
     </div>
     <div class="col-12">
@@ -30,12 +24,10 @@
         window.validateAges = function () {
             const current = value('current_age');
             const retirement = value('retirement_age');
-            const coast = value('coast_fire_age');
             let message = '';
             let bad = [];
             if (current === null || current < 1) { message = 'Enter your current age.'; bad = ['current_age']; }
-            else if (retirement === null || retirement <= current) { message = 'Retirement age must be greater than current age.'; bad = ['retirement_age']; }
-            else if (coast !== null && (coast <= current || coast >= retirement)) { message = 'Coast FIRE age must be after your current age and before retirement.'; bad = ['coast_fire_age']; }
+            else if (retirement === null || retirement <= current) { message = 'Retirement age must be greater than current age.'; bad = ['retirement_age']; }
             document.querySelectorAll('.age-input').forEach(el => {
                 el.classList.toggle('is-invalid', bad.includes(el.id));
             });

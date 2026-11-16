@@ -39,7 +39,14 @@
             <p class="dashboard-input-field mb-0">{{ FIplan.average_savings_rate }}%</p>
         </div></div>
     </div>
-    <div class="col-lg-4">
+    <div class="col-lg-3 col-sm-6">
+        <div class="card dashboard-card"><div class="card-body">
+            <h2 class="dashboard-input-name fs-5">Coast FI age</h2>
+            <p class="dashboard-input-field mb-0" id="kpi-coast-fi">{{ FIplan.coast_fi_age }}</p>
+            <small class="text-muted">{% if FIplan.coast_fi_years_away != None %}Stop contributing at this age and growth alone still reaches your Magic Number by retirement.{% else %}Growth alone cannot reach your Magic Number by retirement at any age in this plan.{% endif %}</small>
+        </div></div>
+    </div>
+    <div class="col-lg-3 col-sm-6">
         <div class="card dashboard-card"><div class="card-body">
             <h2 class="dashboard-input-name fs-5">Funded: {{ FIplan.funded_percent }}%</h2>
             <div class="progress" role="progressbar" aria-label="Funded percentage of Magic Number" aria-valuenow="{{ FIplan.funded_percent }}" aria-valuemin="0" aria-valuemax="100">
@@ -47,13 +54,13 @@
             </div>
         </div></div>
     </div>
-    <div class="col-lg-4">
+    <div class="col-lg-3 col-sm-6">
         <div class="card dashboard-card"><div class="card-body">
             <h2 class="dashboard-input-name fs-5">Withdraw Rate</h2>
             <p class="dashboard-input-field mb-0">{{ FIplan.drawdowns_last }}</p>
         </div></div>
     </div>
-    <div class="col-lg-4">
+    <div class="col-lg-3 col-sm-6">
         <div class="card dashboard-card"><div class="card-body">
             <h2 class="dashboard-input-name fs-5">Chance of reaching it</h2>
             <p class="dashboard-input-field mb-0">{% if chart_data.scenarios.success_probability != None %}{{ chart_data.scenarios.success_probability }}%{% else %}N/A{% endif %}</p>

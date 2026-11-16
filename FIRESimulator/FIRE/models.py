@@ -21,7 +21,6 @@ class Plan(models.Model):
     updated_at = models.DateTimeField(auto_now=True, null=True)
     current_age = models.PositiveSmallIntegerField(validators=[MaxValueValidator(100), MinValueValidator(1)])
     retirement_age = models.PositiveSmallIntegerField(validators=[MaxValueValidator(101), MinValueValidator(2)])
-    coast_fire_age = models.PositiveSmallIntegerField(null=True, validators=[MaxValueValidator(100), MinValueValidator(2)])
     incomes = models.JSONField(null=True)
     expenses = models.JSONField(null=True)
     savings = models.JSONField(null=True)

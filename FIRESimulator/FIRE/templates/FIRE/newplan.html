@@ -70,15 +70,12 @@
         const currentAge = Number(document.getElementById('current_age').value)
         const retirementAge = Number(document.getElementById('retirement_age').value)
         const retirementAgeHelp = document.getElementById('retirement_ageHelp')
-        const coastfireAge = Number(document.getElementById('coast_fire_age').value)
-        const coastfireAgeHelp = document.getElementById('coast_fire_ageHelp')
         const missingInputsHelp = document.getElementById('missingInputsHelp')
         const inputAgesHelp = document.getElementById('inputAgesHelp')
         const incomeButton = document.getElementById('income-button')
 
         // Set initial stlyes for button and errors
         let disableButton = false
-        coastfireAgeHelp.style.display='none'
         retirementAgeHelp.style.display='none'
         missingInputsHelp.style.display='none'
         inputAgesHelp.style.display='none'
@@ -89,16 +86,8 @@
             retirementAgeHelp.style.display='block'
         }
 
-        // Check coast fire age constraints
-        if (coastfireAge != 0) {
-            if (coastfireAge >= retirementAge || coastfireAge <= currentAge) {
-                disableButton = true
-                coastfireAgeHelp.style.display='block'
-            }
-        }
-
         // Check age value constraints
-        if (currentAge > 100 || currentAge < 0 || retirementAge > 101 || retirementAge < 0 || coastfireAge > 101 || coastfireAge < 0) {
+        if (currentAge > 100 || currentAge < 0 || retirementAge > 101 || retirementAge < 0) {
             disableButton = true
             inputAgesHelp.style.display='block'
         }
@@ -121,7 +110,7 @@
 
     // Run function when inputs are changed
     document.addEventListener('change', function (e) {
-        if (e.target.id == "current_age" || e.target.id == "retirement_age" || e.target.id == "coast_fire_age" || e.target.id == "plan_name") {
+        if (e.target.id == "current_age" || e.target.id == "retirement_age" || e.target.id == "plan_name") {
             personalInfoValidation()
         }
     })
@@ -187,14 +176,6 @@
                              <div id="retirement_ageHelp" class="form-text text-danger"><small>Retirement age must be greater than current age.</small></div>
                         </div>
                     </div>
-                    <!-- PERSONAL FIELDS ROW -->
-                    <div class="row g-4 mb-3">
-                        <div class="col-lg-4">
-                            <h5 class="input-name">Coast FI Age (Optional) <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-title="At this age, no additional savings will be contributed to your retirement."></i></h5>              
-                             <input type="number" class="form-control input-field" id="coast_fire_age" name="coast_fire_age" min="2" max="101">
-                             <div id="coast_fire_ageHelp" class="form-text text-danger"><small>Coast FI age must be greater than current age and less than retirement age.</small></div>
-                        </div>
-                    </div>
                 </div>
             </div>
             <!-- NEXT BUTTON -->
@@ -220,7 +201,7 @@
     const KEY = 'fire-survey-draft-v1';
     const form = document.querySelector('form[method="POST"]');
     const banner = document.getElementById('draft-banner');
-    const fields = ['plan_name', 'current_age', 'retirement_age', 'coast_fire_age'];
+    const fields = ['plan_name', 'current_age', 'retirement_age'];
     let dirty = false;
     let submitting = false;
 

@@ -14,11 +14,10 @@ from .models import Plan
 _test_client.store_rendered_templates = lambda *args, **kwargs: None
 
 
-def make_plan(savings, current_age=30, retirement_age=35, coast_fire_age=None, salary=100000, expense=40000):
+def make_plan(savings, current_age=30, retirement_age=35, salary=100000, expense=40000):
     return SimpleNamespace(
         current_age=current_age,
         retirement_age=retirement_age,
-        coast_fire_age=coast_fire_age,
         incomes=[{
             'income_category': 'Salary', 'income_name': 'Job', 'starting_amount': salary, 'yearly_change': 0.0,
             'bonus_rate': 0.0, 'tax_rate': 20.0, 'tax_rate_change': 0.0,
@@ -65,6 +64,15 @@ class EngineTests(TestCase):
         PlanObject(plan).run()
         self.assertNotIn('gross_amounts', plan.incomes[0])
 
+    def test_coast_fi_age_computed(self):
+        rich = PlanObject(make_plan(['Simple', {'simple_net_worth': 600000, 'simple_yearly_growth': 10.0}])).run()
+        self.assertEqual(rich.coast_fi_age, 30)
+        poor = PlanObject(make_plan(['Simple', {'simple_net_worth': 1000, 'simple_yearly_growth': 0.0}])).run()
+        self.assertEqual(poor.coast_fi_age, 'N/A')
+        middle = PlanObject(make_plan(['Simple', {        'simple_net_worth': 500000, 'simple_yearly_growth': 10.0}])).run()
+        self.assertIsInstance(middle.coast_fi_age, int)
+        self.assertGreater(middle.coast_fi_age, 30)
+
     def test_money_negative(self):
         self.assertEqual(money(-1500), '-$1,500')
 
@@ -105,6 +113,14 @@ class SurveyAndPermissionTests(TestCase):
             response = self.client.post(reverse('newplan'), survey_post(**{field: value}))
             self.assertEqual(response.status_code, 200, field)
         self.assertEqual(Plan.objects.count(), 0)
+
+    def test_survey_ignores_coast_fire_age_and_dashboard_shows_coast_fi(self):
+        plan_response = self.client.post(reverse('newplan'), survey_post(coast_fire_age='32'))
+        self.assertEqual(plan_response.status_code, 302)
+        plan = Plan.objects.latest('created_at')
+        page = self.client.get(reverse('runplan', args=[plan.id])).content.decode()
+        self.assertIn('id="kpi-coast-fi"', page)
+        self.assertNotIn('name="coast_fire_age"', page)
 
     def test_csv_download(self):
         plan = self.create_plan()

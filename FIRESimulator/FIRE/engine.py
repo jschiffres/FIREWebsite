@@ -45,10 +45,8 @@ class PlanObject:
         self.years_until_retirement = plan.retirement_age - plan.current_age
         if self.years_until_retirement < 1:
             raise ValueError("Retirement age must be greater than current age.")
-        if plan.coast_fire_age:
-            self.years_until_coast_fire = plan.coast_fire_age - plan.current_age
-        else:
-            self.years_until_coast_fire = self.years_until_retirement
+        # Contributions always continue until retirement; Coast FI age is computed, not chosen
+        self.years_until_coast_fire = self.years_until_retirement
         # Work on copies so computed series are never persisted back to the plan
         self.incomes = copy.deepcopy(plan.incomes or [])
         self.expenses = copy.deepcopy(plan.expenses or [])
@@ -322,6 +320,23 @@ class PlanObject:
             'volatility': MONTE_CARLO_VOLATILITY,
         }
 
+    def compute_coast_fi_age(self):
+        """Earliest age at which stopping all contributions still lets each account's growth
+        carry the balance to the Magic Number at retirement. "N/A" if never."""
+        n = self.years_until_retirement
+        target = self.magic_numbers[-1]
+        if target <= 0:
+            return "N/A"
+        for index in range(n):
+            remaining = n - 1 - index
+            total = 0
+            for account in self.accounts[1:]:
+                growth = account['simple_yearly_growth'] if self.is_simple else account['yearly_growth']
+                total += account['end_amounts'][index] * (1 + pct(growth + self.return_delta)) ** remaining
+            if total >= target:
+                return self.ages[index]
+        return "N/A"
+
     # -------------------------------------------------------------- indicators
     def fi_indicators(self):
         n = self.years_until_retirement
@@ -337,6 +352,9 @@ class PlanObject:
             if magic > 0 and net_worth >= magic:
                 self.fi_age = self.ages[index]
                 break
+
+        self.coast_fi_age = self.compute_coast_fi_age()
+        self.coast_fi_years_away = self.coast_fi_age - self.plan.current_age if isinstance(self.coast_fi_age, int) else None
 
         self.net_worths_last = money(self.net_worths[-1])
         self.magic_numbers_last = money(self.magic_numbers[-1])
@@ -372,6 +390,7 @@ class PlanObject:
             'savings': self.total_savings,
             'fi_age': self.fi_age if isinstance(self.fi_age, int) else None,
             'retirement_age': self.ages[-1],
+            'coast_fi_age': self.coast_fi_age if isinstance(self.coast_fi_age, int) else None,
             'accounts': accounts,
             'scenarios': self.scenario_bands(),
         }
@@ -383,6 +402,7 @@ class PlanObject:
             'net_worths': self.net_worths,
             'magic_numbers': self.magic_numbers,
             'fi_age': self.fi_age if isinstance(self.fi_age, int) else None,
+            'coast_fi_age': self.coast_fi_age if isinstance(self.coast_fi_age, int) else None,
             'net_worth_display': self.net_worths_last,
             'magic_number_display': self.magic_numbers_last,
             'funded_percent': self.funded_percent,

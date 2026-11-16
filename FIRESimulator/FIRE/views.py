@@ -298,8 +298,6 @@ def whatif(request, plan_id):
 
     scenario = copy.copy(plan)
     scenario.retirement_age = int(number('retirement_age', plan.retirement_age, plan.current_age + 1, 101))
-    if scenario.coast_fire_age and scenario.coast_fire_age >= scenario.retirement_age:
-        scenario.coast_fire_age = None
     try:
         fi = PlanObject(
             scenario,
