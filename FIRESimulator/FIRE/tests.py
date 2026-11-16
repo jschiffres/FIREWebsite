@@ -120,6 +120,11 @@ class EmailVerificationAndGoogleTests(TestCase):
             self.client.post(reverse('myaccount'), {'action': 'upgrade'})
             self.assertTrue(Profile.objects.get(user=user).is_premium)
 
+    def test_check_username_endpoint(self):
+        url = reverse('check_username')
+        self.assertFalse(self.client.get(url, {'username': 'SAM'}).json()['available'])
+        self.assertTrue(self.client.get(url, {'username': 'nobody'}).json()['available'])
+
     def test_google_login_disabled_without_credentials(self):
         response = self.client.get(reverse('google_login'))
         self.assertRedirects(response, reverse('loginuser'), fetch_redirect_response=False)

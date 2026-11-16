@@ -17,15 +17,17 @@
     <form method="POST"> 
     {% csrf_token %}
         <div class="form-floating mb-3">
-            <input type="text" class="form-control" id="username" name="username" placeholder="username">
+            <input type="text" class="form-control" id="username" name="username" placeholder="username" autocomplete="username" aria-describedby="usernameHelp username-error">
             <label for="username">Username</label>
             <div id="usernameHelp" class="form-text">Username must be unique.</div>
+            <div id="username-error" class="form-text text-danger" role="alert" hidden>That username is already taken. Please choose another.</div>
         </div>
 
         <div class="form-floating mb-3">
-            <input type="email" class="form-control" id="email" name="email" placeholder="email@email.com">
+            <input type="email" class="form-control" id="email" name="email" placeholder="email@email.com" autocomplete="email" aria-describedby="emailHelp email-error">
             <label for="email">Email</label>
             <div id="emailHelp" class="form-text">Provide a valid email address.</div>
+            <div id="email-error" class="form-text text-danger" role="alert" hidden>That email is already associated with an account. <a class="link-success" href="{% url 'loginuser' %}">Log in</a> or <a class="link-success" href="{% url 'password_reset' %}">reset your password</a>.</div>
         </div>
 
         <div class="form-floating mb-3">
@@ -58,5 +60,34 @@
     <p class="text-center">Already have an account? <a class="link-success" href="{% url 'loginuser' %}">Login</a></p>
 
 </div>
+
+<script>
+(function () {
+    const input = document.getElementById('username');
+    const error = document.getElementById('username-error');
+    const submit = input.form.querySelector('button[type="submit"]');
+    let timer = null, latest = 0;
+
+    function setTaken(taken) {
+        error.hidden = !taken;
+        input.classList.toggle('is-invalid', taken);
+        input.setAttribute('aria-invalid', taken ? 'true' : 'false');
+        submit.disabled = taken;
+    }
+
+    input.addEventListener('input', () => {
+        clearTimeout(timer);
+        const value = input.value.trim();
+        if (!value) { setTaken(false); return; }
+        timer = setTimeout(() => {
+            const request = ++latest;
+            fetch("{% url 'check_username' %}?username=" + encodeURIComponent(value))
+                .then(r => r.json())
+                .then(d => { if (request === latest) setTaken(!d.available); })
+                .catch(() => {});
+        }, 300);
+    });
+})();
+</script>
 
 {% endblock %}

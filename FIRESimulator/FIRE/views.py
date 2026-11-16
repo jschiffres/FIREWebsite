@@ -154,6 +154,18 @@ def google_callback(request):
     messages.success(request, "Signed in with Google.")
     return redirect('userplans')
 
+# USER: Signup username availability (used for inline validation)
+def check_username(request):
+    username = (request.GET.get('username') or '').strip()
+    taken = bool(username) and User.objects.filter(username__iexact=username).exists()
+    return JsonResponse({'available': not taken})
+
+# USER: Signup email availability (used for inline validation)
+def check_email(request):
+    email = (request.GET.get('email') or '').strip()
+    taken = bool(email) and User.objects.filter(email__iexact=email).exists()
+    return JsonResponse({'available': not taken})
+
 # LANDING PAGE
 def landing(request):
     return render(request, 'FIRE/landing.html')
