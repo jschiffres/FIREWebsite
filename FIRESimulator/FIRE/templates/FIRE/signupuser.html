@@ -63,30 +63,39 @@
 
 <script>
 (function () {
-    const input = document.getElementById('username');
-    const error = document.getElementById('username-error');
-    const submit = input.form.querySelector('button[type="submit"]');
-    let timer = null, latest = 0;
+    const form = document.getElementById('username').form;
+    const submit = form.querySelector('button[type="submit"]');
+    const taken = {};
 
-    function setTaken(taken) {
-        error.hidden = !taken;
-        input.classList.toggle('is-invalid', taken);
-        input.setAttribute('aria-invalid', taken ? 'true' : 'false');
-        submit.disabled = taken;
+    function watch(inputId, errorId, url, param) {
+        const input = document.getElementById(inputId);
+        const error = document.getElementById(errorId);
+        let timer = null, latest = 0;
+
+        function setTaken(value) {
+            taken[inputId] = value;
+            error.hidden = !value;
+            input.classList.toggle('is-invalid', value);
+            input.setAttribute('aria-invalid', value ? 'true' : 'false');
+            submit.disabled = Object.values(taken).some(Boolean);
+        }
+
+        input.addEventListener('input', () => {
+            clearTimeout(timer);
+            const value = input.value.trim();
+            if (!value || (param === 'email' && !input.checkValidity())) { setTaken(false); return; }
+            timer = setTimeout(() => {
+                const request = ++latest;
+                fetch(url + '?' + param + '=' + encodeURIComponent(value))
+                    .then(r => r.json())
+                    .then(d => { if (request === latest) setTaken(!d.available); })
+                    .catch(() => {});
+            }, 300);
+        });
     }
 
-    input.addEventListener('input', () => {
-        clearTimeout(timer);
-        const value = input.value.trim();
-        if (!value) { setTaken(false); return; }
-        timer = setTimeout(() => {
-            const request = ++latest;
-            fetch("{% url 'check_username' %}?username=" + encodeURIComponent(value))
-                .then(r => r.json())
-                .then(d => { if (request === latest) setTaken(!d.available); })
-                .catch(() => {});
-        }, 300);
-    });
+    watch('username', 'username-error', "{% url 'check_username' %}", 'username');
+    watch('email', 'email-error', "{% url 'check_email' %}", 'email');
 })();
 </script>
 
