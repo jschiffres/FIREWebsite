@@ -41,8 +41,9 @@
     }
 
     function ageValue(raw) {
-        if (raw === 'Current Age') return Number(document.getElementById('current_age').value);
-        if (raw === 'Target Retirement Age') return Number(document.getElementById('retirement_age').value);
+        const input = id => document.getElementById(id);
+        if (raw === 'Current Age') return input('current_age') ? Number(input('current_age').value) : NaN;
+        if (raw === 'Target Retirement Age') return input('retirement_age') ? Number(input('retirement_age').value) : NaN;
         return Number(raw);
     }
 
@@ -135,7 +136,9 @@
     };
 
     guard.snapshot();
-    guard.validate();
+    // The age inputs render after this script, so validate once the page is parsed.
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', guard.validate);
+    else guard.validate();
 
     if (guard.bound) return;
     guard.bound = true;
