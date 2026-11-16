@@ -225,6 +225,24 @@ class SurveyAndPermissionTests(TestCase):
         self.client.force_login(self.other)
         self.assertEqual(self.client.get(url).status_code, 404)
 
+    def test_withdrawal_is_premium_and_models_depletion(self):
+        self.client.force_login(self.owner)
+        plan = self.create_plan()
+        url = reverse('withdrawal', args=[plan.id])
+        self.assertEqual(self.client.get(url).status_code, 403)
+        self.assertContains(self.client.get(reverse('runplan', args=[plan.id])), 'Unlock with Premium')
+        self.make_premium(self.owner)
+        base = self.client.get(url, {'end_age': 95}).json()
+        heavy = self.client.get(url, {'end_age': 110, 'spending': 200, 'return': 0}).json()
+        self.assertEqual(len(base['ages']), base['end_age'] - base['start_age'])
+        self.assertTrue(0 <= base['success_probability'] <= 100)
+        self.assertIsNotNone(heavy['depleted_age'])
+        self.assertLessEqual(heavy['success_probability'], base['success_probability'])
+        self.assertContains(self.client.get(reverse('runplan', args=[plan.id])), 'WithdrawalChart')
+        self.client.logout()
+        self.client.force_login(self.other)
+        self.assertEqual(self.client.get(url).status_code, 404)
+
     def test_dashboard_has_scenarios_and_whatif_panel(self):
         self.client.force_login(self.owner)
         plan = self.create_plan()

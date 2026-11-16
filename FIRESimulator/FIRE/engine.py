@@ -33,6 +33,7 @@ def sum_series(series, length):
 SCENARIO_RETURN_SHIFT = 2.0
 MONTE_CARLO_TRIALS = 400
 MONTE_CARLO_VOLATILITY = 10.0
+MAX_DEFAULT_RETIREMENT_RETURN = 6.0
 
 
 class PlanObject:
@@ -393,6 +394,74 @@ class PlanObject:
             'coast_fi_age': self.coast_fi_age if isinstance(self.coast_fi_age, int) else None,
             'accounts': accounts,
             'scenarios': self.scenario_bands(),
+        }
+
+    def withdrawal_data(self, end_age=95, inflation=2.5, annual_return=None, spending_percent=100):
+        """Retirement-phase projection: spend down the portfolio from retirement to ``end_age``.
+
+        Spending starts at the plan's final-year recurring expenses (scaled by ``spending_percent``)
+        and grows with ``inflation``. Returns are fixed for the main path and randomised for the
+        Monte Carlo survival odds."""
+        n = self.years_until_retirement
+        start_age = self.plan.current_age + n
+        end_age = int(max(end_age, start_age + 1))
+        years = end_age - start_age
+        portfolio = self.net_worths[-1]
+        blended = 0.0
+        if portfolio > 0:
+            blended = sum(
+                a['end_amounts'][-1] * (a['simple_yearly_growth'] if self.is_simple else a['yearly_growth'])
+                for a in self.accounts[1:]
+            ) / portfolio + self.return_delta
+        default_return = round(min(max(blended, 0.0), MAX_DEFAULT_RETIREMENT_RETURN), 1)
+        annual_return = default_return if annual_return is None else float(annual_return)
+        first_year_spending = self.total_recurring_expenses[-1] * (1 + pct(inflation)) * spending_percent / 100
+
+        def simulate(returns):
+            balance, path, spend_path = portfolio, [], []
+            depleted_age = None
+            for year in range(years):
+                spend = first_year_spending * (1 + pct(inflation)) ** year
+                balance = (balance - spend) * (1 + pct(returns[year])) if balance > 0 else 0
+                if balance <= 0 and depleted_age is None:
+                    depleted_age = start_age + year
+                    balance = 0
+                path.append(round(balance))
+                spend_path.append(round(spend))
+            return path, spend_path, depleted_age
+
+        flat = [annual_return] * years
+        path, spending, depleted_age = simulate(flat)
+
+        rng = random.Random(f"{self.plan.pk}-withdrawal")
+        trials = [simulate([annual_return + rng.gauss(0, MONTE_CARLO_VOLATILITY) for _ in range(years)]) for _ in range(MONTE_CARLO_TRIALS)]
+
+        def percentile(year, q):
+            ordered = sorted(t[0][year] for t in trials)
+            return ordered[min(len(ordered) - 1, int(q * len(ordered)))]
+
+        survived = sum(1 for t in trials if t[2] is None)
+        return {
+            'ages': [start_age + year for year in range(years)],
+            'balances': path,
+            'spending': spending,
+            'p10': [percentile(y, 0.10) for y in range(years)],
+            'p50': [percentile(y, 0.50) for y in range(years)],
+            'p90': [percentile(y, 0.90) for y in range(years)],
+            'start_age': start_age,
+            'end_age': end_age,
+            'starting_portfolio': portfolio,
+            'starting_portfolio_display': money(portfolio),
+            'first_year_spending': round(first_year_spending),
+            'first_year_spending_display': money(first_year_spending),
+            'initial_withdrawal_rate': round(first_year_spending / portfolio * 100, 1) if portfolio > 0 else None,
+            'depleted_age': depleted_age,
+            'ending_balance_display': money(path[-1]) if path else money(portfolio),
+            'success_probability': round(survived / len(trials) * 100),
+            'default_return': default_return,
+            'return': annual_return,
+            'inflation': float(inflation),
+            'volatility': MONTE_CARLO_VOLATILITY,
         }
 
     def whatif_data(self):

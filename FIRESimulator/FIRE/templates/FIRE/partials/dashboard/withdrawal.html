@@ -1,0 +1,108 @@
+<div class="card dashboard-card mb-3 no-print" id="withdrawal-panel">
+    <div class="card-body">
+        {% if not is_premium %}
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h2 class="dashboard-input-name fs-5 mb-1"><i class="bi bi-lock-fill" aria-hidden="true"></i> Retirement withdrawals <span class="badge text-bg-warning">Premium</span></h2>
+                <p class="text-muted small mb-0">See how long your portfolio lasts after you stop working, including inflation and market-risk odds.</p>
+            </div>
+            {% if user.is_authenticated %}
+            <a class="btn btn-action-filled" href="{% url 'myaccount' %}#premium">Unlock with Premium</a>
+            {% else %}
+            <a class="btn btn-action-filled" href="{% url 'signupsave' plan.id %}">Sign up to unlock</a>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+            <h2 class="dashboard-input-name fs-5 mb-0">Retirement withdrawals</h2>
+            <button type="button" class="btn btn-sm btn-action-empty" id="wd-reset">Reset</button>
+        </div>
+        <p class="text-muted small">Spending starts from your plan's recurring expenses at retirement and rises with inflation. Nothing here is saved.</p>
+        <div class="row g-4">
+            <div class="col-md-3">
+                <label for="wd-end-age" class="form-label">Plan through age: <output id="wd-end-age-out" class="fw-bold">95</output></label>
+                <input type="range" class="form-range" id="wd-end-age" min="{{ plan.retirement_age|add:1 }}" max="110" step="1" value="95">
+            </div>
+            <div class="col-md-3">
+                <label for="wd-spending" class="form-label">Spending vs. plan: <output id="wd-spending-out" class="fw-bold">100%</output></label>
+                <input type="range" class="form-range" id="wd-spending" min="50" max="150" step="5" value="100">
+            </div>
+            <div class="col-md-3">
+                <label for="wd-inflation" class="form-label">Inflation: <output id="wd-inflation-out" class="fw-bold">2.5%</output></label>
+                <input type="range" class="form-range" id="wd-inflation" min="0" max="6" step="0.5" value="2.5">
+            </div>
+            <div class="col-md-3">
+                <label for="wd-return" class="form-label">Return in retirement: <output id="wd-return-out" class="fw-bold"></output></label>
+                <input type="range" class="form-range" id="wd-return" min="0" max="10" step="0.5" value="4">
+            </div>
+        </div>
+        <p class="mb-2 mt-2" id="wd-summary" role="status" aria-live="polite"></p>
+        <canvas id="WithdrawalChart" height="100" role="img" aria-label="Line chart of portfolio balance after retirement with a 10th to 90th percentile range. See the summary above for the headline result."></canvas>
+        <p class="text-muted small mb-0 mt-2">Shaded band: 10th&ndash;90th percentile of market-return sequences. The success rate is the share of simulated runs in which money lasts through the chosen age.</p>
+        {% endif %}
+    </div>
+</div>
+
+{% if is_premium %}
+<script>
+(function () {
+    if (!document.getElementById('wd-summary')) return;
+    const url = "{% url 'withdrawal' plan.id %}";
+    const ids = ['end-age', 'spending', 'inflation', 'return'];
+    const el = id => document.getElementById('wd-' + id);
+    const money = v => '$' + Number(v).toLocaleString();
+    let chart = null, timer = null, defaultReturn = null;
+
+    function show(d) {
+        if (defaultReturn === null) {
+            defaultReturn = d.default_return;
+            el('return').value = defaultReturn;
+            el('return').dataset.default = defaultReturn;
+        }
+        el('end-age-out').textContent = d.end_age;
+        el('spending-out').textContent = el('spending').value + '%';
+        el('inflation-out').textContent = d.inflation + '%';
+        el('return-out').textContent = d.return + '%';
+        const lasts = d.depleted_age === null
+            ? 'Your money lasts through age ' + d.end_age + ' in the baseline projection, ending near ' + d.ending_balance_display + '.'
+            : 'In the baseline projection your money runs out at age ' + d.depleted_age + '.';
+        const rate = d.initial_withdrawal_rate === null ? '' : ' First-year withdrawal rate: ' + d.initial_withdrawal_rate + '%.';
+        el('summary').textContent = lasts + ' Success rate across market scenarios: ' + d.success_probability + '%. First-year spending ' + d.first_year_spending_display + ' from ' + d.starting_portfolio_display + '.' + rate;
+
+        const pts = vals => d.ages.map((a, i) => ({ x: a, y: vals[i] }));
+        const sets = [
+            { label: '90th percentile', data: pts(d.p90), borderColor: 'rgba(40,92,83,0.25)', backgroundColor: 'rgba(40,92,83,0.12)', fill: '+1', pointRadius: 0 },
+            { label: '10th percentile', data: pts(d.p10), borderColor: 'rgba(40,92,83,0.25)', fill: false, pointRadius: 0 },
+            { label: 'Baseline balance', data: pts(d.balances), borderColor: '#285C53', borderWidth: 3, fill: false, pointRadius: 0 }
+        ];
+        if (chart) { chart.data.datasets = sets; chart.update(); return; }
+        chart = new Chart(document.getElementById('WithdrawalChart').getContext('2d'), {
+            type: 'line',
+            data: { datasets: sets },
+            options: {
+                responsive: true, animation: false, parsing: false,
+                scales: { x: { type: 'linear', title: { display: true, text: 'Age' }, ticks: { precision: 0 } }, y: { ticks: { callback: money } } },
+                plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: c => c.dataset.label + ': ' + money(c.parsed.y) } } }
+            }
+        });
+    }
+
+    function load() {
+        const q = new URLSearchParams({ end_age: el('end-age').value, spending: el('spending').value, inflation: el('inflation').value });
+        if (defaultReturn !== null) q.set('return', el('return').value);
+        fetch(url + '?' + q, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.ok ? r.json() : Promise.reject())
+            .then(show)
+            .catch(() => { el('summary').textContent = 'Could not calculate retirement withdrawals right now.'; });
+    }
+    const schedule = () => { clearTimeout(timer); timer = setTimeout(load, 200); };
+    ids.forEach(id => el(id).addEventListener('input', schedule));
+    document.getElementById('wd-reset').addEventListener('click', () => {
+        el('end-age').value = 95; el('spending').value = 100; el('inflation').value = 2.5;
+        el('return').value = el('return').dataset.default || 4;
+        load();
+    });
+    load();
+})();
+</script>
+{% endif %}

@@ -58,6 +58,7 @@ urlpatterns = [
     path("copyplan/<str:plan_id>", views.copyplan, name="copyplan"),
     path("compare/", views.compareplans, name="compareplans"),
     path("plan/<str:plan_id>/whatif/", views.whatif, name="whatif"),
+    path("plan/<str:plan_id>/withdrawal/", views.withdrawal, name="withdrawal"),
     path("about/", views.about, name="about"),
     path("deleteplan/<str:plan_id>", views.deleteplan, name="deleteplan"),
 

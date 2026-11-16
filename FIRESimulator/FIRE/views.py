@@ -154,6 +154,7 @@ PLAN_SORTS = {
 
 PREMIUM_FEATURES = [
     ('What-if scenarios', 'Drag sliders for retirement age, savings and returns and see the projection update live.'),
+    ('Retirement withdrawal planning', 'See how long your portfolio lasts once you stop working, with spending, inflation and market-risk odds.'),
     ('Plan comparison', 'Compare up to three plans side by side on one chart.'),
     ('CSV download', 'Export the full year-by-year projection to a spreadsheet.'),
     ('More saved plans', 'Save up to 50 plans instead of the free limit.'),
@@ -366,6 +367,34 @@ def newplan(request):
     except Exception as e:
         print(e)
         return render(request, 'FIRE/newplan.html', {'form': form, 'error': "Error saving plan, please try again."})
+
+# PLANS: Withdrawal-phase projection (Premium, never saved)
+def withdrawal(request, plan_id):
+    plan = get_object_or_404(Plan, pk=plan_id)
+    if not _can_access_plan(request, plan):
+        raise Http404("Plan not found.")
+    if not user_is_premium(request.user):
+        return JsonResponse({'error': 'Withdrawal planning is a Premium feature.'}, status=403)
+
+    def number(name, default, low, high):
+        try:
+            return min(max(float(request.GET.get(name, default)), low), high)
+        except (TypeError, ValueError):
+            return default
+
+    try:
+        fi = PlanObject(plan).run()
+        raw_return = request.GET.get('return')
+        annual_return = None if raw_return in (None, '') else number('return', 0, 0, 12)
+        return JsonResponse(fi.withdrawal_data(
+            end_age=int(number('end_age', 95, plan.retirement_age + 1, 110)),
+            inflation=number('inflation', 2.5, 0, 8),
+            annual_return=annual_return,
+            spending_percent=number('spending', 100, 25, 200),
+        ))
+    except Exception as e:
+        print(f"withdrawal failed for {plan.pk}: {e}")
+        return JsonResponse({'error': 'Could not calculate retirement spending.'}, status=400)
 
 # PLANS: What-if projection (never saved)
 def whatif(request, plan_id):
