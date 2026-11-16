@@ -69,7 +69,7 @@
                 <ul class="dropdown-menu text-center">
                   <li><a class="dropdown-item" href="{% url 'newplan' %}">New Plan</a></li>
                   <li><a class="dropdown-item" href="{% url 'userplans' %}">My Plans</a></li>
-                  <li><a class="dropdown-item" href="{% url 'password_change' %}">Change Password</a></li>
+                  <li><a class="dropdown-item" href="{% url 'myaccount' %}">My Account{% if is_premium %} <i class="bi bi-star-fill text-warning" aria-label="Premium"></i>{% endif %}</a></li>
                   <li class="text-center">
                     <form action="{% url 'logoutuser' %}" method="POST">
                     {% csrf_token %}

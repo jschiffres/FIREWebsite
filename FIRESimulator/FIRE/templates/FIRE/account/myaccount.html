@@ -1,0 +1,111 @@
+{% extends 'FIRE/base.html' %}
+{% block title %}My account | FIRE Simulator{% endblock %}
+{% block content %}
+<div class="col-11 col-lg-9 col-xl-8 mx-auto mt-3 mb-5">
+    <h1 class="text-center m-4">My account</h1>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <section class="card dashboard-card h-100" aria-labelledby="details-heading">
+                <div class="card-body">
+                    <h2 class="fs-5" id="details-heading">Your details</h2>
+                    <form method="POST" novalidate>
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="profile">
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="id_username" value="{{ user.username }}" placeholder="Username" disabled>
+                            <label for="id_username">Username</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="id_first_name" name="first_name" value="{{ user.first_name }}" placeholder="First name" maxlength="150" autocomplete="given-name">
+                            <label for="id_first_name">First name (optional)</label>
+                        </div>
+                        <div class="form-floating mb-1">
+                            <input type="email" class="form-control{% if errors.email %} is-invalid{% endif %}" id="id_email" name="email" value="{{ user.email }}" placeholder="Email" autocomplete="email" required{% if errors.email %} aria-invalid="true" aria-describedby="email-error"{% endif %}>
+                            <label for="id_email">Email</label>
+                        </div>
+                        {% if errors.email %}<div class="form-text text-danger mb-2" id="email-error" role="alert">{{ errors.email }}</div>{% endif %}
+                        <p class="text-muted small mt-2 mb-3">Member since {{ user.date_joined|date:"F j, Y" }}</p>
+                        <button type="submit" class="btn btn-action-filled">Save details</button>
+                    </form>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-md-6">
+            <section class="card dashboard-card h-100" aria-labelledby="plan-heading">
+                <div class="card-body">
+                    <h2 class="fs-5" id="plan-heading">Your plan</h2>
+                    <p class="mb-1">
+                        {% if profile.is_premium %}
+                        <span class="badge text-bg-warning fs-6"><i class="bi bi-star-fill" aria-hidden="true"></i> Premium</span>
+                        {% else %}
+                        <span class="badge text-bg-secondary fs-6">Free</span>
+                        {% endif %}
+                    </p>
+                    {% if profile.is_premium and profile.premium_since %}<p class="text-muted small">Premium since {{ profile.premium_since|date:"F j, Y" }}</p>{% endif %}
+                    <p class="mb-1">Saved plans: <strong>{{ plan_count }}</strong> of {{ plan_limit }}</p>
+                    <div class="progress mb-3" role="progressbar" aria-label="Saved plans used" aria-valuenow="{{ plan_count }}" aria-valuemin="0" aria-valuemax="{{ plan_limit }}">
+                        <div class="progress-bar" style="width: {% widthratio plan_count plan_limit 100 %}%"></div>
+                    </div>
+                    <a class="btn btn-action-empty me-2 mb-2" href="{% url 'password_change' %}"><i class="bi bi-key" aria-hidden="true"></i> Change password</a>
+                    <a class="btn btn-action-empty mb-2" href="{% url 'userplans' %}"><i class="bi bi-list-ul" aria-hidden="true"></i> My plans</a>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-12">
+            <section class="card dashboard-card" aria-labelledby="premium-heading" id="premium">
+                <div class="card-body">
+                    <h2 class="fs-5" id="premium-heading"><i class="bi bi-star-fill text-warning" aria-hidden="true"></i> FI Planner Premium</h2>
+                    <ul class="list-unstyled mb-3">
+                        {% for name, description in premium_features %}
+                        <li class="mb-2">
+                            <i class="bi {% if profile.is_premium %}bi-check-circle-fill text-success{% else %}bi-lock-fill text-muted{% endif %}" aria-hidden="true"></i>
+                            <strong>{{ name }}</strong> <span class="text-muted">&ndash; {{ description }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% if profile.is_premium %}
+                    <form method="POST" onsubmit="return confirm('Switch back to the Free plan? Premium features will be locked, but your saved plans are kept.');">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="downgrade">
+                        <button type="submit" class="btn btn-action-empty">Switch to Free</button>
+                    </form>
+                    {% elif can_upgrade %}
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="upgrade">
+                        <button type="submit" class="btn btn-action-filled"><i class="bi bi-star" aria-hidden="true"></i> Upgrade to Premium</button>
+                        <p class="text-muted small mt-2 mb-0">Demo mode: no payment is taken yet.</p>
+                    </form>
+                    {% else %}
+                    <p class="mb-0 text-muted">Premium upgrades are coming soon.</p>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+
+        <div class="col-12">
+            <section class="card dashboard-card border-danger" aria-labelledby="delete-heading">
+                <div class="card-body">
+                    <h2 class="fs-5 text-danger" id="delete-heading">Delete account</h2>
+                    <p class="text-muted">Permanently deletes your account and all saved plans. This cannot be undone.</p>
+                    <form method="POST" class="row g-2 align-items-start" onsubmit="return confirm('Permanently delete your account and all plans?');">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete">
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-floating">
+                                <input type="password" class="form-control{% if errors.delete %} is-invalid{% endif %}" id="id_delete_password" name="password" placeholder="Password" autocomplete="current-password" required>
+                                <label for="id_delete_password">Confirm password</label>
+                            </div>
+                            {% if errors.delete %}<div class="form-text text-danger" role="alert">{{ errors.delete }}</div>{% endif %}
+                        </div>
+                        <div class="col-auto"><button type="submit" class="btn btn-remove mt-2">Delete my account</button></div>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}

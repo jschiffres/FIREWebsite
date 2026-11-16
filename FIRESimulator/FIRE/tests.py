@@ -7,8 +7,7 @@ from django.urls import reverse
 from django.test import client as _test_client
 
 from .engine import PlanObject, money
-from .models import Plan
-
+from .models import Plan, Profile
 # Django 4.2's test client copies template contexts, which breaks on Python 3.14+.
 # These tests don't inspect response.context, so skip that bookkeeping.
 _test_client.store_rendered_templates = lambda *args, **kwargs: None
@@ -98,6 +97,10 @@ class SurveyAndPermissionTests(TestCase):
         self.owner = User.objects.create_user('owner', 'owner@example.com', 'pw-12345-xyz')
         self.other = User.objects.create_user('other', 'other@example.com', 'pw-12345-xyz')
 
+    def make_premium(self, *users):
+        for user in users:
+            Profile.objects.update_or_create(user=user, defaults={'is_premium': True})
+
     def create_plan(self):
         response = self.client.post(reverse('newplan'), survey_post())
         self.assertEqual(response.status_code, 302)
@@ -132,9 +135,55 @@ class SurveyAndPermissionTests(TestCase):
         self.assertIn('Coast FI age', page)
 
     def test_csv_download(self):
+        self.make_premium(self.owner)
+        self.client.force_login(self.owner)
         plan = self.create_plan()
         response = self.client.get(reverse('downloadplan', args=[plan.id]))
         self.assertEqual(response['Content-Type'], 'text/csv')
+
+    def test_free_users_are_paywalled(self):
+        self.client.force_login(self.owner)
+        plan = self.create_plan()
+        for url in (reverse('downloadplan', args=[plan.id]), reverse('compareplans')):
+            response = self.client.get(url)
+            self.assertRedirects(response, reverse('myaccount'), fetch_redirect_response=False)
+        self.assertEqual(self.client.get(reverse('whatif', args=[plan.id])).status_code, 403)
+        page = self.client.get(reverse('runplan', args=[plan.id])).content.decode()
+        self.assertNotIn('id="whatif-retirement"', page)
+        self.assertIn('Unlock with Premium', page)
+
+    def test_free_plan_limit_and_premium_lifts_it(self):
+        self.client.force_login(self.owner)
+        for _ in range(3):
+            self.create_plan()
+        blocked = self.client.post(reverse('newplan'), survey_post())
+        self.assertEqual(blocked.status_code, 200)
+        self.assertEqual(Plan.objects.filter(user=self.owner).count(), 3)
+        self.make_premium(self.owner)
+        self.assertEqual(self.client.post(reverse('newplan'), survey_post()).status_code, 302)
+
+    def test_my_account_upgrade_downgrade_and_details(self):
+        self.assertEqual(self.client.get(reverse('myaccount')).status_code, 302)
+        self.client.force_login(self.owner)
+        self.assertContains(self.client.get(reverse('myaccount')), 'Upgrade to Premium')
+        self.client.post(reverse('myaccount'), {'action': 'upgrade'})
+        self.assertTrue(Profile.objects.get(user=self.owner).is_premium)
+        with self.settings(PREMIUM_DEMO_UPGRADE=False):
+            self.client.post(reverse('myaccount'), {'action': 'downgrade'})
+            self.client.post(reverse('myaccount'), {'action': 'upgrade'})
+        self.assertFalse(Profile.objects.get(user=self.owner).is_premium)
+        bad = self.client.post(reverse('myaccount'), {'action': 'profile', 'email': 'other@example.com'})
+        self.assertContains(bad, 'already associated')
+        self.client.post(reverse('myaccount'), {'action': 'profile', 'email': 'new@example.com', 'first_name': 'Sam'})
+        self.owner.refresh_from_db()
+        self.assertEqual((self.owner.email, self.owner.first_name), ('new@example.com', 'Sam'))
+
+    def test_delete_account_requires_password(self):
+        self.client.force_login(self.owner)
+        self.client.post(reverse('myaccount'), {'action': 'delete', 'password': 'wrong'})
+        self.assertTrue(User.objects.filter(pk=self.owner.pk).exists())
+        self.client.post(reverse('myaccount'), {'action': 'delete', 'password': 'pw-12345-xyz'})
+        self.assertFalse(User.objects.filter(pk=self.owner.pk).exists())
 
     def test_other_users_cannot_touch_owned_plan(self):
         self.client.force_login(self.owner)
@@ -163,6 +212,7 @@ class SurveyAndPermissionTests(TestCase):
         self.assertContains(self.client.get(reverse('about')), 'not financial')
 
     def test_whatif_returns_projection_and_enforces_access(self):
+        self.make_premium(self.owner)
         self.client.force_login(self.owner)
         plan = self.create_plan()
         url = reverse('whatif', args=[plan.id])
@@ -213,6 +263,7 @@ class SurveyAndPermissionTests(TestCase):
         self.assertContains(missing, 'Page not found', status_code=404)
 
     def test_compare_plans_requires_own_plans(self):
+        self.make_premium(self.owner, self.other)
         self.client.force_login(self.owner)
         first, second = self.create_plan(), self.create_plan()
         ok = self.client.get(reverse('compareplans'), {'plans': [first.id, second.id]})

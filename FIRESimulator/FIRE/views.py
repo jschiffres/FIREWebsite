@@ -7,12 +7,16 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
 from django.db import IntegrityError
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from django.http import HttpResponse, Http404, JsonResponse
 from django.views.decorators.http import require_POST
 import copy
 import uuid
 
-from .models import Plan, Feedback
+from .models import Plan, Feedback, Profile, user_is_premium
+from django.conf import settings
+from django.utils import timezone
 from .forms import CreateUserForm, FeedbackForm, PlanForm, EditPlanForm
 from .engine import PlanObject
 from .plan_input import saveplan
@@ -148,6 +152,71 @@ PLAN_SORTS = {
     'funded': lambda p: -1 if p.funded_percent is None else p.funded_percent,
 }
 
+PREMIUM_FEATURES = [
+    ('What-if scenarios', 'Drag sliders for retirement age, savings and returns and see the projection update live.'),
+    ('Plan comparison', 'Compare up to three plans side by side on one chart.'),
+    ('CSV download', 'Export the full year-by-year projection to a spreadsheet.'),
+    ('More saved plans', 'Save up to 50 plans instead of the free limit.'),
+]
+
+# USER: My Account
+@login_required
+def myaccount(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    errors = {}
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'profile':
+            email = (request.POST.get('email') or '').strip()
+            first_name = (request.POST.get('first_name') or '').strip()[:150]
+            try:
+                validate_email(email)
+            except ValidationError:
+                errors['email'] = 'Enter a valid email address.'
+            else:
+                if User.objects.filter(email__iexact=email).exclude(pk=request.user.pk).exists():
+                    errors['email'] = 'That email is already associated with another account.'
+            if not errors:
+                request.user.email = email
+                request.user.first_name = first_name
+                request.user.save(update_fields=['email', 'first_name'])
+                messages.success(request, "Your details were updated.")
+                return redirect('myaccount')
+        elif action == 'upgrade':
+            if not settings.PREMIUM_DEMO_UPGRADE:
+                messages.error(request, "Online upgrades are not available yet.")
+            elif not profile.is_premium:
+                profile.is_premium = True
+                profile.premium_since = timezone.now()
+                profile.save()
+                messages.success(request, "Welcome to Premium! All premium features are now unlocked.")
+            return redirect('myaccount')
+        elif action == 'downgrade':
+            if profile.is_premium:
+                profile.is_premium = False
+                profile.premium_since = None
+                profile.save()
+                messages.success(request, "Your account is back on the Free plan. Your saved plans are untouched.")
+            return redirect('myaccount')
+        elif action == 'delete':
+            if request.user.check_password(request.POST.get('password', '')):
+                user = request.user
+                logout(request)
+                user.delete()
+                messages.success(request, "Your account and plans were deleted.")
+                return redirect('landing')
+            errors['delete'] = 'Incorrect password. Your account was not deleted.'
+
+    plan_count = Plan.objects.filter(user=request.user).count()
+    return render(request, 'FIRE/account/myaccount.html', {
+        'profile': profile,
+        'errors': errors,
+        'plan_count': plan_count,
+        'plan_limit': MAX_USER_PLANS if profile.is_premium else settings.FREE_PLAN_LIMIT,
+        'premium_features': PREMIUM_FEATURES,
+        'can_upgrade': settings.PREMIUM_DEMO_UPGRADE,
+    })
+
 # USER: Plans
 def userplans(request):
     if request.user.is_authenticated:
@@ -175,9 +244,15 @@ def userplans(request):
         messages.warning(request, "You must be logged in to view your plans.")
         return redirect('loginuser')
 
+def _premium_required(request, feature):
+    messages.warning(request, f"{feature} is a Premium feature. Upgrade your account to unlock it.")
+    return redirect('myaccount')
+
 # PLANS: Compare (2-3 of the user's own plans)
 @login_required
 def compareplans(request):
+    if not user_is_premium(request.user):
+        return _premium_required(request, "Plan comparison")
     ids = request.GET.getlist('plans')
     plans = list(Plan.objects.filter(user=request.user, pk__in=[i for i in ids if _is_uuid(i)]))
     if not 2 <= len(plans) <= 3:
@@ -259,7 +334,11 @@ MAX_USER_PLANS = 50
 
 def _plan_limit_error(request):
     if request.user.is_authenticated:
-        if Plan.objects.filter(user=request.user).count() >= MAX_USER_PLANS:
+        count = Plan.objects.filter(user=request.user).count()
+        if not user_is_premium(request.user):
+            if count >= settings.FREE_PLAN_LIMIT:
+                return f"Free accounts can save {settings.FREE_PLAN_LIMIT} plans. Delete a plan or upgrade to Premium to create more."
+        elif count >= MAX_USER_PLANS:
             return f"You have reached the limit of {MAX_USER_PLANS} plans. Delete one to create another."
     elif len(request.session.get('anonymous_plans', [])) >= MAX_ANONYMOUS_PLANS:
         return f"You have created {MAX_ANONYMOUS_PLANS} plans without an account. Sign up to save more."
@@ -289,6 +368,8 @@ def whatif(request, plan_id):
     plan = get_object_or_404(Plan, pk=plan_id)
     if not _can_access_plan(request, plan):
         raise Http404("Plan not found.")
+    if not user_is_premium(request.user):
+        return JsonResponse({'error': 'What-if scenarios are a Premium feature.'}, status=403)
 
     def number(name, default, low, high):
         try:
@@ -356,6 +437,8 @@ def downloadplan(request, plan_id):
     plan = get_object_or_404(Plan, id=plan_id)
     if not _can_access_plan(request, plan):
         raise Http404("Plan not found.")
+    if not user_is_premium(request.user):
+        return _premium_required(request, "CSV download")
 
     try:
         FIplan = _build_fiplan(plan)

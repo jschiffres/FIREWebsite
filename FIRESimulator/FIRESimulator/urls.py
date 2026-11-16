@@ -48,6 +48,7 @@ urlpatterns = [
     path('logout/', views.logoutuser, name='logoutuser'),
     path('login/', views.loginuser, name='loginuser'),
     path("myplans/", views.userplans, name="userplans"),
+    path("account/", views.myaccount, name="myaccount"),
     path('feedback/', views.feedback, name='feedback'),
 
     #PLAN: New, Run, Download, Copy, Delete

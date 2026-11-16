@@ -42,7 +42,7 @@
                 <li><button type="button" class="btn btn-sm btn-edit-savings" data-bs-toggle="modal" data-bs-target="#savings-Modal"><i class="bi bi-pencil icon-savings" aria-hidden="true"></i> Savings</button></li>
             </ul>
             <ul class="nav nav-pills">
-                <li class="nav-item"><a class="nav-link nav-link-tips" href="{% url 'downloadplan' plan.id %}"><i class="bi bi-download" aria-hidden="true"></i> Download</a></li>
+                <li class="nav-item"><a class="nav-link nav-link-tips" href="{% url 'downloadplan' plan.id %}"><i class="bi bi-download" aria-hidden="true"></i> Download{% if not is_premium %} <i class="bi bi-lock-fill" aria-label="Premium feature"></i>{% endif %}</a></li>
                 <li class="nav-item"><a class="nav-link nav-link-tips" href="#" onclick="window.print(); return false;"><i class="bi bi-printer" aria-hidden="true"></i> Print</a></li>
             </ul>
             {% else %}

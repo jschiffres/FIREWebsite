@@ -64,6 +64,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'FIRE.context_processors.premium',
             ],
         },
     },
@@ -138,3 +139,8 @@ EMAIL_PORT = 587
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER or 'noreply@localhost'
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
+
+# Premium tier. Without a payment provider wired in, self-service upgrade is a demo that only works in DEBUG
+# (or when explicitly enabled); production upgrades should go through a real checkout.
+FREE_PLAN_LIMIT = 3
+PREMIUM_DEMO_UPGRADE = os.environ.get('PREMIUM_DEMO_UPGRADE', str(DEBUG)).lower() == 'true'

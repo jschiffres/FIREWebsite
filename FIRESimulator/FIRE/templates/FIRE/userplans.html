@@ -88,7 +88,7 @@ letter-spacing: 0.17px;
                 <tbody>
 					{% for plan in plans %}
 					<tr>
-						<td style="vertical-align: middle;"><input class="form-check-input compare-check" type="checkbox" name="plans" value="{{ plan.id }}" form="compare-form" aria-label="Select {{ plan.plan_name }} to compare"></td>
+						<td style="vertical-align: middle;">{% if is_premium %}<input class="form-check-input compare-check" type="checkbox" name="plans" value="{{ plan.id }}" form="compare-form" aria-label="Select {{ plan.plan_name }} to compare">{% endif %}</td>
 						<td style="vertical-align: middle;">{{ plan.plan_name }}</td>
 						<td style="vertical-align: middle;">{{ plan.created_at|date:"D d M Y" }}</td>
 						<td style="vertical-align: middle;">{{ plan.retirement_age }}</td>
@@ -184,14 +184,20 @@ letter-spacing: 0.17px;
             </table>
         </div>
     </div>
+	{% if is_premium %}
 	<form id="compare-form" method="get" action="{% url 'compareplans' %}">
 		<button type="submit" id="compare-button" class="btn btn-action-empty" disabled><i class="bi bi-bar-chart"></i> Compare selected (2-3)</button>
 	</form>
+	{% else %}
+	<a class="btn btn-action-empty" href="{% url 'myaccount' %}#premium"><i class="bi bi-lock-fill" aria-hidden="true"></i> Compare plans <span class="badge text-bg-warning">Premium</span></a>
+	{% endif %}
 	<script>
 		const compareChecks = document.querySelectorAll('.compare-check');
 		function updateCompareButton() {
+			const button = document.getElementById('compare-button');
+			if (!button) return;
 			const n = document.querySelectorAll('.compare-check:checked').length;
-			document.getElementById('compare-button').disabled = n < 2 || n > 3;
+			button.disabled = n < 2 || n > 3;
 		}
 		compareChecks.forEach(c => c.addEventListener('change', updateCompareButton));
 	</script>
