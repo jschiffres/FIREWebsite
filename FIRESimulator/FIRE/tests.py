@@ -289,6 +289,16 @@ class SurveyAndPermissionTests(TestCase):
         self.assertEqual(User.objects.filter(email__iexact='owner@example.com').count(), 1)
         self.assertEqual(response.status_code, 200)
 
+    def test_landing_varies_by_auth_state(self):
+        anon = self.client.get(reverse('landing')).content.decode()
+        self.assertIn('Quick estimate', anon)
+        self.assertIn('Free vs Premium', anon)
+        self.client.force_login(self.owner)
+        self.create_plan()
+        page = self.client.get(reverse('landing')).content.decode()
+        self.assertIn('Open dashboard', page)
+        self.assertNotIn('Quick estimate', page)
+
     def test_dashboard_embeds_chart_json_and_lists_show_fi_age(self):
         self.client.force_login(self.owner)
         plan = self.create_plan()

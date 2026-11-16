@@ -5,6 +5,30 @@
 <div class="container mt-5 mb-5">
   <div class="row g-4">
       <div class="col-lg-6">
+        {% if user.is_authenticated %}
+        <h1 id="landing-header">Welcome back{% if user.first_name %}, {{ user.first_name }}{% endif %}</h1>
+        {% if latest_plan %}
+        <div class="card shadow-sm my-3">
+          <div class="card-body">
+            <h5 class="card-title mb-1">{{ latest_plan.plan_name }}</h5>
+            <p class="text-muted small mb-3">Your most recent plan</p>
+            <div class="row text-center mb-3">
+              <div class="col"><div class="fs-3 fw-bold">{{ latest_fi_age|default:"N/A" }}</div><div class="small text-muted">FI age</div></div>
+              <div class="col"><div class="fs-3 fw-bold">{% if latest_funded is not None %}{{ latest_funded|floatformat:0 }}%{% else %}N/A{% endif %}</div><div class="small text-muted">Funded</div></div>
+              <div class="col"><div class="fs-3 fw-bold">{{ plan_count }}{% if not is_premium %}/{{ free_plan_limit }}{% endif %}</div><div class="small text-muted">Plans</div></div>
+            </div>
+            <a href="{% url 'runplan' latest_plan.id %}" class="btn btn-action-filled"><i class="bi bi-speedometer2"></i> Open dashboard</a>
+            <a href="{% url 'userplans' %}" class="btn btn-outline-secondary">All plans</a>
+            {% if not at_limit %}<a href="{% url 'newplan' %}" class="btn btn-outline-secondary"><i class="bi bi-plus-circle"></i> New plan</a>{% endif %}
+          </div>
+        </div>
+        {% if at_limit %}<p class="small text-muted">You've used all {{ free_plan_limit }} free plans. <a href="{% url 'myaccount' %}">Upgrade to Premium</a> for unlimited plans.</p>{% endif %}
+        {% if email_unverified %}<p class="small text-muted"><i class="bi bi-envelope-exclamation"></i> Verify your email to unlock Premium upgrades.</p>{% endif %}
+        {% else %}
+        <p id="landing-subtext">You haven't created a plan yet. It only takes a few minutes.</p>
+        <a href="{% url 'newplan' %}" class="btn btn-lg btn-action-filled"><i class="bi bi-plus-circle"></i> Create your first plan</a>
+        {% endif %}
+        {% else %}
         <h1 id="landing-header">Plan your path to Financial Independence</h1>
         <p id="landing-subtext">Answer a few questions, see your FI timeline, and explore scenarios to reach your goals sooner.</p>
         <div class="row g-4 mb-3 mt-3">
@@ -14,6 +38,7 @@
             </form>
           </div>
         </div>
+        {% endif %}
       </div>
       <div class="col-lg-6 text-center align-self-center">
           {% load static %}
@@ -44,5 +69,63 @@
     </div>
   </div>
 </div>
+
+{% if not user.is_authenticated %}
+<div class="container my-5">
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <h3>Quick estimate</h3>
+      <p class="text-muted">A rough FI age in seconds, no signup needed. Assumes 7% return and the 4% rule.</p>
+      <form id="quick-calc" class="row g-2" onsubmit="return false;">
+        <div class="col-6"><label class="form-label small" for="qc-age">Current age</label><input id="qc-age" type="number" min="16" max="80" value="30" class="form-control"></div>
+        <div class="col-6"><label class="form-label small" for="qc-saved">Invested so far ($)</label><input id="qc-saved" type="number" min="0" value="50000" class="form-control"></div>
+        <div class="col-6"><label class="form-label small" for="qc-contrib">Saved per month ($)</label><input id="qc-contrib" type="number" min="0" value="1500" class="form-control"></div>
+        <div class="col-6"><label class="form-label small" for="qc-spend">Spending per year ($)</label><input id="qc-spend" type="number" min="1" value="40000" class="form-control"></div>
+      </form>
+      <p id="qc-result" class="fs-5 mt-3 mb-0" aria-live="polite"></p>
+    </div>
+    <div class="col-lg-6">
+      <h3>Free vs Premium</h3>
+      <table class="table table-sm align-middle">
+        <thead><tr><th></th><th>Free</th><th>Premium</th></tr></thead>
+        <tbody>
+          <tr><td>Saved plans</td><td>{{ free_plan_limit }}</td><td>Unlimited</td></tr>
+          <tr><td>FI age, Coast FI and charts</td><td><i class="bi bi-check-lg"></i></td><td><i class="bi bi-check-lg"></i></td></tr>
+          <tr><td>Withdrawal-phase modeling</td><td>&ndash;</td><td><i class="bi bi-check-lg"></i></td></tr>
+          <tr><td>Plan comparison and more</td><td>&ndash;</td><td><i class="bi bi-check-lg"></i></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<div class="container mb-5">
+  <h3>FAQ</h3>
+  <div class="accordion" id="landing-faq">
+    {% for q, a in faq %}
+    <div class="accordion-item">
+      <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq{{ forloop.counter }}">{{ q }}</button></h2>
+      <div id="faq{{ forloop.counter }}" class="accordion-collapse collapse" data-bs-parent="#landing-faq"><div class="accordion-body">{{ a }}</div></div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+<script>
+(function () {
+  const ids = ['qc-age', 'qc-saved', 'qc-contrib', 'qc-spend'];
+  const out = document.getElementById('qc-result');
+  function calc() {
+    const [age, saved, contrib, spend] = ids.map(i => parseFloat(document.getElementById(i).value) || 0);
+    if (spend <= 0 || age <= 0) { out.textContent = ''; return; }
+    const target = spend * 25;
+    let bal = saved, years = 0;
+    while (bal < target && years < 70) { bal = bal * 1.07 + contrib * 12; years++; }
+    out.textContent = years >= 70 ? 'Increase your savings to reach FI within 70 years.'
+      : (years === 0 ? 'You are already at your FI number of $' : 'Estimated FI at age ' + Math.round(age + years) + ' (target $') + target.toLocaleString() + (years === 0 ? '.' : ').');
+  }
+  ids.forEach(i => document.getElementById(i).addEventListener('input', calc));
+  calc();
+})();
+</script>
+{% endif %}
 
 {% endblock %}

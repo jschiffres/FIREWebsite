@@ -161,8 +161,29 @@ def check_email(request):
     return JsonResponse({'available': not taken})
 
 # LANDING PAGE
+LANDING_FAQ = [
+    ("What is FIRE?", "Financial Independence, Retire Early: saving enough that investment returns can cover your spending."),
+    ("What is Coast FI?", "The age at which you can stop contributing and still reach your FI number through growth alone."),
+    ("What is the 4% rule?", "A guideline that you can withdraw about 4% of your portfolio per year, so your FI number is roughly 25x annual spending."),
+    ("Do I need to link a bank account?", "No. You enter your numbers manually and can delete your data at any time from My Account."),
+]
+
 def landing(request):
-    return render(request, 'FIRE/landing.html')
+    context = {'faq': LANDING_FAQ}
+    if request.user.is_authenticated:
+        plans = Plan.objects.filter(user=request.user).order_by('-id')
+        latest = plans.first()
+        if latest:
+            fi = _summarize(latest)
+            context.update({
+                'latest_plan': latest,
+                'latest_fi_age': fi.fi_age if fi else None,
+                'latest_funded': fi.funded_percent if fi else None,
+            })
+        count = plans.count()
+        context['plan_count'] = count
+        context['at_limit'] = not user_is_premium(request.user) and count >= settings.FREE_PLAN_LIMIT
+    return render(request, 'FIRE/landing.html', context)
 
 # USER: Signup
 def signupuser(request):
