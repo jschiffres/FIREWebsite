@@ -31,15 +31,17 @@
         </div>
 
         <div class="form-floating mb-3">
-            <input type="password" class="form-control" id="password1" name="password1"placeholder="Password">
+            <input type="password" class="form-control" id="password1" name="password1" placeholder="Password" autocomplete="new-password" aria-describedby="password1Help password1-error">
             <label for="password1">Password</label>
             <div id="password1Help" class="form-text">Choose a secure password.</div>
+            <div id="password1-error" class="form-text text-danger" role="alert" hidden>Password must contain a capital letter, a number and a special character.</div>
         </div>
 
         <div class="form-floating mb-3">
-            <input type="password" class="form-control" id="password2" name="password2" placeholder="Password">
-            <label for="password2">Password</label>
+            <input type="password" class="form-control" id="password2" name="password2" placeholder="Password" autocomplete="new-password" aria-describedby="password2Help password2-error">
+            <label for="password2">Confirm password</label>
             <div id="password2Help" class="form-text">Ensure passwords match.</div>
+            <div id="password2-error" class="form-text text-danger" role="alert" hidden>Passwords do not match.</div>
         </div>
 
         <div class="d-flex justify-content-center">
@@ -96,6 +98,24 @@
 
     watch('username', 'username-error', "{% url 'check_username' %}", 'username');
     watch('email', 'email-error', "{% url 'check_email' %}", 'email');
+
+    const pw1 = document.getElementById('password1');
+    const pw2 = document.getElementById('password2');
+    function flag(input, errorId, bad) {
+        document.getElementById(errorId).hidden = !bad;
+        input.classList.toggle('is-invalid', bad);
+        input.setAttribute('aria-invalid', bad ? 'true' : 'false');
+        taken[input.id] = bad;
+    }
+    function checkPasswords() {
+        const weak = pw1.value !== '' && !(/[A-Z]/.test(pw1.value) && /\d/.test(pw1.value) && /[^A-Za-z0-9]/.test(pw1.value));
+        const mismatch = pw2.value !== '' && pw1.value !== pw2.value;
+        flag(pw1, 'password1-error', weak);
+        flag(pw2, 'password2-error', mismatch);
+        submit.disabled = Object.values(taken).some(Boolean);
+    }
+    pw1.addEventListener('input', checkPasswords);
+    pw2.addEventListener('input', checkPasswords);
 })();
 </script>
 

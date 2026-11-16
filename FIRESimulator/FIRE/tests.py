@@ -130,6 +130,15 @@ class EmailVerificationAndGoogleTests(TestCase):
         self.assertFalse(self.client.get(url, {'email': 'SAM@example.com'}).json()['available'])
         self.assertTrue(self.client.get(url, {'email': 'free@example.com'}).json()['available'])
 
+    def test_password_complexity_enforced_on_signup(self):
+        base = {'username': 'pwuser', 'email': 'pw@example.com'}
+        for weak in ('alllowercase-pass', 'NoNumbers-here', 'NoSpecial1234x'):
+            self.client.post(reverse('signupuser'), {**base, 'password1': weak, 'password2': weak})
+            self.assertFalse(User.objects.filter(username='pwuser').exists(), weak)
+        good = 'Str0ng-pass-99'
+        self.client.post(reverse('signupuser'), {**base, 'password1': good, 'password2': good})
+        self.assertTrue(User.objects.filter(username='pwuser').exists())
+
     def test_google_login_disabled_without_credentials(self):
         response = self.client.get(reverse('google_login'))
         self.assertRedirects(response, reverse('loginuser'), fetch_redirect_response=False)
