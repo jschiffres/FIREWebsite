@@ -17,13 +17,6 @@
     <form method="POST"> 
     {% csrf_token %}
         <div class="form-floating mb-3">
-            <input type="text" class="form-control" id="username" name="username" placeholder="username" autocomplete="username" aria-describedby="usernameHelp username-error">
-            <label for="username">Username</label>
-            <div id="usernameHelp" class="form-text">Username must be unique.</div>
-            <div id="username-error" class="form-text text-danger" role="alert" hidden>That username is already taken. Please choose another.</div>
-        </div>
-
-        <div class="form-floating mb-3">
             <input type="email" class="form-control" id="email" name="email" placeholder="email@email.com" autocomplete="email" aria-describedby="emailHelp email-error">
             <label for="email">Email</label>
             <div id="emailHelp" class="form-text">Provide a valid email address.</div>
@@ -65,7 +58,7 @@
 
 <script>
 (function () {
-    const form = document.getElementById('username').form;
+    const form = document.getElementById('email').form;
     const submit = form.querySelector('button[type="submit"]');
     const taken = {};
 
@@ -96,7 +89,6 @@
         });
     }
 
-    watch('username', 'username-error', "{% url 'check_username' %}", 'username');
     watch('email', 'email-error', "{% url 'check_email' %}", 'email');
 
     const pw1 = document.getElementById('password1');

@@ -64,7 +64,7 @@
             <ul class="nav ms-auto me-3">
               <li class="nav-item dropdown navbar-main-dropdown">
                 <a class="nav-link  link-light dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  Welcome, {{ user.username }}
+                  Welcome, {{ user.first_name|default:user.email|default:user.username }}
                 </a>
                 <ul class="dropdown-menu text-center">
                   <li><a class="dropdown-item" href="{% url 'newplan' %}">New Plan</a></li>

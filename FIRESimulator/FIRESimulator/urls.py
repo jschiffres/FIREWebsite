@@ -43,7 +43,6 @@ urlpatterns = [
         template_name="FIRE/account/password_change_done.html"), name="password_change_done"),
 
     #USER: Sign-up, Sign-up Save, Logout, Login, Plans, Feedback
-    path("signup/check-username/", views.check_username, name="check_username"),
     path("signup/check-email/", views.check_email, name="check_email"),
     path("signup/", views.signupuser, name="signupuser"),
     path("signup/<str:plan_id>", views.signupsave, name="signupsave"),

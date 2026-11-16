@@ -109,10 +109,11 @@ class EmailVerificationAndGoogleTests(TestCase):
 
     def test_signup_sends_verification_and_blocks_upgrade_until_verified(self):
         from django.core import mail
-        self.client.post(reverse('signupuser'), {'username': 'newbie', 'email': 'newbie@example.com',
+        self.client.post(reverse('signupuser'), {'email': 'newbie@example.com',
                                                  'password1': 'Str0ng-pass-99', 'password2': 'Str0ng-pass-99'})
         self.assertTrue(any('Confirm your FI Planner email' in m.subject for m in mail.outbox))
-        user = User.objects.get(username='newbie')
+        user = User.objects.get(email='newbie@example.com')
+        self.assertEqual(user.username, 'newbie')
         with self.settings(PREMIUM_DEMO_UPGRADE=True):
             self.client.post(reverse('myaccount'), {'action': 'upgrade'})
             self.assertFalse(Profile.objects.get(user=user).is_premium)
@@ -120,10 +121,14 @@ class EmailVerificationAndGoogleTests(TestCase):
             self.client.post(reverse('myaccount'), {'action': 'upgrade'})
             self.assertTrue(Profile.objects.get(user=user).is_premium)
 
-    def test_check_username_endpoint(self):
-        url = reverse('check_username')
-        self.assertFalse(self.client.get(url, {'username': 'SAM'}).json()['available'])
-        self.assertTrue(self.client.get(url, {'username': 'nobody'}).json()['available'])
+    def test_login_with_email_and_unique_generated_usernames(self):
+        for _ in range(2):
+            self.client.logout()
+        self.client.post(reverse('signupuser'), {'email': 'sam@other.com', 'password1': 'Str0ng-pass-99', 'password2': 'Str0ng-pass-99'})
+        self.assertEqual(User.objects.get(email='sam@other.com').username, 'sam2')
+        self.client.logout()
+        self.client.post(reverse('loginuser'), {'email': 'SAM@OTHER.com', 'password': 'Str0ng-pass-99'})
+        self.assertIn('_auth_user_id', self.client.session)
 
     def test_check_email_endpoint(self):
         url = reverse('check_email')
@@ -131,13 +136,13 @@ class EmailVerificationAndGoogleTests(TestCase):
         self.assertTrue(self.client.get(url, {'email': 'free@example.com'}).json()['available'])
 
     def test_password_complexity_enforced_on_signup(self):
-        base = {'username': 'pwuser', 'email': 'pw@example.com'}
+        base = {'email': 'pw@example.com'}
         for weak in ('alllowercase-pass', 'NoNumbers-here', 'NoSpecial1234x'):
             self.client.post(reverse('signupuser'), {**base, 'password1': weak, 'password2': weak})
-            self.assertFalse(User.objects.filter(username='pwuser').exists(), weak)
+            self.assertFalse(User.objects.filter(email='pw@example.com').exists(), weak)
         good = 'Str0ng-pass-99'
         self.client.post(reverse('signupuser'), {**base, 'password1': good, 'password2': good})
-        self.assertTrue(User.objects.filter(username='pwuser').exists())
+        self.assertTrue(User.objects.filter(email='pw@example.com').exists())
 
     def test_google_login_disabled_without_credentials(self):
         response = self.client.get(reverse('google_login'))
@@ -280,8 +285,8 @@ class SurveyAndPermissionTests(TestCase):
 
     def test_signup_rejects_duplicate_email(self):
         response = self.client.post(reverse('signupuser'), {
-            'username': 'dupe', 'email': 'OWNER@example.com', 'password1': 'Str0ng-pass-99', 'password2': 'Str0ng-pass-99'})
-        self.assertEqual(User.objects.filter(username='dupe').count(), 0)
+            'email': 'OWNER@example.com', 'password1': 'Str0ng-pass-99', 'password2': 'Str0ng-pass-99'})
+        self.assertEqual(User.objects.filter(email__iexact='owner@example.com').count(), 1)
         self.assertEqual(response.status_code, 200)
 
     def test_dashboard_embeds_chart_json_and_lists_show_fi_age(self):

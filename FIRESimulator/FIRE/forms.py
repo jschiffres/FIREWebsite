@@ -10,10 +10,20 @@ class PlanForm(ModelForm):
 		fields = ['plan_name' ,'current_age', 'retirement_age']
 
 class CreateUserForm(UserCreationForm):
+	"""Email + password signup; the internal username is generated from the email."""
 	email = forms.EmailField(required=True)
 	class Meta:
 		model = User
-		fields = ['username', 'email', 'password1', 'password2']
+		fields = ['email', 'password1', 'password2']
+
+	def save(self, commit=True):
+		from .auth_flows import unique_username
+		user = super().save(commit=False)
+		user.email = self.cleaned_data['email']
+		user.username = unique_username(user.email)
+		if commit:
+			user.save()
+		return user
 		
 class FeedbackForm(ModelForm):
 	class Meta:

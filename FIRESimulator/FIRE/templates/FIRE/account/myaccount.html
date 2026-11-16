@@ -13,10 +13,6 @@
                         {% csrf_token %}
                         <input type="hidden" name="action" value="profile">
                         <div class="form-floating mb-3">
-                            <input type="text" class="form-control" id="id_username" value="{{ user.username }}" placeholder="Username" disabled>
-                            <label for="id_username">Username</label>
-                        </div>
-                        <div class="form-floating mb-3">
                             <input type="text" class="form-control" id="id_first_name" name="first_name" value="{{ user.first_name }}" placeholder="First name" maxlength="150" autocomplete="given-name">
                             <label for="id_first_name">First name (optional)</label>
                         </div>
@@ -104,8 +100,8 @@
                                 <input type="password" class="form-control{% if errors.delete %} is-invalid{% endif %}" id="id_delete_password" name="password" placeholder="Password" autocomplete="current-password" required>
                                 <label for="id_delete_password">Confirm password</label>
                                 {% else %}
-                                <input type="text" class="form-control{% if errors.delete %} is-invalid{% endif %}" id="id_delete_password" name="password" placeholder="Username" autocomplete="off" required>
-                                <label for="id_delete_password">Type your username to confirm</label>
+                                <input type="text" class="form-control{% if errors.delete %} is-invalid{% endif %}" id="id_delete_password" name="password" placeholder="Email" autocomplete="off" required>
+                                <label for="id_delete_password">Type your email to confirm</label>
                                 {% endif %}
                             </div>
                             {% if errors.delete %}<div class="form-text text-danger" role="alert">{{ errors.delete }}</div>{% endif %}

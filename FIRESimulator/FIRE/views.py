@@ -61,7 +61,7 @@ def _create_account(request, plan=None):
     try:
         user = form.save()
     except IntegrityError:
-        return None, render(request, template, {'form': form, 'error': 'Username has already been taken.'})
+        return None, render(request, template, {'form': form, 'error': 'Please try again.'})
     if plan is not None:
         plan.user = user
         plan.save()
@@ -154,12 +154,6 @@ def google_callback(request):
     messages.success(request, "Signed in with Google.")
     return redirect('userplans')
 
-# USER: Signup username availability (used for inline validation)
-def check_username(request):
-    username = (request.GET.get('username') or '').strip()
-    taken = bool(username) and User.objects.filter(username__iexact=username).exists()
-    return JsonResponse({'available': not taken})
-
 # USER: Signup email availability (used for inline validation)
 def check_email(request):
     email = (request.GET.get('email') or '').strip()
@@ -196,9 +190,11 @@ def loginuser(request):
         else:
             return render(request, 'FIRE/loginuser.html', {'form':AuthenticationForm()})
     else:
-        user = authenticate(request, username=request.POST.get('username'), password=request.POST.get('password'))
+        identifier = (request.POST.get('email') or request.POST.get('username') or '').strip()
+        match = User.objects.filter(email__iexact=identifier).first() or User.objects.filter(username__iexact=identifier).first()
+        user = authenticate(request, username=match.username if match else identifier, password=request.POST.get('password'))
         if user is None:
-            return render(request, 'FIRE/loginuser.html', {'form':AuthenticationForm(), 'error': "Username and password did not match."})
+            return render(request, 'FIRE/loginuser.html', {'form':AuthenticationForm(), 'error': "Email and password did not match."})
         else:
             login(request, user)
             messages.success(request, "Logged in successfully!")
@@ -309,7 +305,7 @@ def myaccount(request):
             if request.user.has_usable_password():
                 confirmed = request.user.check_password(request.POST.get('password', ''))
             else:
-                confirmed = request.POST.get('password', '').strip() == request.user.username
+                confirmed = request.POST.get('password', '').strip().lower() == request.user.email.lower()
             if confirmed:
                 user = request.user
                 logout(request)
