@@ -1,6 +1,17 @@
+import os
+
 from django.conf import settings
 
 from .models import Profile, user_is_premium
+
+_CSS_PATH = os.path.join(os.path.dirname(__file__), 'static', 'main.css')
+
+
+def _css_version():
+    try:
+        return int(os.path.getmtime(_CSS_PATH))
+    except OSError:
+        return 0
 
 
 def premium(request):
@@ -9,6 +20,7 @@ def premium(request):
     if user.is_authenticated and user.email:
         unverified = not Profile.objects.filter(user=user, email_verified=True).exists()
     return {
+        'css_version': _css_version(),
         'is_premium': user_is_premium(user),
         'free_plan_limit': settings.FREE_PLAN_LIMIT,
         'email_unverified': unverified,
