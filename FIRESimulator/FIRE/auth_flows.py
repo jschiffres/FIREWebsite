@@ -41,21 +41,9 @@ def read_verification_token(token):
 
 
 def send_verification_email(user):
-    if not user.email:
-        return False
-    context = {
-        'user': user,
-        'verify_url': site_url() + reverse('verify_email', args=[make_verification_token(user)]),
-    }
-    html = render_to_string('emails/verify_email.html', context)
-    try:
-        message = EmailMultiAlternatives('Confirm your FI Planner email', strip_tags(html), settings.DEFAULT_FROM_EMAIL, [user.email])
-        message.attach_alternative(html, 'text/html')
-        message.send()
-    except Exception as e:
-        print(e)
-        return False
-    return True
+    from .emails import send_templated_email
+    verify_url = site_url() + reverse('verify_email', args=[make_verification_token(user)])
+    return send_templated_email('Confirm your FI Planner email', 'emails/verify_email.html', user, {'verify_url': verify_url})
 
 
 def google_enabled():

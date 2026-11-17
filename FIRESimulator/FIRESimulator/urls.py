@@ -27,6 +27,7 @@ urlpatterns = [
     path("password-reset/", auth_views.PasswordResetView.as_view(
         template_name="FIRE/account/password_reset_form.html",
         email_template_name="FIRE/account/password_reset_email.txt",
+        html_email_template_name="emails/password_reset.html",
         subject_template_name="FIRE/account/password_reset_subject.txt",
         success_url=reverse_lazy("password_reset_done")), name="password_reset"),
     path("password-reset/sent/", auth_views.PasswordResetDoneView.as_view(
@@ -54,6 +55,8 @@ urlpatterns = [
     path("auth/google/callback/", views.google_callback, name="google_callback"),
     path("myplans/", views.userplans, name="userplans"),
     path("account/", views.myaccount, name="myaccount"),
+    path("privacy/", views.privacy, name="privacy"),
+    path("terms/", views.terms, name="terms"),
     path("billing/checkout/", views.start_checkout, name="start_checkout"),
     path("billing/portal/", views.billing_portal, name="billing_portal"),
     path("stripe/webhook/", views.stripe_webhook, name="stripe_webhook"),

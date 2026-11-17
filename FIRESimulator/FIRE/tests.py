@@ -439,7 +439,52 @@ class StripeBillingTests(TestCase):
         self.assertFalse(profile.is_premium)
         self.assertEqual(profile.stripe_status, 'canceled')
 
+    def test_premium_emails_sent_only_on_transitions(self):
+        from django.core import mail
+        def send(event_type, status):
+            event = {'type': event_type, 'data': {'object': {'id': 'sub_1', 'customer': 'cus_1', 'status': status}}}
+            with mock.patch('stripe.Webhook.construct_event', return_value=event):
+                self.client.post(reverse('stripe_webhook'), '{}', content_type='application/json', HTTP_STRIPE_SIGNATURE='sig')
+        mail.outbox.clear()
+        send('customer.subscription.created', 'active')
+        send('customer.subscription.updated', 'active')
+        self.assertEqual([m.subject for m in mail.outbox], ['Welcome to FI Planner Premium'])
+        self.assertIn('Premium', mail.outbox[0].body)
+        self.assertNotIn('<', mail.outbox[0].body)
+        send('customer.subscription.deleted', 'canceled')
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertIn('ended', mail.outbox[1].subject)
+
+    def test_payment_failed_email(self):
+        from django.core import mail
+        mail.outbox.clear()
+        event = {'type': 'invoice.payment_failed', 'data': {'object': {'customer': 'cus_1'}}}
+        with mock.patch('stripe.Webhook.construct_event', return_value=event):
+            self.client.post(reverse('stripe_webhook'), '{}', content_type='application/json', HTTP_STRIPE_SIGNATURE='sig')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('payment', mail.outbox[0].subject.lower())
+
     def test_webhook_rejects_bad_signature(self):
         response = self.client.post(reverse('stripe_webhook'), '{}', content_type='application/json',
                                     HTTP_STRIPE_SIGNATURE='bad')
         self.assertEqual(response.status_code, 400)
+
+
+class LegalAndEmailTemplateTests(TestCase):
+    def test_legal_pages_and_footer_links(self):
+        for name in ('privacy', 'terms'):
+            self.assertEqual(self.client.get(reverse(name)).status_code, 200)
+        html = self.client.get(reverse('about')).content.decode()
+        self.assertIn(reverse('privacy'), html)
+        self.assertIn(reverse('terms'), html)
+
+    def test_password_reset_email_is_branded_html(self):
+        from django.core import mail
+        User.objects.create_user('reset', 'reset@example.com', 'Str0ng-pass-99')
+        self.client.post(reverse('password_reset'), {'email': 'reset@example.com'})
+        self.assertEqual(len(mail.outbox), 1)
+        message = mail.outbox[0]
+        self.assertIn('FI Planner', message.subject)
+        self.assertNotIn('FIRE Simulator', message.body)
+        self.assertEqual(message.alternatives[0][1], 'text/html')
+        self.assertIn('/password-reset/', message.alternatives[0][0])

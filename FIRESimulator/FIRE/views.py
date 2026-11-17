@@ -32,6 +32,19 @@ import csv
 def about(request):
     return render(request, 'FIRE/about.html')
 
+LEGAL_CONTEXT = {
+    'effective_date': 'January 1, 2026',
+    'company_name': 'FI Planner',
+    'contact_email': 'hello@fiplanner.app',
+    'governing_law': '[Your state/country]',
+}
+
+def privacy(request):
+    return render(request, 'FIRE/privacy.html', LEGAL_CONTEXT)
+
+def terms(request):
+    return render(request, 'FIRE/terms.html', LEGAL_CONTEXT)
+
 def not_found(request, exception=None):
     return render(request, 'FIRE/404.html', status=404)
 

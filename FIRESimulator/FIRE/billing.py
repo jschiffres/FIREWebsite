@@ -88,13 +88,18 @@ def sync_subscription(subscription):
     profile.stripe_subscription_id = subscription['id']
     profile.stripe_status = status
     should_be_premium = status in ACTIVE_STATUSES
+    was_premium = profile.is_premium
     if should_be_premium and not profile.is_premium:
         profile.is_premium = True
         profile.premium_since = timezone.now()
     elif not should_be_premium and profile.is_premium:
         profile.is_premium = False
         profile.premium_since = None
+    changed = profile.is_premium != was_premium
     profile.save()
+    if changed:
+        from . import emails
+        (emails.premium_welcome_email if profile.is_premium else emails.premium_ended_email)(profile.user)
     return profile
 
 
@@ -112,3 +117,8 @@ def handle_event(event):
             sync_subscription(_plain(_client().Subscription.retrieve(obj['subscription'])))
     elif kind in ('customer.subscription.created', 'customer.subscription.updated', 'customer.subscription.deleted'):
         sync_subscription(obj)
+    elif kind == 'invoice.payment_failed':
+        profile = Profile.objects.filter(stripe_customer_id=obj.get('customer')).first()
+        if profile:
+            from . import emails
+            emails.payment_failed_email(profile.user)

@@ -1,0 +1,12 @@
+{% extends 'emails/base_email.html' %}
+{% block title %}Payment problem{% endblock %}
+{% block heading %}We couldn't process your payment{% endblock %}
+{% block body %}
+<p>Hi {{ user.first_name|default:"there" }},</p>
+<p>We weren't able to collect the latest payment for your FI Planner Premium subscription. This is usually an expired card or a temporary bank decline.</p>
+<p>To keep your Premium features, please update your payment method. Stripe will retry the payment automatically for a short time.</p>
+<p style="text-align:center; margin:28px 0;">
+  <a href="{{ account_url }}" style="display:inline-block; padding:12px 24px; background-color:#285C53; color:#ffffff; text-decoration:none; border-radius:6px; font-weight:600;">Update payment method</a>
+</p>
+<p>Your plans and data are not affected.</p>
+{% endblock %}

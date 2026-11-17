@@ -1,0 +1,19 @@
+{% extends 'emails/base_email.html' %}
+{% block title %}Welcome to FI Planner Premium{% endblock %}
+{% block heading %}You're now on FI Planner Premium{% endblock %}
+{% block body %}
+<p>Hi {{ user.first_name|default:"there" }},</p>
+<p>Thank you for upgrading. Your Premium features are active now:</p>
+<ul style="padding-left:20px;">
+  <li>What-if sliders to test retirement age, savings and returns</li>
+  <li>Retirement withdrawal modelling</li>
+  <li>Side-by-side plan comparison</li>
+  <li>CSV and PDF downloads of your plan</li>
+  <li>A higher limit on saved plans</li>
+</ul>
+<p style="text-align:center; margin:28px 0;">
+  <a href="{{ landing_url }}" style="display:inline-block; padding:12px 24px; background-color:#285C53; color:#ffffff; text-decoration:none; border-radius:6px; font-weight:600;">Open my plans</a>
+</p>
+<p>You can view your subscription, update your payment method, download invoices or cancel at any time from <a href="{{ account_url }}" style="color:#285C53;">My Account</a>.</p>
+{% endblock %}
+{% block footnote %}Payments are processed securely by Stripe; FI Planner never sees or stores your card number.<br>{% endblock %}
