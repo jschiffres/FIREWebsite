@@ -78,6 +78,16 @@ def create_portal_url(profile):
     return session['url']
 
 
+def cancel_subscriptions(profile):
+    """Immediately cancel every open subscription for the profile's Stripe customer (used on account deletion)."""
+    if not (settings.STRIPE_ENABLED and profile.stripe_customer_id):
+        return
+    client = _client()
+    subs = _plain(client.Subscription.list(customer=profile.stripe_customer_id, limit=100))
+    for sub in subs['data']:
+        client.Subscription.cancel(sub['id'])
+
+
 def sync_subscription(subscription):
     """Apply a Stripe subscription object to the matching profile."""
     customer_id = subscription['customer']
