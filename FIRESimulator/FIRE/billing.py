@@ -13,6 +13,11 @@ def _client():
     return stripe
 
 
+def _plain(obj):
+    """Stripe objects aren't dicts in newer SDKs; convert to plain dicts."""
+    return obj.to_dict() if hasattr(obj, 'to_dict') else obj
+
+
 def resolve_price_id(interval):
     """Return the price ID for 'month' or 'year', looking it up from the product if needed."""
     direct = settings.STRIPE_YEARLY_PRICE_ID if interval == 'year' else settings.STRIPE_MONTHLY_PRICE_ID
@@ -21,11 +26,11 @@ def resolve_price_id(interval):
     product_id = settings.STRIPE_YEARLY_PRODUCT_ID if interval == 'year' else settings.STRIPE_MONTHLY_PRODUCT_ID
     if not product_id:
         return None
-    product = _client().Product.retrieve(product_id)
+    product = _plain(_client().Product.retrieve(product_id))
     default_price = product.get('default_price')
     if default_price:
         return default_price if isinstance(default_price, str) else default_price['id']
-    prices = _client().Price.list(product=product_id, active=True, type='recurring', limit=1)
+    prices = _plain(_client().Price.list(product=product_id, active=True, type='recurring', limit=1))
     return prices['data'][0]['id'] if prices['data'] else None
 
 
@@ -95,7 +100,7 @@ def sync_subscription(subscription):
 
 def handle_event(event):
     kind = event['type']
-    obj = event['data']['object']
+    obj = _plain(event['data']['object'])
     if kind == 'checkout.session.completed':
         if obj.get('mode') != 'subscription':
             return
@@ -104,6 +109,6 @@ def handle_event(event):
             profile.stripe_customer_id = obj['customer']
             profile.save(update_fields=['stripe_customer_id'])
         if obj.get('subscription'):
-            sync_subscription(_client().Subscription.retrieve(obj['subscription']))
+            sync_subscription(_plain(_client().Subscription.retrieve(obj['subscription'])))
     elif kind in ('customer.subscription.created', 'customer.subscription.updated', 'customer.subscription.deleted'):
         sync_subscription(obj)
