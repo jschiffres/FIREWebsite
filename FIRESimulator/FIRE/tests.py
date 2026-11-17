@@ -548,3 +548,13 @@ class RateLimitTests(TestCase):
         cache.clear()
         self.assertEqual(codes[0], 200)
         self.assertEqual(codes[-1], 429)
+
+class ClientIpTests(TestCase):
+    def test_forwarded_ip_used_only_with_trusted_hops(self):
+        from django.test import RequestFactory, override_settings
+        from .ratelimit import _client_ip
+        req = RequestFactory().get('/', HTTP_X_FORWARDED_FOR='6.6.6.6, 1.2.3.4', REMOTE_ADDR='10.0.0.1')
+        with override_settings(TRUSTED_PROXY_HOPS=0):
+            self.assertEqual(_client_ip(req), '10.0.0.1')
+        with override_settings(TRUSTED_PROXY_HOPS=1):
+            self.assertEqual(_client_ip(req), '1.2.3.4')
