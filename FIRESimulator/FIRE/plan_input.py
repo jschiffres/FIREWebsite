@@ -139,6 +139,35 @@ def _parse_expenses(request, current_age, retirement_age):
     return expenses
 
 
+MAX_CUSTOM_ACCOUNTS = 8
+ALLOCATION_MODES = ('limit', 'fixed', 'percent', 'match', 'none')
+UNLIMITED_CATEGORIES = ('TBA', 'HYSA')
+
+
+def _by_position(request, name, position, default):
+    values = request.POST.getlist(name)
+    return values[position] if position < len(values) else default
+
+
+def _parse_custom_settings(request, position, category, label):
+    """Per-account allocation rule for Custom plans (missing values use defaults)."""
+    mode = _by_position(request, 'allocation_mode', position, 'limit')
+    if mode not in ALLOCATION_MODES or (mode == 'match' and category != 'ESRP'):
+        raise PlanInputError(f"{label}: invalid allocation method.")
+    try:
+        value = float(_by_position(request, 'allocation_value', position, 0) or 0)
+    except ValueError:
+        raise PlanInputError(f"{label}: please enter a valid allocation amount.")
+    if mode == 'fixed':
+        _check_range(value, 0, 10000000, f"{label} yearly amount")
+        value = int(value)
+    elif mode == 'percent':
+        _check_range(value, 0, 100, f"{label} percent of savings")
+    else:
+        value = 0
+    return {'allocation_mode': mode, 'allocation_value': value}
+
+
 def _parse_savings(request, allow_custom=False):
     option = request.POST.get('saving_option')
     if option == 'Custom' and not allow_custom:
@@ -153,31 +182,40 @@ def _parse_savings(request, allow_custom=False):
 
     names = request.POST.getlist('saving_name')
     categories = request.POST.getlist('saving_category')
+    custom = option == 'Custom'
     if not names:
         raise PlanInputError("No savings provided.")
-    if len(set(categories)) != len(categories):
+    if custom and len(names) > MAX_CUSTOM_ACCOUNTS:
+        raise PlanInputError(f"You can add up to {MAX_CUSTOM_ACCOUNTS} accounts.")
+    if not custom and len(set(categories)) != len(categories):
         raise PlanInputError("Each savings account type can only be added once.")
 
     savings = [option]
-    for category, name in zip(categories, names):
-        prefix = category.lower()
-        if category not in ('ESRP', 'HSA', 'IRA', 'TBA'):
+    seen = {}
+    for position, (category, name) in enumerate(zip(categories, names)):
+        if category not in ('ESRP', 'HSA', 'IRA', 'TBA') + (('HYSA',) if custom else ()):
             raise PlanInputError("Invalid saving category.")
+        prefix = category.lower()
+        # Custom plans can hold several accounts of one type; fields are matched by order within the type
+        index = seen.get(category, 0)
+        seen[category] = index + 1
         label = f"Account '{name}'"
         saving = {'saving_category': category, 'saving_name': name}
-        saving['current_value'] = _single(request, f'{prefix}_current_value', _to_int, f"{label} current value")
-        saving['yearly_growth'] = _single(request, f'{prefix}_yearly_growth', float, f"{label} yearly growth")
+        saving['current_value'] = _field(request, f'{prefix}_current_value', index, _to_int, f"{label} current value")
+        saving['yearly_growth'] = _field(request, f'{prefix}_yearly_growth', index, float, f"{label} yearly growth")
         if saving['current_value'] < 0:
             raise PlanInputError(f"{label}: current value can not be negative.")
         _check_range(saving['yearly_growth'], -50, 50, f"{label} yearly growth")
         if category == 'ESRP':
-            saving['employer_contribution_rate'] = _single(request, 'esrp_contribution_rate', float, f"{label} employer contribution")
+            saving['employer_contribution_rate'] = _field(request, 'esrp_contribution_rate', index, float, f"{label} employer contribution")
             _check_range(saving['employer_contribution_rate'], 0, 100, f"{label} employer contribution")
-        if category != 'TBA':
-            saving['contribution_limit'] = _single(request, f'{prefix}_contribution_limit', _to_int, f"{label} contribution limit")
-            saving['contribution_limit_step'] = _single(request, f'{prefix}_contribution_limit_step', _to_int, f"{label} limit increase")
+        if category not in UNLIMITED_CATEGORIES:
+            saving['contribution_limit'] = _field(request, f'{prefix}_contribution_limit', index, _to_int, f"{label} contribution limit")
+            saving['contribution_limit_step'] = _field(request, f'{prefix}_contribution_limit_step', index, _to_int, f"{label} limit increase")
             if saving['contribution_limit'] < 0:
                 raise PlanInputError(f"{label}: contribution limit can not be negative.")
+        if custom:
+            saving.update(_parse_custom_settings(request, position, category, label))
         savings.append(saving)
     if option == 'Recommended':
         order = ['ESRP', 'HSA', 'IRA', 'TBA']

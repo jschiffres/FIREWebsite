@@ -55,6 +55,42 @@ class EngineTests(TestCase):
         self.assertEqual(fi.accounts[3]['contribution_amounts'], [26000] * 5)
         self.assertEqual(fi.unallocated_total, 0)
 
+    def test_custom_allocation_modes_and_order(self):
+        roth = dict(HSA, saving_name='Roth', allocation_mode='fixed', allocation_value=6000)
+        pct = dict(TBA, saving_name='Pct', allocation_mode='percent', allocation_value=50)
+        fi = PlanObject(make_plan(['Custom', roth, pct, dict(TBA)])).run()
+        self.assertEqual(fi.accounts[1]['contribution_amounts'], [4000] * 5)  # fixed capped by limit
+        self.assertEqual(fi.accounts[2]['contribution_amounts'], [20000] * 5)  # 50% of 40000
+        self.assertEqual(fi.accounts[3]['contribution_amounts'], [16000] * 5)  # the rest
+        self.assertEqual(fi.unallocated_total, 0)
+
+    def test_custom_match_only_and_summary(self):
+        esrp = dict(ESRP, allocation_mode='match')
+        fi = PlanObject(make_plan(['Custom', esrp])).run()
+        self.assertEqual(fi.accounts[1]['contribution_amounts'], [5000] * 5)
+        self.assertEqual(fi.accounts[1]['employer_contribution_amounts'], [5000] * 5)
+        self.assertEqual(fi.allocation_summary['unallocated'], 35000)
+        self.assertEqual(fi.allocation_summary['placed'], 5000)
+
+    def test_dormant_account_gets_nothing_and_surplus_goes_to_hysa(self):
+        old_401k = dict(ESRP, saving_name='Old 401k', current_value=50000, yearly_growth=10.0, allocation_mode='none')
+        hysa = {'saving_category': 'HYSA', 'saving_name': 'Savings', 'current_value': 0, 'yearly_growth': 0.0}
+        fi = PlanObject(make_plan(['Custom', old_401k, dict(HSA), hysa])).run()
+        self.assertEqual(fi.accounts[1]['contribution_amounts'], [0] * 5)
+        self.assertEqual(fi.accounts[1]['employer_contribution_amounts'], [0] * 5)
+        self.assertEqual(fi.accounts[1]['end_amounts'][0], 55000)
+        self.assertEqual(fi.accounts[2]['contribution_amounts'], [4000] * 5)
+        self.assertEqual(fi.accounts[3]['contribution_amounts'], [36000] * 5)
+        self.assertEqual(fi.unallocated_total, 0)
+        self.assertEqual(fi.allocation_summary['unallocated'], 0)
+
+    def test_shortfall_draws_hysa_first_then_other_accounts(self):
+        hysa = {'saving_category': 'HYSA', 'saving_name': 'Savings', 'current_value': 15000, 'yearly_growth': 0.0}
+        brokerage = dict(TBA, current_value=20000)
+        fi = PlanObject(make_plan(['Custom', brokerage, hysa], expense=90000)).run()
+        self.assertEqual(fi.accounts[2]['contribution_amounts'][:3], [-10000, -5000, 0])
+        self.assertEqual(fi.accounts[1]['contribution_amounts'][:3], [0, -5000, -10000])
+
     def test_unallocated_savings_reported(self):
         fi = PlanObject(make_plan(['Custom', dict(ESRP)])).run()
         self.assertEqual(fi.unallocated_savings, [30000] * 5)
@@ -621,6 +657,28 @@ class CustomSavingsPremiumTests(TestCase):
         page = self.client.get(reverse('savings-method'), {'saving_option': 'Custom'}).content.decode()
         self.assertIn('data-sortable', page)
         self.assertEqual(self.client.post(reverse('newplan'), self.custom_post()).status_code, 302)
+
+    def test_custom_allows_multiple_accounts_per_type_with_rules(self):
+        Profile.objects.update_or_create(user=self.user, defaults={'is_premium': True})
+        post = survey_post(saving_option='Custom', saving_name=['A', 'B', 'Cash'],
+                           saving_category=['TBA', 'TBA', 'HYSA'],
+                           tba_current_value=['0', '5'], tba_yearly_growth=['6', '5'],
+                           hysa_current_value=['100'], hysa_yearly_growth=['4'],
+                           allocation_mode=['fixed', 'none', 'limit'], allocation_value=['1000', '0', '0'])
+        self.assertEqual(self.client.post(reverse('newplan'), post).status_code, 302)
+        saved = Plan.objects.latest('created_at').savings
+        self.assertEqual([s['saving_name'] for s in saved[1:]], ['A', 'B', 'Cash'])
+        self.assertEqual(saved[1]['allocation_mode'], 'fixed')
+        self.assertEqual(saved[1]['allocation_value'], 1000)
+        self.assertEqual(saved[2]['allocation_mode'], 'none')
+        self.assertEqual(saved[2]['current_value'], 5)
+        self.assertEqual(saved[3]['saving_category'], 'HYSA')
+
+    def test_hysa_is_custom_only(self):
+        post = survey_post(saving_option='Recommended', saving_name=['Cash'], saving_category=['HYSA'],
+                           hysa_current_value=['1'], hysa_yearly_growth=['4'])
+        self.assertEqual(self.client.post(reverse('newplan'), post).status_code, 200)
+        self.assertEqual(Plan.objects.count(), 0)
 
     def test_recommended_is_fixed_order_and_not_sortable(self):
         page = self.client.get(reverse('savings-method'), {'saving_option': 'Recommended'}).content.decode()

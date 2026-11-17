@@ -1,0 +1,43 @@
+{% if custom %}
+<!-- CUSTOM ALLOCATION RULES -->
+{% with mode=account.allocation_mode|default:'limit' %}
+<div class="alloc-row">
+    <div class="row g-4 mb-3">
+        <div class="col-lg-4">
+            <h5 class="input-name">How Savings Fill This Account</h5>
+            <select class="form-select input-select" name="allocation_mode" onchange="allocModeChange(this)">
+                <option value="limit" {% if mode == 'limit' %}selected{% endif %}>{% if category == 'HYSA' %}Surplus savings (whatever is left over){% elif category == 'TBA' %}All remaining savings{% else %}Fill up to the limit{% endif %}</option>
+                <option value="fixed" {% if mode == 'fixed' %}selected{% endif %}>A fixed $ amount per year</option>
+                <option value="percent" {% if mode == 'percent' %}selected{% endif %}>A % of yearly savings</option>
+                {% if category == 'ESRP' %}<option value="match" {% if mode == 'match' %}selected{% endif %}>Only enough to get the employer match</option>{% endif %}
+                <option value="none" {% if mode == 'none' %}selected{% endif %}>No new contributions (dormant account, e.g. an old 401k)</option>
+            </select>
+        </div>
+        <div class="col-lg-3 alloc-value-col{% if mode != 'fixed' and mode != 'percent' %} d-none{% endif %}">
+            <h5 class="input-name alloc-value-label">{% if mode == 'percent' %}Percent of Yearly Savings{% else %}Dollars Per Year{% endif %}</h5>
+            <div class="input-group">
+                <span class="input-group-text alloc-prefix{% if mode == 'percent' %} d-none{% endif %}">$</span>
+                <input type="number" class="form-control input-field" name="allocation_value" min="0" step="any" value="{{ account.allocation_value|default:0 }}">
+                <span class="input-group-text alloc-suffix{% if mode != 'percent' %} d-none{% endif %}">%</span>
+            </div>
+        </div>
+    </div>
+    <div class="form-text mb-3 alloc-dormant-note{% if mode != 'none' %} d-none{% endif %}"><small>A dormant account keeps growing at its yearly growth rate and counts toward your net worth, but receives no new savings{% if category == 'ESRP' %} or employer match{% endif %}.</small></div>
+    {% if category == 'HYSA' %}<div class="form-text mb-3"><small>Any savings not placed in other accounts go to your high yield savings account. If a year's expenses exceed your income, it is drawn down first.</small></div>{% endif %}
+</div>
+{% endwith %}
+<script>
+if (!window.allocModeChange) {
+    window.allocModeChange = function (select) {
+        const row = select.closest('.alloc-row');
+        const valueCol = row.querySelector('.alloc-value-col');
+        const percent = select.value === 'percent';
+        valueCol.classList.toggle('d-none', select.value !== 'fixed' && !percent);
+        row.querySelector('.alloc-value-label').textContent = percent ? 'Percent of Yearly Savings' : 'Dollars Per Year';
+        row.querySelector('.alloc-prefix').classList.toggle('d-none', percent);
+        row.querySelector('.alloc-suffix').classList.toggle('d-none', !percent);
+        row.querySelector('.alloc-dormant-note').classList.toggle('d-none', select.value !== 'none');
+    };
+}
+</script>
+{% endif %}

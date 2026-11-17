@@ -23,7 +23,7 @@ from django.conf import settings
 from django.utils import timezone
 from .forms import CreateUserForm, FeedbackForm, PlanForm, EditPlanForm
 from .engine import PlanObject
-from .plan_input import saveplan
+from .plan_input import saveplan, MAX_CUSTOM_ACCOUNTS
 from .emails import welcome_email
 from . import emails
 from . import auth_flows, billing, pdf_report
@@ -389,7 +389,7 @@ PREMIUM_FEATURES = [
     ('Retirement withdrawal planning', 'See how long your portfolio lasts once you stop working, with spending, inflation and market-risk odds.'),
     ('Plan comparison', 'Compare up to three plans side by side on one chart.'),
     ('CSV & PDF downloads', 'Export the full year-by-year projection to a spreadsheet, or download a polished PDF report of your plan to save or share.'),
-    ('Custom savings method', 'Build your own account list and set the exact order your savings are invested in. Free plans use the Simple or Recommended methods.'),
+    ('Custom savings method', 'Add several accounts of any type, order them by priority, and choose how savings fill each one (up to the limit, a fixed amount, a percent, or just the employer match), mark old accounts as dormant, and keep a high yield savings account for surplus cash and shortfall years. Free plans use the Simple or Recommended methods.'),
     ('More saved plans', 'Save up to 50 plans instead of the free limit.'),
 ]
 
@@ -919,8 +919,9 @@ def create_saving(request):
     hsa_count = int(request.GET.get("hsa_count"))
     ira_count = int(request.GET.get("ira_count"))
     tba_count = int(request.GET.get("tba_count"))
-    if entry_count < 4:
-        return render(request, 'FIRE/partials/new_saving.html', {'entry_count': entry_count, 'esrp_count': esrp_count, 'hsa_count': hsa_count, 'ira_count': ira_count, 'tba_count': tba_count})
+    custom = request.GET.get("custom") == "1"
+    if entry_count < (MAX_CUSTOM_ACCOUNTS if custom else 4):
+        return render(request, 'FIRE/partials/new_saving.html', {'custom': custom, 'entry_count': entry_count, 'esrp_count': esrp_count, 'hsa_count': hsa_count, 'ira_count': ira_count, 'tba_count': tba_count})
     else:
         return render(request, 'FIRE/partials/none.html')
 
@@ -962,30 +963,21 @@ def expense_fields(request):
 # HTMX: Add Category Fields
 def saving_fields(request):
     category = request.GET.get("saving_category")
+    custom = request.GET.get("custom") == "1"
     ages = [num for num in range(int(request.GET.get("min_age")),int(request.GET.get("max_age")))]
-    if category == "ESRP":        
-        if int(request.GET.get("esrp_count")) == 0:
-            return render(request, 'FIRE/partials/fields_savings_esrp.html', {'ages' : ages})
-        else:
-            return render(request, 'FIRE/partials/fields_savings_none.html')
-    elif category == "IRA":
-        if int(request.GET.get("ira_count")) == 0:
-            return render(request, 'FIRE/partials/fields_savings_ira.html', {'ages' : ages})
-        else:
-            return render(request, 'FIRE/partials/fields_savings_none.html')
-    elif category == "HSA":
-        if int(request.GET.get("hsa_count")) == 0:
-            return render(request, 'FIRE/partials/fields_savings_hsa.html', {'ages' : ages})
-        else:
-            return render(request, 'FIRE/partials/fields_savings_none.html')
-    elif category == "TBA":
-        if int(request.GET.get("tba_count")) == 0:
-            return render(request, 'FIRE/partials/fields_savings_tba.html', {'ages' : ages})
-        else:
-            return render(request, 'FIRE/partials/fields_savings_none.html')
-    else:
+    templates = {
+        'ESRP': 'FIRE/partials/fields_savings_esrp.html',
+        'HSA': 'FIRE/partials/fields_savings_hsa.html',
+        'IRA': 'FIRE/partials/fields_savings_ira.html',
+        'TBA': 'FIRE/partials/fields_savings_tba.html',
+        'HYSA': 'FIRE/partials/fields_savings_hysa.html',
+    }
+    if category not in templates:
         return render(request, 'FIRE/partials/fields_savings_none.html')
-
+    # Only Custom plans may hold several accounts of one type
+    if not custom and int(request.GET.get(f"{category.lower()}_count", 0)) != 0:
+        return render(request, 'FIRE/partials/fields_savings_none.html')
+    return render(request, templates[category], {'ages': ages, 'custom': custom})
 # HTMX: Add Entry Table    
 def income_table(request):
     if request.GET.get('income_category') == "None":

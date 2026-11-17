@@ -31,6 +31,12 @@ def sum_series(series, length):
 
 
 SCENARIO_RETURN_SHIFT = 2.0
+
+ACCOUNT_COLORS = ['#285C53', '#4F378A', '#EC652B', '#2E7D9A', '#B08900', '#7A5C58', '#3C8D40', '#C2185B']
+# Accounts without a yearly contribution limit
+UNLIMITED_CATEGORIES = ('TBA', 'HYSA')
+# Shortfall years are withdrawn from these account types in this order
+WITHDRAWAL_ORDER = ('HYSA', 'TBA', 'IRA', 'ESRP', 'HSA')
 MONTE_CARLO_TRIALS = 400
 MONTE_CARLO_VOLATILITY = 10.0
 MAX_DEFAULT_RETIREMENT_RETURN = 6.0
@@ -185,7 +191,8 @@ class PlanObject:
         if self.is_simple:
             return
         for account in self.accounts[1:]:
-            if account['saving_category'] != 'TBA':
+            category = account['saving_category']
+            if category not in UNLIMITED_CATEGORIES:
                 account['contribution_limits'] = [
                     account['contribution_limit'] + year * account['contribution_limit_step']
                     for year in range(self.years_until_retirement)
@@ -194,64 +201,146 @@ class PlanObject:
     def compute_contributions(self):
         n = self.years_until_retirement
         self.unallocated_savings = [0] * n
+        self.allocation_summary = None
 
         if self.is_simple:
             self.accounts[1]['contribution_amounts'] = list(self.total_savings)
             return
 
-        esrp, hsa, ira, tba = (self._account(c) for c in ('ESRP', 'HSA', 'IRA', 'TBA'))
-        employee = {id(a): [0] * n for a in self.accounts[1:]}
-        employer = [0] * n
-
+        accounts = self.accounts[1:]
+        employee = {id(a): [0] * n for a in accounts}
+        employer = {id(a): [0] * n for a in accounts}
+        allocate = self._allocate_custom if self.accounts[0] == 'Custom' else self._allocate_recommended
+        balances = {id(a): a['current_value'] for a in accounts}
         for year in range(n):
             savings = self.total_savings[year]
-
             if savings < 0:
-                # Shortfall years are withdrawn from the first available account
-                for account in (tba, ira, esrp, hsa):
-                    if account is not None:
-                        employee[id(account)][year] = savings
-                        break
-                continue
+                self._withdraw_shortfall(accounts, balances, employee, year, -savings)
+            else:
+                allocate(year, savings, accounts, employee, employer)
+            # Track balances so a shortfall can be drawn from accounts that actually hold money
+            for account in accounts:
+                key = id(account)
+                balances[key] = math.floor(
+                    (balances[key] + employee[key][year] + employer[key][year])
+                    * (1 + pct(account['yearly_growth'] + self.return_delta))
+                )
 
-            remaining = savings
-            esrp_amount = 0
-            if esrp is not None:
-                # Employer contributes dollar-for-dollar up to rate% of salary, so fill the match first
-                match_target = math.floor(pct(esrp['employer_contribution_rate']) * self.total_salary_income[year])
-                esrp_amount = min(remaining, match_target, esrp['contribution_limits'][year])
-                employer[year] = esrp_amount
-                remaining -= esrp_amount
-            if hsa is not None:
-                amount = min(remaining, hsa['contribution_limits'][year])
-                employee[id(hsa)][year] = amount
-                remaining -= amount
-            if esrp is not None:
-                extra = min(remaining, esrp['contribution_limits'][year] - esrp_amount)
-                employee[id(esrp)][year] = esrp_amount + extra
-                remaining -= extra
-            if ira is not None:
-                amount = min(remaining, ira['contribution_limits'][year])
-                employee[id(ira)][year] = amount
-                remaining -= amount
-            if tba is not None:
-                employee[id(tba)][year] = remaining
-                remaining = 0
-            self.unallocated_savings[year] = remaining
-
-        for account in self.accounts[1:]:
+        for account in accounts:
             account['contribution_amounts'] = employee[id(account)]
             if account['saving_category'] == 'ESRP':
-                account['employer_contribution_amounts'] = employer
+                account['employer_contribution_amounts'] = employer[id(account)]
 
-        def series(account):
-            return employee[id(account)] if account is not None else [0] * n
+        def category_series(source, category):
+            return sum_series([source[id(a)] for a in accounts if a['saving_category'] == category], n)
 
-        self.hsa_contribution_amounts = series(hsa)
-        self.esrp_contribution_amounts = series(esrp)
-        self.esrp_employer_contribution_amounts = employer if esrp is not None else [0] * n
-        self.ira_contribution_amounts = series(ira)
-        self.tba_contribution_amounts = series(tba)
+        self.hsa_contribution_amounts = category_series(employee, 'HSA')
+        self.esrp_contribution_amounts = category_series(employee, 'ESRP')
+        self.esrp_employer_contribution_amounts = category_series(employer, 'ESRP')
+        self.ira_contribution_amounts = category_series(employee, 'IRA')
+        self.tba_contribution_amounts = category_series(employee, 'TBA')
+        self.hysa_contribution_amounts = category_series(employee, 'HYSA')
+        self.allocation_summary = self._allocation_summary(accounts, employee, employer)
+
+    def _withdraw_shortfall(self, accounts, balances, employee, year, shortfall):
+        """Cover a shortfall from the high yield savings account first, then taxable, IRA, 401k and HSA."""
+        ordered = [a for category in WITHDRAWAL_ORDER for a in accounts if a['saving_category'] == category]
+        for account in ordered:
+            take = min(shortfall, max(balances[id(account)], 0))
+            employee[id(account)][year] -= take
+            shortfall -= take
+        if shortfall > 0 and ordered:
+            employee[id(ordered[0])][year] -= shortfall
+
+    def _allocate_recommended(self, year, savings, accounts, employee, employer):
+        esrp, hsa, ira, tba = (self._account(c) for c in ('ESRP', 'HSA', 'IRA', 'TBA'))
+        remaining = savings
+        esrp_amount = 0
+        if esrp is not None:
+            # Employer contributes dollar-for-dollar up to rate% of salary, so fill the match first
+            match_target = math.floor(pct(esrp['employer_contribution_rate']) * self.total_salary_income[year])
+            esrp_amount = min(remaining, match_target, esrp['contribution_limits'][year])
+            employer[id(esrp)][year] = esrp_amount
+            remaining -= esrp_amount
+        if hsa is not None:
+            amount = min(remaining, hsa['contribution_limits'][year])
+            employee[id(hsa)][year] = amount
+            remaining -= amount
+        if esrp is not None:
+            extra = min(remaining, esrp['contribution_limits'][year] - esrp_amount)
+            employee[id(esrp)][year] = esrp_amount + extra
+            remaining -= extra
+        if ira is not None:
+            amount = min(remaining, ira['contribution_limits'][year])
+            employee[id(ira)][year] = amount
+            remaining -= amount
+        if tba is not None:
+            employee[id(tba)][year] = remaining
+            remaining = 0
+        self.unallocated_savings[year] = remaining
+
+    def _allocate_custom(self, year, savings, accounts, employee, employer):
+        """Fill accounts in the user's order, each by its own rule. Dormant accounts get nothing and
+        whatever is left over goes to the high yield savings account."""
+        remaining = savings
+        for account in accounts:
+            category = account['saving_category']
+            mode = account.get('allocation_mode', 'limit')
+            value = account.get('allocation_value', 0)
+            if mode == 'none' or (category == 'HYSA' and mode == 'limit'):
+                continue
+            match_target = 0
+            if category == 'ESRP':
+                match_target = math.floor(pct(account['employer_contribution_rate']) * self.total_salary_income[year])
+
+            if mode == 'fixed':
+                wanted = value
+            elif mode == 'percent':
+                wanted = math.floor(savings * pct(value))
+            elif mode == 'match':
+                wanted = match_target
+            else:
+                wanted = remaining
+            if category not in UNLIMITED_CATEGORIES:
+                wanted = min(wanted, account['contribution_limits'][year])
+            amount = max(0, min(wanted, remaining))
+            employee[id(account)][year] = amount
+            remaining -= amount
+            if category == 'ESRP':
+                employer[id(account)][year] = min(amount, match_target)
+
+        sinks = [a for a in accounts if a['saving_category'] == 'HYSA' and a.get('allocation_mode', 'limit') != 'none']
+        sink = next((a for a in sinks if a.get('allocation_mode', 'limit') == 'limit'), sinks[0] if sinks else None)
+        if sink is not None and remaining > 0:
+            employee[id(sink)][year] += remaining
+            remaining = 0
+        self.unallocated_savings[year] = remaining
+
+    def _allocation_summary(self, accounts, employee, employer):
+        """Where this year's savings go, for the dashboard's allocation bar."""
+        total = max(self.total_savings[0], 0)
+        if total == 0:
+            return None
+        items = []
+        for position, account in enumerate(accounts):
+            amount = max(employee[id(account)][0], 0)
+            if amount > 0:
+                items.append({
+                    'name': account.get('saving_name', 'Savings'),
+                    'amount': amount,
+                    'percent': round(amount / total * 100, 1),
+                    'color': ACCOUNT_COLORS[position % len(ACCOUNT_COLORS)],
+                })
+        unallocated = max(self.unallocated_savings[0], 0)
+        return {
+            'age': self.ages[0],
+            'total': total,
+            'items': items,
+            'placed': total - unallocated,
+            'unallocated': unallocated,
+            'unallocated_percent': round(unallocated / total * 100, 1),
+            'employer': sum(employer[id(a)][0] for a in accounts),
+        }
 
     def compute_balances(self):
         n = self.years_until_retirement
@@ -382,7 +471,18 @@ class PlanObject:
             {'name': a.get('saving_name', 'Savings'), 'end_amounts': a['end_amounts']}
             for a in self.accounts[1:]
         ]
+        n = self.years_until_retirement
+        allocations = []
+        for a in self.accounts[1:]:
+            name = a.get('saving_name', 'Savings')
+            allocations.append({'name': name, 'amounts': list(a.get('contribution_amounts', [0] * n))})
+            employer = a.get('employer_contribution_amounts')
+            if employer and any(employer):
+                allocations.append({'name': f'{name} (employer match)', 'amounts': list(employer)})
+        if any(self.unallocated_savings):
+            allocations.append({'name': 'Unallocated', 'amounts': list(self.unallocated_savings)})
         return {
+            'allocations': allocations,
             'ages': self.ages,
             'net_worths': self.net_worths,
             'magic_numbers': self.magic_numbers,
@@ -564,6 +664,7 @@ class PlanObject:
                 ("HSA", self.hsa_contribution_amounts),
                 ("IRA", self.ira_contribution_amounts),
                 ("TBA", self.tba_contribution_amounts),
+                ("HYSA", self.hysa_contribution_amounts),
                 ("401k/403b", self.esrp_contribution_amounts),
             ):
                 total = sum(v for v in series if v > 0)

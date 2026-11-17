@@ -138,7 +138,7 @@
 </div>
 <div class="btn-toolbar" role="toolbar">
     <div class="btn-group" role="group">
-        <button type="button" class="btn btn-add" hx-get="{% url 'create-saving' %}" hx-target="#saving-div" hx-swap="beforeend" hx-vals="js:{entry_count: document.querySelectorAll('.saving-entry').length, esrp_count: document.querySelectorAll('.esrp-entry').length, hsa_count: document.querySelectorAll('.hsa-entry').length, ira_count: document.querySelectorAll('.ira-entry').length, tba_count: document.querySelectorAll('.tba-entry').length}"><i class="bi bi-plus"></i>  Account</button>
+        <button type="button" class="btn btn-add" hx-get="{% url 'create-saving' %}" hx-target="#saving-div" hx-swap="beforeend" hx-vals="js:{custom: 0, entry_count: document.querySelectorAll('.saving-entry').length, esrp_count: document.querySelectorAll('.esrp-entry').length, hsa_count: document.querySelectorAll('.hsa-entry').length, ira_count: document.querySelectorAll('.ira-entry').length, tba_count: document.querySelectorAll('.tba-entry').length}"><i class="bi bi-plus"></i>  Account</button>
     </div>
     <div class="btn-group" role="group">
         <button type="button" id="expand-savings-entries" class="btn btn-action-empty" onclick="savingsAccordionAction('Expand');"><i class="bi bi-arrows-expand"></i>  Expand All</button>
