@@ -46,7 +46,7 @@
     </div>
     <div class="card dashboard-card mb-4">
         <div class="card-body">
-            <canvas id="CompareChart" height="110"></canvas>
+            <div class="chart-box"><canvas id="CompareChart"></canvas></div>
         </div>
     </div>
 </div>
@@ -71,6 +71,7 @@
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 animation: false,
                 parsing: false,
                 plugins: {
