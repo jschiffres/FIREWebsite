@@ -65,8 +65,8 @@
                 </div>
                 <div class="form-check form-check-inline">
                     <input class="form-check-input" type="radio" name="saving_option" id="saving_option_custom" value="Custom" hx-get="{% url 'savings-method' %}" hx-target="#savings-method" hx-trigger="click" hx-swap="innerHTML">
-                    <label class="form-check-label" for="saving_option_advanced">Custom</label>
-                    <a tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-title="Custom" data-bs-content="Savings will be allocated per your priorities. Add as many accounts and order them yourself!"><i class="bi bi-question-circle"></i></a>
+                    <label class="form-check-label" for="saving_option_custom">Custom{% if not is_premium %} <span class="badge text-bg-warning"><i class="bi bi-lock-fill" aria-hidden="true"></i> Premium</span>{% endif %}</label>
+                    <a tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-title="Custom (Premium)" data-bs-content="Savings will be allocated per your priorities. Add your own accounts and order them yourself!"><i class="bi bi-question-circle"></i></a>
                 </div>
             </div>
             <div id="savings-method">

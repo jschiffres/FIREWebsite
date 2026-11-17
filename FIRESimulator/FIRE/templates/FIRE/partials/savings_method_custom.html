@@ -1,21 +1,20 @@
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
-document.body.addEventListener('htmx:afterRequest', function () {
-    const list = document.getElementById('saving-div');
-
-    const sortable = new Sortable(list, {
-        animation: 150,
-        handle: '.accordion-header', // users drag the header
-        ghostClass: 'bg-light',
-        onEnd: function (evt) {
-            const newOrder = Array.from(list.children).map(item => item.dataset.id);
+if (!window.savingSortableBound) {
+    window.savingSortableBound = true;
+    const initSortable = function () {
+        const list = document.getElementById('saving-div');
+        if (list && list.hasAttribute('data-sortable') && !list._sortable && window.Sortable) {
+            list._sortable = new Sortable(list, {animation: 150, handle: '.accordion-header', ghostClass: 'bg-light'});
         }
-    });
-});
+    };
+    document.body.addEventListener('htmx:afterSettle', initSortable);
+    document.body.addEventListener('htmx:afterRequest', initSortable);
+    initSortable();
+}
 </script>
 
 <!-- Savings Entries -->
-<div id="saving-div">
+<div id="saving-div" data-sortable>
 </div>
 <div class="btn-toolbar" role="toolbar">
     <div class="btn-group" role="group">

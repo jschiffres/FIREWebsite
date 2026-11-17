@@ -1,5 +1,6 @@
 """Parsing and validation of plan survey / dashboard form submissions."""
 from .engine import CURRENT_AGE, RETIREMENT_AGE
+from .models import user_is_premium
 
 
 class PlanInputError(ValueError):
@@ -138,8 +139,10 @@ def _parse_expenses(request, current_age, retirement_age):
     return expenses
 
 
-def _parse_savings(request):
+def _parse_savings(request, allow_custom=False):
     option = request.POST.get('saving_option')
+    if option == 'Custom' and not allow_custom:
+        raise PlanInputError("The Custom savings method is a Premium feature. Please choose Simple or Recommended.")
     if option == 'Simple':
         net_worth = _single(request, 'simple_net_worth', _to_int, "current net worth")
         growth = _single(request, 'simple_yearly_growth', float, "yearly growth")
@@ -176,6 +179,9 @@ def _parse_savings(request):
             if saving['contribution_limit'] < 0:
                 raise PlanInputError(f"{label}: contribution limit can not be negative.")
         savings.append(saving)
+    if option == 'Recommended':
+        order = ['ESRP', 'HSA', 'IRA', 'TBA']
+        savings[1:] = sorted(savings[1:], key=lambda s: order.index(s['saving_category']))
     return savings
 
 
@@ -187,7 +193,9 @@ def saveplan(form, request, dashboard_edit=False):
         current_age, retirement_age = _parse_ages(request)
         incomes = _parse_incomes(request, current_age, retirement_age)
         expenses = _parse_expenses(request, current_age, retirement_age)
-        savings = _parse_savings(request)
+        existing = getattr(form.instance, 'savings', None) or []
+        allow_custom = user_is_premium(request.user) or (bool(existing) and existing[0] == 'Custom')
+        savings = _parse_savings(request, allow_custom)
     except PlanInputError as error:
         return str(error)
 

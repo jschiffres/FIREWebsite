@@ -64,9 +64,9 @@
                         <a tabindex="0" role="button" aria-label="About the Recommended method" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-title="Recommended" data-bs-html="true" data-bs-content="Savings will be allocated in the following order*: <ol> <li>401k to recieve employer match</li><li>Max HSA</li><li>Max 401k</li><li>Max IRA</li><li>TBA</li></ol> *Each account is optional"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
                     </div>
                     <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="saving_option" id="saving_option_custom" value="Custom" {% if FIplan.accounts|first == 'Custom' %} checked {% endif %}>
-                        <label class="form-check-label" for="saving_option_custom">Custom</label>
-                        <a tabindex="0" role="button" aria-label="About the Custom method" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-title="Custom" data-bs-content="Savings will be allocated per your priorities. Add as many accounts and order them yourself!"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+                        <input class="form-check-input" type="radio" name="saving_option" id="saving_option_custom" value="Custom" {% if FIplan.accounts|first == 'Custom' %} checked {% elif not is_premium %} disabled {% endif %}>
+                        <label class="form-check-label" for="saving_option_custom">Custom{% if not is_premium %} <a href="{% url 'myaccount' %}#premium" class="badge text-bg-warning text-decoration-none"><i class="bi bi-lock-fill" aria-hidden="true"></i> Premium</a>{% endif %}</label>
+                        <a tabindex="0" role="button" aria-label="About the Custom method" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-title="Custom (Premium)" data-bs-content="Savings will be allocated per your priorities. Add your own accounts and order them yourself!"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
                     </div>
                 </div>
                 <div id="savings-method" data-method="{{ FIplan.accounts|first }}" data-method-url="{% url 'savings-method' %}">
