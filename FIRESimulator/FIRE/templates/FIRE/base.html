@@ -55,14 +55,13 @@
             trigger: 'focus'
           })
       })
-      document.addEventListener('focusin', (e) => {
-          const el = e.target.closest && e.target.closest('[data-bs-toggle="popover"]')
-          if (el && !bootstrap.Popover.getInstance(el)) {
-              const p = new bootstrap.Popover(el, {trigger: 'focus'})
-              p.show()
-          }
-      })
     };
+    document.addEventListener('focusin', (e) => {
+        const el = e.target.closest && e.target.closest('[data-bs-toggle="popover"]')
+        if (el && !bootstrap.Popover.getInstance(el)) {
+            new bootstrap.Popover(el, {trigger: 'focus'}).show()
+        }
+    })
 </script>
   <div class="site">
     <header>

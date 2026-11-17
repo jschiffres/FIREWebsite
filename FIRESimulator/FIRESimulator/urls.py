@@ -18,18 +18,19 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path, reverse_lazy
 from FIRE import views
+from FIRE.ratelimit import ratelimit
 
 handler404 = "FIRE.views.not_found"
 handler500 = "FIRE.views.server_error"
 
 urlpatterns = [
     #PASSWORD: Reset, Change
-    path("password-reset/", auth_views.PasswordResetView.as_view(
+    path("password-reset/", ratelimit('pwreset', 5, 3600)(auth_views.PasswordResetView.as_view(
         template_name="FIRE/account/password_reset_form.html",
         email_template_name="FIRE/account/password_reset_email.txt",
         html_email_template_name="emails/password_reset.html",
         subject_template_name="FIRE/account/password_reset_subject.txt",
-        success_url=reverse_lazy("password_reset_done")), name="password_reset"),
+        success_url=reverse_lazy("password_reset_done"))), name="password_reset"),
     path("password-reset/sent/", auth_views.PasswordResetDoneView.as_view(
         template_name="FIRE/account/password_reset_done.html"), name="password_reset_done"),
     path("password-reset/<uidb64>/<token>/", auth_views.PasswordResetConfirmView.as_view(

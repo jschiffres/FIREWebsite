@@ -27,6 +27,7 @@ from .plan_input import saveplan
 from .emails import welcome_email
 from . import emails
 from . import auth_flows, billing, pdf_report
+from .ratelimit import ratelimit
 
 import math
 import csv
@@ -38,7 +39,7 @@ LEGAL_CONTEXT = {
     'effective_date': 'January 1, 2026',
     'company_name': 'FI Planner',
     'contact_email': 'hello@fiplanner.app',
-    'governing_law': '[Your state/country]',
+    'governing_law': 'Colorado, USA',
 }
 
 def privacy(request):
@@ -80,7 +81,7 @@ FAQ_SECTIONS = [
         ('Is my financial data private?',
          'Your plan data is tied to your account and is never sold. We do not ask for bank logins or account numbers; you type in estimates yourself. See the Privacy Policy for details on what we store and how to delete your data.'),
         ('How do I delete my account or plans?',
-         'You can delete individual plans from My Plans and manage your account from My Account. To have your account and all associated data removed, email hello@fiplanner.app.'),
+         'You can delete individual plans from My Plans. To permanently delete your account and all saved plans, open My Account and use the Delete account section at the bottom, which asks you to type your email to confirm.'),
     ]),
     ('Premium, billing and downloads', [
         ('What is included in Premium?',
@@ -190,6 +191,7 @@ def verify_email(request, token):
 
 @login_required
 @require_POST
+@ratelimit('resend', 5, 3600)
 def resend_verification(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
     if profile.email_verified:
@@ -260,6 +262,7 @@ def google_callback(request):
     return redirect('userplans')
 
 # USER: Signup email availability (used for inline validation)
+@ratelimit('checkemail', 30, 600, methods=('GET',))
 def check_email(request):
     email = (request.GET.get('email') or '').strip()
     taken = bool(email) and User.objects.filter(email__iexact=email).exists()
@@ -291,6 +294,7 @@ def landing(request):
     return render(request, 'FIRE/landing.html', context)
 
 # USER: Signup
+@ratelimit('signup', 10, 3600)
 def signupuser(request):
     if request.method == "GET":
         return render(request, 'FIRE/signupuser.html', {'form':CreateUserForm()})
@@ -298,6 +302,7 @@ def signupuser(request):
     return response or error
 
 # USER: Signup & Save Plan            
+@ratelimit('signup', 10, 3600)
 def signupsave(request, plan_id):
     plan = get_object_or_404(Plan, pk=plan_id)
     if plan.user is not None:
@@ -309,6 +314,7 @@ def signupsave(request, plan_id):
     return response or error
 
 # USER: Login
+@ratelimit('login', 10, 600)
 def loginuser(request):
     if request.method == "GET":
         if request.user.is_authenticated:
@@ -337,6 +343,7 @@ def logoutuser(request):
         return redirect('userplans')
 
 # USER: Feedback (saved, then emailed to the support inbox)
+@ratelimit('feedback', 5, 3600)
 def feedback(request):
     if request.method == "GET":
         context = {'form': FeedbackForm()}

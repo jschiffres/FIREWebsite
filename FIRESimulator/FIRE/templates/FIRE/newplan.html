@@ -58,8 +58,9 @@
     }
 
     document.addEventListener('click', function (e) {
-        if (e.target.classList.contains("btn-action-empty")) {
-            updateQuestionnaireNav(e)
+        const btn = e.target.closest ? e.target.closest('.btn-action-empty') : null
+        if (btn) {
+            updateQuestionnaireNav({target: btn})
         }
     })
 </script>

@@ -537,3 +537,14 @@ class RenamePlanTests(TestCase):
         p.refresh_from_db()
         self.assertEqual(p.plan_name, 'New')
 
+
+
+class RateLimitTests(TestCase):
+    def test_login_is_rate_limited(self):
+        from django.core.cache import cache
+        cache.clear()
+        with override_settings(RATELIMIT_ENABLED=True):
+            codes = [self.client.post('/login/', {'email': 'a@b.com', 'password': 'x'}).status_code for _ in range(12)]
+        cache.clear()
+        self.assertEqual(codes[0], 200)
+        self.assertEqual(codes[-1], 429)
