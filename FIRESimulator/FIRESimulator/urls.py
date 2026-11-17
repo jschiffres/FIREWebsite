@@ -17,6 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path, reverse_lazy
+from django.views.generic import RedirectView
+from django.contrib.staticfiles.storage import staticfiles_storage
 from FIRE import views
 from FIRE.ratelimit import ratelimit
 
@@ -60,6 +62,7 @@ urlpatterns = [
     path("terms/", views.terms, name="terms"),
     path("faq/", views.faq, name="faq"),
     path("robots.txt", views.robots_txt, name="robots_txt"),
+    path("favicon.ico", RedirectView.as_view(url=staticfiles_storage.url("favicon.svg"), permanent=True)),
     path("sitemap.xml", views.sitemap_xml, name="sitemap_xml"),
     path("billing/checkout/", views.start_checkout, name="start_checkout"),
     path("billing/portal/", views.billing_portal, name="billing_portal"),

@@ -558,3 +558,43 @@ class ClientIpTests(TestCase):
             self.assertEqual(_client_ip(req), '10.0.0.1')
         with override_settings(TRUSTED_PROXY_HOPS=1):
             self.assertEqual(_client_ip(req), '1.2.3.4')
+
+
+class CustomSavingsPremiumTests(TestCase):
+    def custom_post(self):
+        return survey_post(saving_option='Custom', saving_name=['Mine'], saving_category=['TBA'],
+                           tba_current_value=['500'], tba_yearly_growth=['6'])
+
+    def setUp(self):
+        self.user = User.objects.create_user('cust', 'cust@example.com', 'pw-12345-xyz')
+        self.client.force_login(self.user)
+
+    def test_free_user_cannot_use_custom(self):
+        self.assertEqual(self.client.get(reverse('savings-method'), {'saving_option': 'Custom'}).status_code, 200)
+        page = self.client.get(reverse('savings-method'), {'saving_option': 'Custom'}).content.decode()
+        self.assertIn('Premium feature', page)
+        self.assertNotIn('id="saving-div"', page)
+        response = self.client.post(reverse('newplan'), self.custom_post())
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Plan.objects.count(), 0)
+
+    def test_premium_user_can_use_custom(self):
+        Profile.objects.update_or_create(user=self.user, defaults={'is_premium': True})
+        page = self.client.get(reverse('savings-method'), {'saving_option': 'Custom'}).content.decode()
+        self.assertIn('data-sortable', page)
+        self.assertEqual(self.client.post(reverse('newplan'), self.custom_post()).status_code, 302)
+
+    def test_recommended_is_fixed_order_and_not_sortable(self):
+        page = self.client.get(reverse('savings-method'), {'saving_option': 'Recommended'}).content.decode()
+        self.assertNotIn('data-sortable', page)
+        post = survey_post(saving_option='Recommended', saving_name=['T', 'E'], saving_category=['TBA', 'ESRP'],
+                           tba_current_value=['1'], tba_yearly_growth=['6'], esrp_current_value=['1'],
+                           esrp_yearly_growth=['6'], esrp_contribution_rate=['3'], esrp_contribution_limit=['23000'],
+                           esrp_contribution_limit_step=['500'])
+        self.assertEqual(self.client.post(reverse('newplan'), post).status_code, 302)
+        saved = Plan.objects.latest('created_at').savings
+        self.assertEqual([s['saving_category'] for s in saved[1:]], ['ESRP', 'TBA'])
+
+    def test_favicon_linked(self):
+        self.assertIn('rel="icon"', self.client.get('/').content.decode())
+        self.assertEqual(self.client.get('/favicon.ico').status_code, 301)

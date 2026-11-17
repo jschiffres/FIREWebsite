@@ -67,7 +67,7 @@ FAQ_SECTIONS = [
         ('Should I enter income before or after tax?',
          'Enter income before tax and add your tax rate. FI Planner calculates the take-home amount and uses it to work out how much you can save each year.'),
         ('How are my savings and investments projected?',
-         'Each account grows once per year at the rate of return you enter. Your yearly savings are allocated across accounts using the savings method you choose (Simple, Recommended or Custom), and any employer match is added on top of your own contributions.'),
+         'Each account grows once per year at the rate of return you enter. Your yearly savings are allocated across accounts using the savings method you choose (Simple or Recommended, plus Custom with Premium), and any employer match is added on top of your own contributions.'),
         ('Does FI Planner account for inflation and taxes?',
          'Inflation is included in the retirement withdrawal planner, which grows your spending each year. Taxes on income are modeled through your tax rate, but taxes on withdrawals and changes to tax law are not. See the Assumptions and Disclaimer page for the full list.'),
         ('How accurate are the projections?',
@@ -389,6 +389,7 @@ PREMIUM_FEATURES = [
     ('Retirement withdrawal planning', 'See how long your portfolio lasts once you stop working, with spending, inflation and market-risk odds.'),
     ('Plan comparison', 'Compare up to three plans side by side on one chart.'),
     ('CSV & PDF downloads', 'Export the full year-by-year projection to a spreadsheet, or download a polished PDF report of your plan to save or share.'),
+    ('Custom savings method', 'Build your own account list and set the exact order your savings are invested in. Free plans use the Simple or Recommended methods.'),
     ('More saved plans', 'Save up to 50 plans instead of the free limit.'),
 ]
 
@@ -891,7 +892,8 @@ def savings_method(request):
     elif request.GET.get('saving_option') == 'Recommended':
         return render(request, 'FIRE/partials/savings_method_recommended.html')
     elif request.GET.get('saving_option') == 'Custom':
-        print("Here")
+        if not user_is_premium(request.user):
+            return render(request, 'FIRE/partials/savings_method_locked.html')
         return render(request, 'FIRE/partials/savings_method_custom.html')
     else:
         return render(request, 'FIRE/partials/none.html')
