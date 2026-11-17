@@ -598,3 +598,15 @@ class CustomSavingsPremiumTests(TestCase):
     def test_favicon_linked(self):
         self.assertIn('rel="icon"', self.client.get('/').content.decode())
         self.assertEqual(self.client.get('/favicon.ico').status_code, 301)
+
+
+class AnonymousLiveTableTests(TestCase):
+    def test_anonymous_entries_include_live_table_hooks(self):
+        page = self.client.get(reverse('income-fields'), {'income_category': 'Salary', 'min_age': 30, 'max_age': 40, 'salary_count': 0}).content.decode()
+        self.assertIn('hx-get="/', page)
+        self.assertIn('income-table', page)
+        table = self.client.get(reverse('income-table'), {
+            'income_category': 'Salary', 'min_age': 30, 'max_age': 35, 'starting_amount': 75000, 'yearly_change': 3,
+            'bonus_rate': 1, 'tax_rate': 15, 'tax_rate_change': 0, 'start_age': 30, 'stop_age': 34})
+        self.assertEqual(table.status_code, 200)
+        self.assertIn('<table', table.content.decode())

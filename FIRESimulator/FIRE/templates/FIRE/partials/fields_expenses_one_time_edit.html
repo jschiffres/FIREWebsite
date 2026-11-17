@@ -1,4 +1,3 @@
-{% if user.is_authenticated %}
 <div class="expense-one-time-entry">
     <!-- EXPENSE FIELDS ROW -->
     <div class="row g-4 mb-3">
@@ -27,33 +26,3 @@
         </div>
     </div>
 </div>
-{% else %}
-<div class="expense-lump-sum-entry">
-    <!-- EXPENSE FIELDS ROW -->
-    <div class="row g-4 mb-3">
-        <div class="col-lg-4">
-            <h5 class="input-name">Amount</h5>   
-            <div class="input-group">
-                <span class="input-group-text">$</span>             
-                <input type="number" class="form-control input-field expense_starting_amount" name="one_time_expense_amount" min="100" max="10000000" value="{{ expense.amount}}" required>
-            </div>
-            <div class="form-text text-danger form-error-text expense-amount-error"><small> Amount must be greater than $0</small></div>
-        </div>
-    </div>
-    <!-- EXPENSE FIELDS ROW -->
-    <div class="row g-4 mb-3">
-        <div class="col-lg-4">
-            <h5 class="input-name">Age</h5>              
-            <select class="form-select input-select age" name="one_time_expense_age">
-                {% for age in ages %}
-                    {% if age == expense.age %}
-                        <option value="{{ age }}" selected>{{ age }}</option>
-                    {% else %}
-                        <option value="{{ age }}">{{ age }}</option>
-                    {% endif %}
-                {% endfor %}
-            </select>
-        </div>
-    </div>
-</div>
-{% endif %}
