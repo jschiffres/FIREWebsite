@@ -20,6 +20,13 @@
   <link rel="stylesheet" type="text/css" href="{% static '/main.css' %}?v={{ css_version }}"> 
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}FI Planner{% endblock %}</title>
+  <meta name="description" content="{% block description %}FI Planner is a free financial independence calculator. Model your income, expenses and savings to find your FI number and the age you can retire.{% endblock %}">
+  <link rel="canonical" href="{{ site_url }}{{ request.path }}">
+  <meta property="og:site_name" content="FI Planner">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{% block og_title %}FI Planner | Plan your path to financial independence{% endblock %}">
+  <meta property="og:url" content="{{ site_url }}{{ request.path }}">
+  {% block head_extra %}{% endblock %}
   <script src="{% static 'a11y.js' %}?v={{ css_version }}" defer></script>
 </head>
 
@@ -139,6 +146,7 @@
       <ul class="nav justify-content-center flex-wrap" aria-label="Footer">
         <li><p class="me-2">&copy; {% now "Y" %} FI Planner</p></li>
         <li><a class="link-light me-2" href="mailto:hello@fiplanner.app">Contact</a></li>
+        <li><a class="link-light me-2" href="{% url 'faq' %}">FAQ</a></li>
         <li><a class="link-light me-2" href="{% url 'feedback' %}">Feedback</a></li>
         <li><a class="link-light me-2" href="{% url 'about' %}">Assumptions &amp; Disclaimer</a></li>
         <li><a class="link-light me-2" href="{% url 'privacy' %}">Privacy</a></li>

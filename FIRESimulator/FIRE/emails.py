@@ -61,3 +61,29 @@ def premium_ended_email(user):
 
 def payment_failed_email(user):
     return send_templated_email('Action needed: payment failed for FI Planner Premium', 'emails/payment_failed.html', user)
+
+
+def feedback_notification(feedback, reply_to=''):
+    """Forward a submitted Feedback to the support inbox. Never raises; returns success."""
+    who = feedback.user.username if feedback.user else 'Anonymous'
+    lines = [
+        f'Category: {feedback.category}',
+        f'From: {who}',
+        f'Reply email: {reply_to or "(none provided)"}',
+        f'Submitted: {feedback.created_at:%Y-%m-%d %H:%M %Z}' if feedback.created_at else '',
+        f'Reference: {feedback.id}',
+        '',
+        feedback.feedback,
+    ]
+    try:
+        EmailMultiAlternatives(
+            f'[FI Planner feedback] {feedback.category}',
+            '\n'.join(lines),
+            settings.DEFAULT_FROM_EMAIL,
+            [SUPPORT_EMAIL],
+            reply_to=[reply_to] if reply_to else None,
+        ).send()
+    except Exception:
+        logger.exception('Failed to send feedback notification')
+        return False
+    return True

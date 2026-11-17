@@ -13,6 +13,7 @@ from django.http import HttpResponse, Http404, JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 import logging
+import json
 logger = logging.getLogger(__name__)
 import copy
 import uuid
@@ -24,6 +25,7 @@ from .forms import CreateUserForm, FeedbackForm, PlanForm, EditPlanForm
 from .engine import PlanObject
 from .plan_input import saveplan
 from .emails import welcome_email
+from . import emails
 from . import auth_flows, billing, pdf_report
 
 import math
@@ -44,6 +46,93 @@ def privacy(request):
 
 def terms(request):
     return render(request, 'FIRE/terms.html', LEGAL_CONTEXT)
+
+FAQ_SECTIONS = [
+    ('Financial independence basics', [
+        ('What is financial independence (FI) and FIRE?',
+         'Financial independence means your investments can cover your living expenses without needing a paycheck. FIRE stands for "Financial Independence, Retire Early": saving aggressively so you can reach that point years or decades before a traditional retirement age.'),
+        ('What is my FI number (Magic Number)?',
+         'Your FI number, which FI Planner calls the Magic Number, is the net worth you need to support your lifestyle indefinitely. It is your annual recurring expenses divided by the safe withdrawal rate. With the 4% rule that is 25 times your yearly expenses, so $40,000 of yearly spending needs about $1,000,000.'),
+        ('What is the 4% rule?',
+         'The 4% rule is a guideline from historical market research suggesting you can withdraw about 4% of your portfolio in the first year of retirement, then adjust for inflation, with a high chance the money lasts around 30 years. It is a rule of thumb, not a guarantee, and people retiring very early often choose a lower rate.'),
+        ('What is Coast FI?',
+         'Coast FI is the point where your current investments, left to grow with no further contributions, will reach your Magic Number by your target retirement age. Once you are there you only need to earn enough to cover current expenses. FI Planner shows the age you reach Coast FI on the dashboard.'),
+        ('What are Lean FIRE and Fat FIRE?',
+         'Lean FIRE means retiring early on a frugal budget, while Fat FIRE means retiring early with a comfortable or generous budget. The difference is simply your annual expenses, so you can model either by changing the expense amounts in your plan.'),
+    ]),
+    ('Using FI Planner', [
+        ('How does the FI Planner survey work?',
+         'You answer four short steps: personal details such as current and retirement age, income, expenses, and savings and investment accounts. FI Planner then builds a year-by-year projection of your net worth and compares it to your Magic Number to estimate the age you can reach financial independence.'),
+        ('Should I enter income before or after tax?',
+         'Enter income before tax and add your tax rate. FI Planner calculates the take-home amount and uses it to work out how much you can save each year.'),
+        ('How are my savings and investments projected?',
+         'Each account grows once per year at the rate of return you enter. Your yearly savings are allocated across accounts using the savings method you choose (Simple, Recommended or Custom), and any employer match is added on top of your own contributions.'),
+        ('Does FI Planner account for inflation and taxes?',
+         'Inflation is included in the retirement withdrawal planner, which grows your spending each year. Taxes on income are modeled through your tax rate, but taxes on withdrawals and changes to tax law are not. See the Assumptions and Disclaimer page for the full list.'),
+        ('How accurate are the projections?',
+         'Projections are only as good as the numbers you enter and assume constant returns, so real results will differ. Use the What-if tool and the withdrawal planner, which includes randomised market returns, to see how sensitive your plan is.'),
+        ('Can I compare different scenarios?',
+         'Yes. Create more than one plan, or copy an existing plan and change a few inputs, then use Compare to view them side by side. The What-if sliders on the dashboard let you test changes without editing your plan.'),
+    ]),
+    ('Your account and privacy', [
+        ('Do I need an account to use FI Planner?',
+         'You can explore the site without an account, but you need a free account to save and revisit your plans. You can sign up with your email address or with Google.'),
+        ('Is my financial data private?',
+         'Your plan data is tied to your account and is never sold. We do not ask for bank logins or account numbers; you type in estimates yourself. See the Privacy Policy for details on what we store and how to delete your data.'),
+        ('How do I delete my account or plans?',
+         'You can delete individual plans from My Plans and manage your account from My Account. To have your account and all associated data removed, email hello@fiplanner.app.'),
+    ]),
+    ('Premium, billing and downloads', [
+        ('What is included in Premium?',
+         'Premium lets you create more plans and unlocks CSV and PDF downloads. The CSV is a spreadsheet of your year-by-year projection and the PDF is a polished report of your dashboard you can save or share.'),
+        ('How much does Premium cost and how do I pay?',
+         'Premium is available as a monthly or yearly subscription. Payments are handled securely by Stripe, and we never see or store your card details.'),
+        ('How do I cancel Premium?',
+         'Open My Account and choose Manage billing to cancel, update your card or download invoices. You keep Premium until the end of the period you have paid for, and your plans are never deleted when a subscription ends.'),
+        ('Is FI Planner financial advice?',
+         'No. FI Planner is an educational projection tool and is not financial, tax or investment advice. Consider speaking with a licensed professional before making major financial decisions.'),
+    ]),
+]
+
+
+def faq(request):
+    items = [{'q': q, 'a': a} for _, qs in FAQ_SECTIONS for q, a in qs]
+    schema = {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        'mainEntity': [
+            {'@type': 'Question', 'name': i['q'],
+             'acceptedAnswer': {'@type': 'Answer', 'text': i['a']}}
+            for i in items
+        ],
+    }
+    sections = [{'title': t, 'items': [{'q': q, 'a': a} for q, a in qs]} for t, qs in FAQ_SECTIONS]
+    schema_json = json.dumps(schema).replace('<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')
+    return render(request, 'FIRE/faq.html', {'sections': sections, 'faq_schema_json': schema_json})
+
+
+def robots_txt(request):
+    site = settings.SITE_URL.rstrip('/')
+    body = (
+        'User-agent: *\n'
+        'Allow: /\n'
+        'Disallow: /plan/\n'
+        'Disallow: /myplans/\n'
+        'Disallow: /account/\n'
+        'Disallow: /admin/\n'
+        'Disallow: /billing/\n'
+        f'Sitemap: {site}/sitemap.xml\n'
+    )
+    return HttpResponse(body, content_type='text/plain')
+
+
+def sitemap_xml(request):
+    site = settings.SITE_URL.rstrip('/')
+    names = ['landing', 'faq', 'about', 'privacy', 'terms', 'signupuser', 'loginuser', 'feedback']
+    urls = ''.join(f'<url><loc>{site}{reverse(n)}</loc></url>' for n in names)
+    xml = ('<?xml version="1.0" encoding="UTF-8"?>'
+           f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>')
+    return HttpResponse(xml, content_type='application/xml')
 
 def not_found(request, exception=None):
     return render(request, 'FIRE/404.html', status=404)
@@ -247,24 +336,30 @@ def logoutuser(request):
     else:
         return redirect('userplans')
 
-# USER: Feedback    
+# USER: Feedback (saved, then emailed to the support inbox)
 def feedback(request):
     if request.method == "GET":
-        if request.user.is_superuser: # just using request.user attributes
-            feedback = Feedback.objects.all()
-            return render(request, 'FIRE/feedback.html', {'form': FeedbackForm(), 'feedback': feedback})
-        return render(request, 'FIRE/feedback.html', {'form': FeedbackForm()})
-    else:
-        form = FeedbackForm(request.POST)
-        if not form.is_valid():
-            messages.warning(request, "Please provide your feedback before submitting.")
-            return redirect('feedback')
-        newfeedback = form.save(commit=False)
-        if request.user.is_authenticated:
-            newfeedback.user = request.user
-        newfeedback.save()
-        messages.success(request, "Feedback submitted successfully!")
+        context = {'form': FeedbackForm()}
+        if request.user.is_superuser:
+            context['feedback'] = Feedback.objects.select_related('user').order_by('-created_at')
+        return render(request, 'FIRE/feedback.html', context)
+    form = FeedbackForm(request.POST)
+    if form.data.get('website'):
+        # Honeypot filled in: pretend success without saving or sending
+        messages.success(request, "Thanks! Your feedback has been sent.")
         return redirect('feedback')
+    if not form.is_valid():
+        messages.warning(request, "Please choose a category and enter your feedback before submitting.")
+        return render(request, 'FIRE/feedback.html', {'form': form})
+    newfeedback = form.save(commit=False)
+    if request.user.is_authenticated:
+        newfeedback.user = request.user
+    newfeedback.status = 'New'
+    newfeedback.save()
+    reply_to = form.cleaned_data.get('reply_email') or (request.user.email if request.user.is_authenticated else '')
+    emails.feedback_notification(newfeedback, reply_to)
+    messages.success(request, "Thanks! Your feedback has been sent.")
+    return redirect('feedback')
 
 def _summarize(plan):
     try:
@@ -286,7 +381,7 @@ PREMIUM_FEATURES = [
     ('What-if scenarios', 'Drag sliders for retirement age, savings and returns and see the projection update live.'),
     ('Retirement withdrawal planning', 'See how long your portfolio lasts once you stop working, with spending, inflation and market-risk odds.'),
     ('Plan comparison', 'Compare up to three plans side by side on one chart.'),
-    ('CSV download', 'Export the full year-by-year projection to a spreadsheet.'),
+    ('CSV & PDF downloads', 'Export the full year-by-year projection to a spreadsheet, or download a polished PDF report of your plan to save or share.'),
     ('More saved plans', 'Save up to 50 plans instead of the free limit.'),
 ]
 

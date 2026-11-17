@@ -1,33 +1,63 @@
 {% extends 'FIRE/base.html' %}
-{% block title %}Feedback | FI Planner{% endblock %}
+{% block title %}Send Feedback | FI Planner{% endblock %}
+{% block description %}Send feedback, report a bug or request a feature for FI Planner. We read every message.{% endblock %}
 
 {% block content %}
 
-{% if error %}
+<div class="col-12 col-md-8 col-lg-5 mx-auto mt-3 px-3">
+    <h1 class="text-center">Send us feedback</h1>
+    <p class="text-center text-muted">Found a bug, have an idea, or spotted something that looks off? Tell us and it goes straight to our inbox. For anything else, you can also email <a href="mailto:hello@fiplanner.app">hello@fiplanner.app</a>.</p>
 
-    <div class="alert alert-danger" role="alert">
-        {{ error }}
-    </div>
+    <form method="POST" novalidate>
+        {% csrf_token %}
+        <div class="form-floating mb-3">
+            <select class="form-select{% if form.category.errors %} is-invalid{% endif %}" id="category" name="category" required>
+                <option value="">Select a category</option>
+                {% for value, label in form.fields.category.choices %}{% if value %}<option value="{{ value }}"{% if form.category.value == value %} selected{% endif %}>{{ label }}</option>{% endif %}{% endfor %}
+            </select>
+            <label for="category">Category</label>
+            {% if form.category.errors %}<div class="invalid-feedback">Please choose a category.</div>{% endif %}
+        </div>
 
-{% endif %}
+        <div class="form-floating mb-3">
+            <textarea class="form-control{% if form.feedback.errors %} is-invalid{% endif %}" id="feedback" name="feedback" placeholder="Your feedback" style="height: 160px" maxlength="5000" required>{{ form.feedback.value|default:'' }}</textarea>
+            <label for="feedback">Your feedback</label>
+            {% if form.feedback.errors %}<div class="invalid-feedback">Please enter your feedback (up to 5,000 characters).</div>{% endif %}
+        </div>
+
+        {% if not user.is_authenticated %}
+        <div class="form-floating mb-3">
+            <input type="email" class="form-control{% if form.reply_email.errors %} is-invalid{% endif %}" id="reply_email" name="reply_email" placeholder="Email (optional)" autocomplete="email" value="{{ form.reply_email.value|default:'' }}">
+            <label for="reply_email">Your email (optional, so we can reply)</label>
+            {% if form.reply_email.errors %}<div class="invalid-feedback">Please enter a valid email address.</div>{% endif %}
+        </div>
+        {% endif %}
+
+        <div style="position:absolute; left:-10000px;" aria-hidden="true">
+            <label for="website">Leave this field empty</label>
+            <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+        </div>
+
+        <div class="d-flex justify-content-center">
+            <button type="submit" class="btn btn-action-filled"><i class="bi bi-send" aria-hidden="true"></i> Send feedback</button>
+        </div>
+    </form>
+</div>
 
 {% if user.is_superuser %}
-
-    <h2 class="mt-3">Submitted feedback</h2>
-
+<hr class="hr-big">
+<div class="container">
+    <h2 class="fs-4">Submitted feedback</h2>
+    {% if feedback %}
+    <div class="table-responsive">
         <table class="table table-hover">
             <thead class="table-dark">
-                <tr>
-                    <th class="th-special" style="text-align: center;">User</th>
-                    <th class="th-special" style="text-align: center;">Category</th>
-                    <th class="th-special" style="text-align: center;">Feedback</th>
-                    <th class="th-special" style="text-align: center;">Date Provided</th>
-                </tr>
+                <tr><th scope="col">User</th><th scope="col">Category</th><th scope="col">Feedback</th><th scope="col">Date</th></tr>
             </thead>
             <tbody>
                 {% for f in feedback %}
                 <tr>
-                    <td>{{ f.user }}</td>
+                    <td>{{ f.user|default:"Anonymous" }}</td>
                     <td>{{ f.category }}</td>
                     <td>{{ f.feedback }}</td>
                     <td>{{ f.created_at|date:"D d M Y" }}</td>
@@ -35,48 +65,11 @@
                 {% endfor %}
             </tbody>
         </table>
-
+    </div>
     {% else %}
-        
-        <h5 class="text-center"> No feedback to report</h5>
-
+    <p class="text-center text-muted">No feedback to report.</p>
     {% endif %}
-
-    <hr class="hr-big">
-
-{% endif %}
-
-<div class="col-12 col-md-8 col-lg-4 mx-auto mt-3 px-3">
-
-    <h1 class="text-center">Feedback</h1>
-
-    <form method="POST"> 
-    {% csrf_token %}
-        <div class="mb-3">
-
-            <label for="category">Category</label>
-            <select class="form-select" id="category" name="category">
-                <option value=None>- -</option>
-                <option value="Bug Report">Bug Report</option>
-                <option value="Feature Request">Feature Request</option>
-                <option value="Content Accuracy">Content Accuracy</option>
-                <option value="Performance Issue">Performance Issue</option>
-                <option value="Account Issue">Account Issue</option>
-                <option value="Other">Other</option>
-            </select>
-        </div>
-        
-        <div class="mb-3">
-            <label for="feedback">Feedback</label>
-            <textarea type="text" class="form-control" id="feedback" name="feedback"  required rows="5"></textarea>
-        </div>
-
-        <div class="d-flex justify-content-center">
-            <button type="submit" class="btn btn-primary"><i class="bi bi-chat-left-text-fill"></i> Submit</button>
-        </div>
-
-    </form>
-
 </div>
+{% endif %}
 
 {% endblock %}

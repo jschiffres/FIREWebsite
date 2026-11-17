@@ -26,6 +26,12 @@ class CreateUserForm(UserCreationForm):
 		return user
 		
 class FeedbackForm(ModelForm):
+	CATEGORIES = ['Bug Report', 'Feature Request', 'Content Accuracy', 'Performance Issue', 'Account Issue', 'Other']
+	category = forms.ChoiceField(choices=[('', 'Select a category')] + [(c, c) for c in CATEGORIES])
+	feedback = forms.CharField(max_length=5000, widget=forms.Textarea)
+	reply_email = forms.EmailField(required=False)
+	website = forms.CharField(required=False)  # honeypot, real users leave it empty
+
 	class Meta:
 		model = Feedback
 		fields = ['feedback',

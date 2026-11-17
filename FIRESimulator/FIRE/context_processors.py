@@ -21,6 +21,7 @@ def premium(request):
         unverified = not Profile.objects.filter(user=user, email_verified=True).exists()
     return {
         'css_version': _css_version(),
+        'site_url': settings.SITE_URL.rstrip('/'),
         'is_premium': user_is_premium(user),
         'free_plan_limit': settings.FREE_PLAN_LIMIT,
         'email_unverified': unverified,

@@ -1,4 +1,4 @@
-from types import SimpleNamespace
+﻿from types import SimpleNamespace
 
 from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
@@ -488,3 +488,38 @@ class LegalAndEmailTemplateTests(TestCase):
         self.assertNotIn('FIRE Simulator', message.body)
         self.assertEqual(message.alternatives[0][1], 'text/html')
         self.assertIn('/password-reset/', message.alternatives[0][0])
+
+
+class FaqFeedbackTests(TestCase):
+    def test_faq_page_has_schema_and_footer_link(self):
+        r = self.client.get('/faq/')
+        self.assertEqual(r.status_code, 200)
+        html = r.content.decode()
+        self.assertIn('application/ld+json', html)
+        self.assertIn('FAQPage', html)
+        self.assertIn('href="/faq/"', self.client.get('/about/').content.decode())
+
+    def test_robots_and_sitemap(self):
+        self.assertIn('Sitemap:', self.client.get('/robots.txt').content.decode())
+        self.assertIn('/faq/', self.client.get('/sitemap.xml').content.decode())
+
+    def test_feedback_sends_email(self):
+        from django.core import mail
+        from .models import Feedback
+        r = self.client.post('/feedback/', {'category': 'Bug Report', 'feedback': 'Broken', 'reply_email': 'a@b.com'})
+        self.assertEqual(r.status_code, 302)
+        self.assertEqual(Feedback.objects.count(), 1)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ['hello@fiplanner.app'])
+
+    def test_feedback_honeypot_and_invalid(self):
+        from django.core import mail
+        from .models import Feedback
+        self.client.post('/feedback/', {'category': 'Bug Report', 'feedback': 'x', 'website': 'spam'})
+        self.client.post('/feedback/', {'category': 'Nope', 'feedback': 'x'})
+        self.assertEqual(Feedback.objects.count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_premium_copy_mentions_pdf(self):
+        self.assertIn('PDF', self.client.get('/').content.decode())
+
