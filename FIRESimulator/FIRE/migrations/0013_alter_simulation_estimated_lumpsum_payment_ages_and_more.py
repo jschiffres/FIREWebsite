@@ -3,6 +3,17 @@
 from django.db import migrations, models
 
 
+class ArrayToJsonAlterField(migrations.AlterField):
+    """PostgreSQL cannot cast an array to jsonb directly, so convert it with to_jsonb."""
+
+    def database_forwards(self, app_label, schema_editor, from_state, to_state):
+        if schema_editor.connection.vendor != 'postgresql':
+            return super().database_forwards(app_label, schema_editor, from_state, to_state)
+        table = schema_editor.quote_name(to_state.apps.get_model(app_label, self.model_name_lower)._meta.db_table)
+        column = schema_editor.quote_name(self.name)
+        schema_editor.execute(f'ALTER TABLE {table} ALTER COLUMN {column} TYPE jsonb USING to_jsonb({column})')
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -10,12 +21,12 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
+        ArrayToJsonAlterField(
             model_name='simulation',
             name='estimated_lumpsum_payment_ages',
             field=models.JSONField(null=True),
         ),
-        migrations.AlterField(
+        ArrayToJsonAlterField(
             model_name='simulation',
             name='estimated_lumpsum_payment_amounts',
             field=models.JSONField(null=True),
