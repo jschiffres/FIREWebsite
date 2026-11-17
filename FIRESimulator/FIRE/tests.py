@@ -531,6 +531,12 @@ class FaqFeedbackTests(TestCase):
         self.assertIn('FAQPage', html)
         self.assertIn('href="/faq/"', self.client.get('/about/').content.decode())
 
+    def test_share_preview_tags(self):
+        html = self.client.get('/').content.decode()
+        self.assertIn('property="og:image" content="', html)
+        self.assertIn('og-image.png', html)
+        self.assertIn('twitter:card" content="summary_large_image"', html)
+
     def test_robots_and_sitemap(self):
         self.assertIn('Sitemap:', self.client.get('/robots.txt').content.decode())
         self.assertIn('/faq/', self.client.get('/sitemap.xml').content.decode())
