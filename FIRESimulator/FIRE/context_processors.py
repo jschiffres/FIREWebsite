@@ -22,6 +22,7 @@ def premium(request):
     return {
         'css_version': _css_version(),
         'site_url': settings.SITE_URL.rstrip('/'),
+        'ga_measurement_id': settings.GA_MEASUREMENT_ID,
         'is_premium': user_is_premium(user),
         'free_plan_limit': settings.FREE_PLAN_LIMIT,
         'email_unverified': unverified,

@@ -198,6 +198,8 @@ DEFAULT_FROM_EMAIL = os.environ.get(
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 # Base URL used for links inside emails; set to https://fiplanner.app in production.
 SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')
+# Google Analytics 4 measurement ID (e.g. G-XXXXXXXXXX); analytics stays off when blank
+GA_MEASUREMENT_ID = os.environ.get('GA_MEASUREMENT_ID', '').strip()
 
 # Premium tier. Without a payment provider wired in, self-service upgrade is a demo that only works in DEBUG
 # (or when explicitly enabled); production upgrades should go through a real checkout.
