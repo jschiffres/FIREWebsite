@@ -605,7 +605,14 @@ def runplan(request, plan_id):
 
     error = None
     form = None
-    # If post request, update the plan in the database by saving the form
+    if request.method == "POST" and not request.user.is_authenticated:
+        # Editing needs an account; send visitors to sign up and keep this plan
+        signup_url = reverse('signupsave', args=[plan.id])
+        if request.headers.get('HX-Request'):
+            response = HttpResponse(status=204)
+            response['HX-Redirect'] = signup_url
+            return response
+        return redirect(signup_url)
     if request.method == "POST":
         form = EditPlanForm(request.POST, instance=plan)
         try:

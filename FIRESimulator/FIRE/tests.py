@@ -648,3 +648,38 @@ class AnonymousLiveTableTests(TestCase):
             'bonus_rate': 1, 'tax_rate': 15, 'tax_rate_change': 0, 'start_age': 30, 'stop_age': 34})
         self.assertEqual(table.status_code, 200)
         self.assertIn('<table', table.content.decode())
+
+
+class AnonymousTrialTests(TestCase):
+    def setUp(self):
+        self.client.post(reverse('newplan'), survey_post())
+        self.plan = Plan.objects.latest('created_at')
+
+    def test_anonymous_can_create_and_view_plan(self):
+        self.assertIsNone(self.plan.user)
+        page = self.client.get(reverse('runplan', args=[self.plan.id]))
+        self.assertEqual(page.status_code, 200)
+        self.assertContains(page, 'Sign-up to gain access')
+
+    def test_anonymous_cannot_edit_plan(self):
+        before = self.plan.retirement_age
+        response = self.client.post(reverse('runplan', args=[self.plan.id]), survey_post(retirement_age='40'))
+        self.assertRedirects(response, reverse('signupsave', args=[self.plan.id]), fetch_redirect_response=False)
+        self.plan.refresh_from_db()
+        self.assertEqual(self.plan.retirement_age, before)
+        htmx = self.client.post(reverse('runplan', args=[self.plan.id]), survey_post(retirement_age='40'), HTTP_HX_REQUEST='true')
+        self.assertEqual(htmx['HX-Redirect'], reverse('signupsave', args=[self.plan.id]))
+
+    def test_anonymous_cannot_download_or_copy(self):
+        for name in ('downloadplan', 'downloadpdf', 'copyplan'):
+            response = self.client.get(reverse(name, args=[self.plan.id]))
+            self.assertEqual(response.status_code, 302, name)
+            self.assertNotIn('csv', response.get('Content-Type', ''), name)
+
+    def test_signup_claims_the_plan(self):
+        response = self.client.post(reverse('signupsave', args=[self.plan.id]), {
+            'email': 'new@example.com', 'first_name': 'New', 'password1': 'Str0ng!Pass99', 'password2': 'Str0ng!Pass99',
+            'terms': 'on'})
+        self.assertEqual(response.status_code, 302)
+        self.plan.refresh_from_db()
+        self.assertIsNotNone(self.plan.user)
