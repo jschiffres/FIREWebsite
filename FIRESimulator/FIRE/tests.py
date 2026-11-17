@@ -1,4 +1,4 @@
-﻿from types import SimpleNamespace
+from types import SimpleNamespace
 
 from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
@@ -283,6 +283,38 @@ class SurveyAndPermissionTests(TestCase):
         self.assertTrue(User.objects.filter(pk=self.owner.pk).exists())
         self.client.post(reverse('myaccount'), {'action': 'delete', 'password': 'pw-12345-xyz'})
         self.assertFalse(User.objects.filter(pk=self.owner.pk).exists())
+
+    def test_delete_cancels_stripe_subscription(self):
+        from unittest import mock
+        profile = Profile.objects.get_or_create(user=self.owner)[0]
+        profile.stripe_customer_id = 'cus_123'
+        profile.save()
+        self.client.force_login(self.owner)
+        with self.settings(STRIPE_ENABLED=True), \
+                mock.patch('FIRE.billing._client') as client:
+            client.return_value.Subscription.list.return_value = {'data': [{'id': 'sub_1'}]}
+            self.client.post(reverse('myaccount'), {'action': 'delete', 'password': 'pw-12345-xyz'})
+            client.return_value.Subscription.cancel.assert_called_once_with('sub_1')
+        self.assertFalse(User.objects.filter(pk=self.owner.pk).exists())
+
+    def test_delete_blocked_if_stripe_cancel_fails(self):
+        from unittest import mock
+        profile = Profile.objects.get_or_create(user=self.owner)[0]
+        profile.stripe_customer_id = 'cus_123'
+        profile.save()
+        self.client.force_login(self.owner)
+        with self.settings(STRIPE_ENABLED=True), \
+                mock.patch('FIRE.billing._client', side_effect=RuntimeError('boom')):
+            self.client.post(reverse('myaccount'), {'action': 'delete', 'password': 'pw-12345-xyz'})
+        self.assertTrue(User.objects.filter(pk=self.owner.pk).exists())
+
+    def test_google_only_user_gets_password_reset_email(self):
+        google = User.objects.create_user('g_user', 'g@example.com')
+        google.set_unusable_password()
+        google.save()
+        from django.core import mail
+        self.client.post(reverse('password_reset'), {'email': 'g@example.com'})
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_other_users_cannot_touch_owned_plan(self):
         self.client.force_login(self.owner)

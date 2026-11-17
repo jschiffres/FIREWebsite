@@ -21,6 +21,7 @@ from django.views.generic import RedirectView
 from django.contrib.staticfiles.storage import staticfiles_storage
 from FIRE import views
 from FIRE.ratelimit import ratelimit
+from FIRE.forms import AnyUserPasswordResetForm
 
 handler404 = "FIRE.views.not_found"
 handler500 = "FIRE.views.server_error"
@@ -28,6 +29,7 @@ handler500 = "FIRE.views.server_error"
 urlpatterns = [
     #PASSWORD: Reset, Change
     path("password-reset/", ratelimit('pwreset', 5, 3600)(auth_views.PasswordResetView.as_view(
+        form_class=AnyUserPasswordResetForm,
         template_name="FIRE/account/password_reset_form.html",
         email_template_name="FIRE/account/password_reset_email.txt",
         html_email_template_name="emails/password_reset.html",

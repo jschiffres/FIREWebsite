@@ -450,11 +450,18 @@ def myaccount(request):
                 confirmed = request.POST.get('password', '').strip().lower() == request.user.email.lower()
             if confirmed:
                 user = request.user
+                try:
+                    billing.cancel_subscriptions(profile)
+                except Exception:
+                    logger.exception("Could not cancel Stripe subscription during account deletion")
+                    errors['delete'] = "We couldn't cancel your subscription, so your account was not deleted. Please try again or contact us."
+                    confirmed = False
+            if confirmed:
                 logout(request)
                 user.delete()
                 messages.success(request, "Your account and plans were deleted.")
                 return redirect('landing')
-            errors['delete'] = 'Incorrect confirmation. Your account was not deleted.'
+            errors.setdefault('delete', 'Incorrect confirmation. Your account was not deleted.')
 
     plan_count = Plan.objects.filter(user=request.user).count()
     return render(request, 'FIRE/account/myaccount.html', {

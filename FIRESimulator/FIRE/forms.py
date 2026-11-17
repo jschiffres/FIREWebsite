@@ -1,8 +1,16 @@
 from django.forms import ModelForm
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordResetForm
 from django import forms
 from django.contrib.auth.models import User
 from .models import Feedback, Plan
+
+
+class AnyUserPasswordResetForm(PasswordResetForm):
+    """Also emails Google-only accounts (unusable password) so they can set a first password."""
+
+    def get_users(self, email):
+        return (u for u in User.objects.filter(email__iexact=email, is_active=True))
+
 
 class PlanForm(ModelForm):
 	class Meta:
