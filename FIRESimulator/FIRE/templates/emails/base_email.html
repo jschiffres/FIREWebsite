@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}FI Planner{% endblock %}</title>
+</head>
+<body style="margin:0; padding:20px; background-color:#f4f4f7; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color:#333; line-height:1.5;">
+  <div style="max-width:600px; margin:auto; background:#ffffff; padding:36px; border-radius:8px; border-top:6px solid #285C53;">
+    <p style="margin:0 0 20px; font-size:20px; font-weight:700; color:#285C53;">FI Planner</p>
+    <h1 style="margin:0 0 16px; font-size:24px; color:#2b2d42;">{% block heading %}{% endblock %}</h1>
+    {% block body %}{% endblock %}
+    <hr style="border:none; border-top:1px solid #e5e5e5; margin:32px 0 16px;">
+    <p style="margin:0; font-size:12px; color:#777;">
+      {% block footnote %}{% endblock %}
+      Questions? Reply to this email or write to <a href="mailto:hello@fiplanner.app" style="color:#285C53;">hello@fiplanner.app</a>.<br>
+      {% block legal_links %}<a href="{{ site_url }}{% url 'privacy' %}" style="color:#777;">Privacy Policy</a> &middot; <a href="{{ site_url }}{% url 'terms' %}" style="color:#777;">Terms of Service</a><br>{% endblock %}
+      &copy; {% now "Y" %} FI Planner. FI Planner is an educational tool and does not provide financial, tax or investment advice.
+    </p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{% extends 'emails/base_email.html' %}
+{% block title %}Your Premium subscription has ended{% endblock %}
+{% block heading %}Your Premium subscription has ended{% endblock %}
+{% block body %}
+<p>Hi {{ user.first_name|default:"there" }},</p>
+<p>Your FI Planner Premium subscription is no longer active, so your account has returned to the free plan.</p>
+<p><strong>Your plans and data are safe.</strong> You can still view and edit your saved plans. Premium-only features, such as what-if sliders, withdrawal modelling, plan comparison and downloads, are paused, and if you have more plans than the free limit allows you won't be able to create new ones until you're back under it.</p>
+<p>You're welcome to resubscribe whenever you like:</p>
+<p style="text-align:center; margin:28px 0;">
+  <a href="{{ account_url }}" style="display:inline-block; padding:12px 24px; background-color:#285C53; color:#ffffff; text-decoration:none; border-radius:6px; font-weight:600;">Go to My Account</a>
+</p>
+<p>If you didn't expect this, check your payment method in My Account or reply to this email and we'll help.</p>
+{% endblock %}

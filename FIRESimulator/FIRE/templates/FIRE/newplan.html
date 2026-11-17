@@ -1,4 +1,5 @@
 {% extends 'FIRE/base.html' %}
+{% block title %}Questionnaire | FI Planner{% endblock %}
 
 {% block content %}
 
@@ -43,11 +44,23 @@
             expenses.classList.add("active")
             savings.classList.remove("active")
         }
+        updateSurveyProgress()
+    }
+
+    function updateSurveyProgress() {
+        const steps = ['personal-nav-link', 'income-nav-link', 'expenses-nav-link', 'savings-nav-link']
+        const current = steps.findIndex(id => document.getElementById(id).classList.contains('active')) + 1
+        const bar = document.getElementById('survey-progress-bar')
+        const label = document.getElementById('survey-progress-label')
+        bar.style.width = (current / steps.length * 100) + '%'
+        bar.parentElement.setAttribute('aria-valuenow', current)
+        label.textContent = 'Step ' + current + ' of ' + steps.length
     }
 
     document.addEventListener('click', function (e) {
-        if (e.target.classList.contains("btn-action-empty")) {
-            updateQuestionnaireNav(e)
+        const btn = e.target.closest ? e.target.closest('.btn-action-empty') : null
+        if (btn) {
+            updateQuestionnaireNav({target: btn})
         }
     })
 </script>
@@ -59,15 +72,12 @@
         const currentAge = Number(document.getElementById('current_age').value)
         const retirementAge = Number(document.getElementById('retirement_age').value)
         const retirementAgeHelp = document.getElementById('retirement_ageHelp')
-        const coastfireAge = Number(document.getElementById('coast_fire_age').value)
-        const coastfireAgeHelp = document.getElementById('coast_fire_ageHelp')
         const missingInputsHelp = document.getElementById('missingInputsHelp')
         const inputAgesHelp = document.getElementById('inputAgesHelp')
         const incomeButton = document.getElementById('income-button')
 
         // Set initial stlyes for button and errors
         let disableButton = false
-        coastfireAgeHelp.style.display='none'
         retirementAgeHelp.style.display='none'
         missingInputsHelp.style.display='none'
         inputAgesHelp.style.display='none'
@@ -78,16 +88,8 @@
             retirementAgeHelp.style.display='block'
         }
 
-        // Check coast fire age constraints
-        if (coastfireAge != 0) {
-            if (coastfireAge >= retirementAge || coastfireAge <= currentAge) {
-                disableButton = true
-                coastfireAgeHelp.style.display='block'
-            }
-        }
-
         // Check age value constraints
-        if (currentAge > 100 || currentAge < 0 || retirementAge > 101 || retirementAge < 0 || coastfireAge > 101 || coastfireAge < 0) {
+        if (currentAge > 100 || currentAge < 0 || retirementAge > 101 || retirementAge < 0) {
             disableButton = true
             inputAgesHelp.style.display='block'
         }
@@ -110,7 +112,7 @@
 
     // Run function when inputs are changed
     document.addEventListener('change', function (e) {
-        if (e.target.id == "current_age" || e.target.id == "retirement_age" || e.target.id == "coast_fire_age" || e.target.id == "plan_name") {
+        if (e.target.id == "current_age" || e.target.id == "retirement_age" || e.target.id == "plan_name") {
             personalInfoValidation()
         }
     })
@@ -133,12 +135,16 @@
             <li class="nav-item"><a class="nav-link nav-link-savings" id="savings-nav-link" href="#savings"><svg class="align-self-center" xmlns="http://www.w3.org/2000/svg" width="11" height="10" viewBox="0 0 11 10" fill="none"><circle cx="5.5" cy="5" r="5" fill="#4F378A"/></svg> Savings</a></li>
         </ul>
         <ul class="nav nav-pills">
-            <li class="nav-item"><a class="nav-link nav-link-tips" href="#"><i class="bi bi-lightbulb"></i> Tips</a></li>
+            <li class="nav-item"><button type="button" class="nav-link nav-link-tips" id="tips-button" data-bs-toggle="modal" data-bs-target="#tips-modal"><i class="bi bi-lightbulb" aria-hidden="true"></i> Tips</button></li>
         </ul>
     </div>
+    <div class="container pb-2 d-flex align-items-center gap-3">
+        <div class="progress flex-grow-1" role="progressbar" aria-label="Questionnaire progress" aria-valuenow="1" aria-valuemin="1" aria-valuemax="4" style="height: 6px;">
+            <div id="survey-progress-bar" class="progress-bar" style="width: 25%; background-color: #285C53;"></div>
+        </div>
+        <small id="survey-progress-label" class="text-nowrap">Step 1 of 4</small>
+    </div>
 </nav>
-
-<!-- NAVBAR SCROLL CONTAINER -->
 <div class="container">
     <form method="POST">{% csrf_token %}
         <!-- PERSONAL INFO -->
@@ -172,14 +178,6 @@
                              <div id="retirement_ageHelp" class="form-text text-danger"><small>Retirement age must be greater than current age.</small></div>
                         </div>
                     </div>
-                    <!-- PERSONAL FIELDS ROW -->
-                    <div class="row g-4 mb-3">
-                        <div class="col-lg-4">
-                            <h5 class="input-name">Coast FI Age (Optional) <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-title="At this age, no additional savings will be contributed to your retirement."></i></h5>              
-                             <input type="number" class="form-control input-field" id="coast_fire_age" name="coast_fire_age" min="2" max="101">
-                             <div id="coast_fire_ageHelp" class="form-text text-danger"><small>Coast FI age must be greater than current age and less than retirement age.</small></div>
-                        </div>
-                    </div>
                 </div>
             </div>
             <!-- NEXT BUTTON -->
@@ -192,6 +190,130 @@
         </div>
     </form>
 </div>
+
+<!-- TIPS MODAL: shows the panel for whichever survey step is active -->
+<div class="modal fade" id="tips-modal" tabindex="-1" aria-labelledby="tips-modal-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="tips-modal-title"><i class="bi bi-lightbulb" aria-hidden="true"></i> <span id="tips-modal-heading">Tips</span></h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="tips-panel" data-tips="personal" data-title="Tips: Personal info" hidden>
+                    <ul>
+                        <li><strong>Be honest about your current age.</strong> Every projection starts from it, so even a year's difference shifts your results.</li>
+                        <li><strong>Pick a retirement age you could live with.</strong> It's just a starting point. You can change it on the dashboard at any time and instantly see the effect.</li>
+                        <li><strong>Aim for a range, not a single date.</strong> Try a target a few years earlier and later once your plan is built.</li>
+                        <li><strong>Name your plan.</strong> A clear name such as "Baseline" or "Move abroad" makes plans easier to compare later.</li>
+                    </ul>
+                </div>
+                <div class="tips-panel" data-tips="income" data-title="Tips: Income" hidden>
+                    <ul>
+                        <li><strong>Enter pre-tax amounts.</strong> Income takes a Starting Amount and a Tax Rate, so use your gross figure and your best estimate of your effective tax rate.</li>
+                        <li><strong>Add every source.</strong> Use Salary for your job (with a yearly bonus if it's reliable), Recurring for rental income, pensions or Social Security, and One-time for inheritances or sales.</li>
+                        <li><strong>Plan for raises.</strong> "Yearly Change" models raises or declines. 2-4% is common, roughly inflation plus a little.</li>
+                        <li><strong>Set Start and Stop Ages.</strong> Give contract work or a pension its real dates so you don't overstate future earnings.</li>
+                        <li><strong>Stay conservative.</strong> Leave out bonuses and windfalls you can't count on.</li>
+                    </ul>
+                </div>
+                <div class="tips-panel" data-tips="expenses" data-title="Tips: Expenses" hidden>
+                    <ul>
+                        <li><strong>Check a few months of statements.</strong> Most people underestimate spending. Your real number drives your Magic Number.</li>
+                        <li><strong>Include the irregular costs.</strong> Annual insurance, travel, gifts, car repairs and home maintenance add up. Divide by 12 if needed.</li>
+                        <li><strong>Remember life changes.</strong> Use Recurring expenses with Start and Stop Ages for things like a mortgage or childcare, and One-time expenses for big purchases.</li>
+                        <li><strong>Plan for healthcare.</strong> It's often the biggest new expense when you retire before Medicare age.</li>
+                        <li><strong>Lower spending helps twice.</strong> It lets you save more now and reduces how much you need in retirement.</li>
+                    </ul>
+                </div>
+                <div class="tips-panel" data-tips="savings" data-title="Tips: Savings" hidden>
+                    <ul>
+                        <li><strong>Simple</strong> is the fastest route: one pool of savings growing at a single rate.</li>
+                        <li><strong>Recommended</strong> fills accounts in a tax-smart order: 401(k) up to the employer match, then HSA, 401(k) and IRA. Each account is optional.</li>
+                        <li><strong>Custom</strong> lets you add your own accounts and order them by priority. At least one account is required.</li>
+                        <li><strong>Always capture the employer match.</strong> It's an immediate, guaranteed return.</li>
+                        <li><strong>Use realistic Yearly Growth.</strong> Long-run stock returns of about 5-7% after inflation are a common planning assumption. Cash and bonds grow more slowly.</li>
+                        <li><strong>Include what you already have.</strong> Current Value is added to your starting net worth.</li>
+                    </ul>
+                </div>
+                <p class="small text-muted mb-0">These are general educational tips, not financial advice.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-action-filled" data-bs-dismiss="modal">Got it</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.getElementById('tips-modal').addEventListener('show.bs.modal', function () {
+        const steps = {'personal-nav-link': 'personal', 'income-nav-link': 'income', 'expenses-nav-link': 'expenses', 'savings-nav-link': 'savings'}
+        const activeId = Object.keys(steps).find(id => document.getElementById(id).classList.contains('active'))
+        const current = steps[activeId] || 'personal'
+        document.querySelectorAll('#tips-modal .tips-panel').forEach(function (panel) {
+            const match = panel.dataset.tips === current
+            panel.hidden = !match
+            if (match) document.getElementById('tips-modal-heading').textContent = panel.dataset.title
+        })
+    })
+</script>
+
+<div id="draft-banner" class="container mt-3" hidden>
+    <div class="alert alert-info d-flex flex-wrap align-items-center gap-2 mb-0" role="alert">
+        <span>You have a saved draft of your personal info.</span>
+        <button type="button" class="btn btn-sm btn-action-filled" id="draft-restore">Restore draft</button>
+        <button type="button" class="btn btn-sm btn-action-empty" id="draft-discard">Discard</button>
+    </div>
+</div>
+<script>
+(function () {
+    const KEY = 'fire-survey-draft-v1';
+    const form = document.querySelector('form[method="POST"]');
+    const banner = document.getElementById('draft-banner');
+    const fields = ['plan_name', 'current_age', 'retirement_age'];
+    let dirty = false;
+    let submitting = false;
+
+    function read() {
+        const draft = {};
+        fields.forEach(id => { draft[id] = document.getElementById(id).value; });
+        return draft;
+    }
+    function store() {
+        try { localStorage.setItem(KEY, JSON.stringify(read())); } catch (e) {}
+    }
+
+    try {
+        if (localStorage.getItem(KEY)) banner.hidden = false;
+    } catch (e) {}
+
+    document.getElementById('draft-restore').addEventListener('click', () => {
+        try {
+            const draft = JSON.parse(localStorage.getItem(KEY));
+            fields.forEach(id => {
+                const el = document.getElementById(id);
+                el.value = draft[id] || '';
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+        } catch (e) {}
+        banner.hidden = true;
+    });
+    document.getElementById('draft-discard').addEventListener('click', () => {
+        try { localStorage.removeItem(KEY); } catch (e) {}
+        banner.hidden = true;
+    });
+
+    form.addEventListener('input', () => { dirty = true; store(); });
+    form.addEventListener('change', () => { dirty = true; store(); });
+    form.addEventListener('submit', () => {
+        submitting = true;
+        try { localStorage.removeItem(KEY); } catch (e) {}
+    });
+    window.addEventListener('beforeunload', e => {
+        if (dirty && !submitting) { e.preventDefault(); e.returnValue = ''; }
+    });
+})();
+</script>
 
 <style>
     /* Fade transition for HTMX */

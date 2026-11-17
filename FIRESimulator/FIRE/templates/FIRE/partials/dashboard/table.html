@@ -1,0 +1,54 @@
+<div class="container tbl-container mb-3">
+    <div class="row tbl-fixed" tabindex="0" role="region" aria-label="Year-by-year projection table">
+        <table class="table table-hover table-striped table-condensed">
+            <caption class="visually-hidden">Year-by-year income, expenses, savings, account balances and net worth</caption>
+            <thead>
+                <tr>
+                    {% include 'FIRE/partials/dashboard/th.html' with color='#B34E82' label='Age' %}
+                    {% include 'FIRE/partials/dashboard/th.html' with color='#B34E82' label='Year' %}
+                    {% for income in FIplan.incomes %}
+                        {% with name=income.income_name %}
+                        {% with l=name|add:': Gross' %}{% include 'FIRE/partials/dashboard/th.html' with color='#285C53' label=l %}{% endwith %}
+                        {% if income.income_category == 'Salary' %}{% with l=name|add:': Bonus' %}{% include 'FIRE/partials/dashboard/th.html' with color='#285C53' label=l %}{% endwith %}{% endif %}
+                        {% with l=name|add:': Tax' %}{% include 'FIRE/partials/dashboard/th.html' with color='#285C53' label=l %}{% endwith %}
+                        {% with l=name|add:': Net' %}{% include 'FIRE/partials/dashboard/th.html' with color='#285C53' label=l %}{% endwith %}
+                        {% endwith %}
+                    {% endfor %}
+                    {% for expense in FIplan.expenses %}
+                        {% include 'FIRE/partials/dashboard/th.html' with color='#EC652B' label=expense.expense_name %}
+                    {% endfor %}
+                    {% include 'FIRE/partials/dashboard/th.html' with color='#000000' label='Savings' %}
+                    {% if FIplan.accounts|first == 'Simple' %}
+                        {% include 'FIRE/partials/dashboard/th.html' with color='#4F378A' label='Net Worth: Start' %}
+                        {% include 'FIRE/partials/dashboard/th.html' with color='#4F378A' label='Net Worth: Cont. Amount' %}
+                        {% include 'FIRE/partials/dashboard/th.html' with color='#4F378A' label='Net Worth: End' %}
+                    {% else %}
+                        {% for account in FIplan.accounts|slice:"1:" %}
+                            {% with name=account.saving_name %}
+                            {% with l=name|add:': Start' %}{% include 'FIRE/partials/dashboard/th.html' with color='#4F378A' label=l %}{% endwith %}
+                            {% if account.saving_category == 'ESRP' or account.saving_category == 'HSA' or account.saving_category == 'IRA' %}
+                                {% with l=name|add:': Cont. Limit' %}{% include 'FIRE/partials/dashboard/th.html' with color='#4F378A' label=l %}{% endwith %}
+                            {% endif %}
+                            {% with l=name|add:': Cont. Amount' %}{% include 'FIRE/partials/dashboard/th.html' with color='#4F378A' label=l %}{% endwith %}
+                            {% if account.saving_category == 'ESRP' %}
+                                {% with l=name|add:': Employer Cont. Amount' %}{% include 'FIRE/partials/dashboard/th.html' with color='#4F378A' label=l %}{% endwith %}
+                            {% endif %}
+                            {% with l=name|add:': End' %}{% include 'FIRE/partials/dashboard/th.html' with color='#4F378A' label=l %}{% endwith %}
+                            {% endwith %}
+                        {% endfor %}
+                    {% endif %}
+                    {% include 'FIRE/partials/dashboard/th.html' with color='#000000' label='Net Worth' %}
+                    {% include 'FIRE/partials/dashboard/th.html' with color='#000000' label='Magic Number' %}
+                    {% include 'FIRE/partials/dashboard/th.html' with color='#000000' label='Withdraw Rate' %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in FIplan.plan_data %}
+                <tr>
+                    {% for num in row %}<td>{{ num }}</td>{% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

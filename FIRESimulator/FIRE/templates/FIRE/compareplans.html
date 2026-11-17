@@ -1,0 +1,89 @@
+{% extends 'FIRE/base.html' %}
+{% block title %}Compare plans | FI Planner{% endblock %}
+
+{% block content %}
+<nav id="app-navbar" class="navbar mt-0 shadow-lg sticky-top navbar-expand-lg">
+    <div class="container">
+        <h1 class="mt-3 mb-3 fs-3 fw-bold" id="nav-header">Compare Plans</h1>
+        <ul class="nav nav-pills">
+            <li><a class="btn btn-sm btn-action-empty" href="{% url 'userplans' %}"><i class="bi bi-arrow-left"></i> My Plans</a></li>
+        </ul>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <div class="container tbl-container mb-3">
+        <div class="row tbl-fixed">
+            <table class="table table-hover table-striped">
+                <thead>
+                    <tr>
+                        <th>Plan</th>
+                        <th>Current age</th>
+                        <th>Retirement age</th>
+                        <th>Projected net worth</th>
+                        <th>Magic Number</th>
+                        <th>Funded</th>
+                        <th>FI age</th>
+                        <th>Avg. savings rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                    <tr>
+                        <td><a href="{% url 'runplan' row.plan.id %}">{{ row.plan.plan_name }}</a></td>
+                        <td>{{ row.plan.current_age }}</td>
+                        <td>{{ row.plan.retirement_age }}</td>
+                        <td>{{ row.fi.net_worths_last }}</td>
+                        <td>{{ row.fi.magic_numbers_last }}</td>
+                        <td>{{ row.fi.funded_percent }}%</td>
+                        <td>{{ row.fi.fi_age }}</td>
+                        <td>{{ row.fi.average_savings_rate }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card dashboard-card mb-4">
+        <div class="card-body">
+            <canvas id="CompareChart" height="110"></canvas>
+        </div>
+    </div>
+</div>
+
+{{ compare_data|json_script:"compare-data" }}
+<script>
+    (function() {
+        const data = JSON.parse(document.getElementById('compare-data').textContent);
+        const palette = ['#285C53', '#EC652B', '#4F378A'];
+        new Chart(document.getElementById('CompareChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                datasets: data.series.map((s, i) => ({
+                    label: s.name,
+                    data: s.points,
+                    borderColor: palette[i % palette.length],
+                    backgroundColor: palette[i % palette.length],
+                    borderWidth: 3,
+                    pointRadius: 2,
+                    tension: 0.3
+                }))
+            },
+            options: {
+                responsive: true,
+                animation: false,
+                parsing: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    title: { display: true, text: 'Projected Net Worth by Plan', align: 'start' },
+                    tooltip: { callbacks: { label: c => c.dataset.label + ': $' + c.parsed.y.toLocaleString() } }
+                },
+                scales: {
+                    x: { type: 'linear', title: { display: true, text: 'Age' }, ticks: { precision: 0 } },
+                    y: { title: { display: true, text: 'Net Worth ($)' }, ticks: { callback: v => '$' + v.toLocaleString() } }
+                }
+            }
+        });
+    })();
+</script>
+{% endblock %}

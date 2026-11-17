@@ -1,0 +1,45 @@
+{% extends 'FIRE/base.html' %}
+{% block title %}Terms of Service | FI Planner{% endblock %}
+{% block content %}
+<article class="col-11 col-md-9 col-lg-7 mx-auto my-4 legal">
+  <h1 class="fs-2 fw-bold">Terms of Service</h1>
+  <p class="text-muted">Effective date: {{ effective_date }}</p>
+  <p>These terms govern your use of FI Planner at fiplanner.app, provided by {{ company_name }} ("we", "us"). By creating an account or using the service you agree to them. If you do not agree, do not use the service.</p>
+
+  <h2 class="fs-5 fw-bold mt-4">1. Not financial advice</h2>
+  <p>FI Planner is an educational projection tool. Results are estimates based on the information and assumptions you provide and on simplified models; actual outcomes will differ. Nothing on the service is financial, tax, legal or investment advice, and we are not a registered advisor. Consult a qualified professional before making financial decisions. See also our <a href="{% url 'about' %}">Assumptions &amp; Disclaimer</a>.</p>
+
+  <h2 class="fs-5 fw-bold mt-4">2. Your account</h2>
+  <p>You must be at least 16 years old. Provide accurate information, keep your credentials confidential, and tell us promptly of any unauthorized use. You are responsible for activity under your account.</p>
+
+  <h2 class="fs-5 fw-bold mt-4">3. Free and Premium plans</h2>
+  <p>The free plan has limits on features and the number of saved plans. Premium is a paid subscription, billed monthly or yearly through Stripe at the price shown at checkout. Subscriptions renew automatically until cancelled. You can cancel at any time from My Account; access continues until the end of the current paid period. Except where required by law, fees already paid are non-refundable. We may change prices or features with advance notice, applying from your next renewal.</p>
+
+  <h2 class="fs-5 fw-bold mt-4">4. Acceptable use</h2>
+  <p>Do not misuse the service: no attempting to access other users' data, disrupting or reverse engineering the service, automated scraping, or using it for unlawful purposes.</p>
+
+  <h2 class="fs-5 fw-bold mt-4">5. Your data</h2>
+  <p>You keep ownership of the information you enter. You grant us a limited license to store and process it to operate the service. Our handling of personal information is described in the <a href="{% url 'privacy' %}">Privacy Policy</a>.</p>
+
+  <h2 class="fs-5 fw-bold mt-4">6. Our property</h2>
+  <p>The service, including its software, design and content, is owned by us and our licensors and is protected by intellectual property laws. You may not copy or resell it except as permitted by these terms.</p>
+
+  <h2 class="fs-5 fw-bold mt-4">7. Disclaimers</h2>
+  <p>The service is provided "as is" and "as available" without warranties of any kind, express or implied, including accuracy, fitness for a particular purpose and uninterrupted availability.</p>
+
+  <h2 class="fs-5 fw-bold mt-4">8. Limitation of liability</h2>
+  <p>To the maximum extent permitted by law, we are not liable for indirect, incidental, special or consequential damages, or for any loss arising from financial decisions made using the service. Our total liability for any claim is limited to the amount you paid us in the 12 months before the claim (or USD 50 if you have not paid anything).</p>
+
+  <h2 class="fs-5 fw-bold mt-4">9. Termination</h2>
+  <p>You may stop using the service at any time. We may suspend or terminate accounts that breach these terms or that pose a risk to the service. Sections that by their nature should survive termination will survive.</p>
+
+  <h2 class="fs-5 fw-bold mt-4">10. Changes</h2>
+  <p>We may update these terms. If changes are material we will give notice by email or within the app. Continued use after the effective date means you accept the changes.</p>
+
+  <h2 class="fs-5 fw-bold mt-4">11. Governing law</h2>
+  <p>These terms are governed by the laws of {{ governing_law }}, without regard to conflict-of-law rules.</p>
+
+  <h2 class="fs-5 fw-bold mt-4">12. Contact</h2>
+  <p>Questions about these terms? Email <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.</p>
+</article>
+{% endblock %}

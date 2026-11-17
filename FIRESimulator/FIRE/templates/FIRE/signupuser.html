@@ -1,4 +1,5 @@
 {% extends 'FIRE/base.html' %}
+{% block title %}Sign up | FI Planner{% endblock %}
 
 {% block content %}
 
@@ -17,39 +18,99 @@
     <form method="POST"> 
     {% csrf_token %}
         <div class="form-floating mb-3">
-            <input type="text" class="form-control" id="username" name="username" placeholder="username">
-            <label for="username">Username</label>
-            <div id="usernameHelp" class="form-text">Username must be unique.</div>
-        </div>
-
-        <div class="form-floating mb-3">
-            <input type="email" class="form-control" id="email" name="email" placeholder="email@email.com">
+            <input type="email" class="form-control" id="email" name="email" placeholder="email@email.com" autocomplete="email" aria-describedby="emailHelp email-error">
             <label for="email">Email</label>
             <div id="emailHelp" class="form-text">Provide a valid email address.</div>
+            <div id="email-error" class="form-text text-danger" role="alert" hidden>That email is already associated with an account. <a class="link-success" href="{% url 'loginuser' %}">Log in</a> or <a class="link-success" href="{% url 'password_reset' %}">reset your password</a>.</div>
         </div>
 
         <div class="form-floating mb-3">
-            <input type="password" class="form-control" id="password1" name="password1"placeholder="Password">
+            <input type="password" class="form-control" id="password1" name="password1" placeholder="Password" autocomplete="new-password" aria-describedby="password1Help password1-error">
             <label for="password1">Password</label>
             <div id="password1Help" class="form-text">Choose a secure password.</div>
+            <div id="password1-error" class="form-text text-danger" role="alert" hidden>Password must contain a capital letter, a number and a special character.</div>
         </div>
 
         <div class="form-floating mb-3">
-            <input type="password" class="form-control" id="password2" name="password2" placeholder="Password">
-            <label for="password2">Password</label>
+            <input type="password" class="form-control" id="password2" name="password2" placeholder="Password" autocomplete="new-password" aria-describedby="password2Help password2-error">
+            <label for="password2">Confirm password</label>
             <div id="password2Help" class="form-text">Ensure passwords match.</div>
+            <div id="password2-error" class="form-text text-danger" role="alert" hidden>Passwords do not match.</div>
         </div>
 
         <div class="d-flex justify-content-center">
             <button type="submit" class="btn btn-action-filled"><i class="bi bi-person-fill-add"></i> Sign-up</i></button>
         </div>
+        <p class="text-center small text-muted mt-2">By signing up you agree to our <a href="{% url 'terms' %}" target="_blank" rel="noopener">Terms of Service</a> and <a href="{% url 'privacy' %}" target="_blank" rel="noopener">Privacy Policy</a>.</p>
 
     </form>
+
+    {% if google_enabled %}
+    <div class="d-flex align-items-center my-3"><hr class="flex-grow-1"><span class="px-2 text-muted small">or</span><hr class="flex-grow-1"></div>
+    <div class="d-flex justify-content-center">
+        <a class="btn btn-action-empty" href="{% url 'google_login' %}{% if plan %}?plan={{ plan.id }}{% endif %}"><i class="bi bi-google" aria-hidden="true"></i> Sign up with Google</a>
+    </div>
+    {% endif %}
 
     <br>
     
     <p class="text-center">Already have an account? <a class="link-success" href="{% url 'loginuser' %}">Login</a></p>
 
 </div>
+
+<script>
+(function () {
+    const form = document.getElementById('email').form;
+    const submit = form.querySelector('button[type="submit"]');
+    const taken = {};
+
+    function watch(inputId, errorId, url, param) {
+        const input = document.getElementById(inputId);
+        const error = document.getElementById(errorId);
+        let timer = null, latest = 0;
+
+        function setTaken(value) {
+            taken[inputId] = value;
+            error.hidden = !value;
+            input.classList.toggle('is-invalid', value);
+            input.setAttribute('aria-invalid', value ? 'true' : 'false');
+            submit.disabled = Object.values(taken).some(Boolean);
+        }
+
+        input.addEventListener('input', () => {
+            clearTimeout(timer);
+            const value = input.value.trim();
+            if (!value || (param === 'email' && !input.checkValidity())) { setTaken(false); return; }
+            timer = setTimeout(() => {
+                const request = ++latest;
+                fetch(url + '?' + param + '=' + encodeURIComponent(value))
+                    .then(r => r.json())
+                    .then(d => { if (request === latest) setTaken(!d.available); })
+                    .catch(() => {});
+            }, 300);
+        });
+    }
+
+    watch('email', 'email-error', "{% url 'check_email' %}", 'email');
+
+    const pw1 = document.getElementById('password1');
+    const pw2 = document.getElementById('password2');
+    function flag(input, errorId, bad) {
+        document.getElementById(errorId).hidden = !bad;
+        input.classList.toggle('is-invalid', bad);
+        input.setAttribute('aria-invalid', bad ? 'true' : 'false');
+        taken[input.id] = bad;
+    }
+    function checkPasswords() {
+        const weak = pw1.value !== '' && !(/[A-Z]/.test(pw1.value) && /\d/.test(pw1.value) && /[^A-Za-z0-9]/.test(pw1.value));
+        const mismatch = pw2.value !== '' && pw1.value !== pw2.value;
+        flag(pw1, 'password1-error', weak);
+        flag(pw2, 'password2-error', mismatch);
+        submit.disabled = Object.values(taken).some(Boolean);
+    }
+    pw1.addEventListener('input', checkPasswords);
+    pw2.addEventListener('input', checkPasswords);
+})();
+</script>
 
 {% endblock %}

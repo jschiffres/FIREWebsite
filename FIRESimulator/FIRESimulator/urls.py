@@ -15,24 +15,68 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import include, path
+from django.contrib.auth import views as auth_views
+from django.urls import include, path, reverse_lazy
 from FIRE import views
+from FIRE.ratelimit import ratelimit
+
+handler404 = "FIRE.views.not_found"
+handler500 = "FIRE.views.server_error"
 
 urlpatterns = [
+    #PASSWORD: Reset, Change
+    path("password-reset/", ratelimit('pwreset', 5, 3600)(auth_views.PasswordResetView.as_view(
+        template_name="FIRE/account/password_reset_form.html",
+        email_template_name="FIRE/account/password_reset_email.txt",
+        html_email_template_name="emails/password_reset.html",
+        subject_template_name="FIRE/account/password_reset_subject.txt",
+        success_url=reverse_lazy("password_reset_done"))), name="password_reset"),
+    path("password-reset/sent/", auth_views.PasswordResetDoneView.as_view(
+        template_name="FIRE/account/password_reset_done.html"), name="password_reset_done"),
+    path("password-reset/<uidb64>/<token>/", auth_views.PasswordResetConfirmView.as_view(
+        template_name="FIRE/account/password_reset_confirm.html",
+        success_url=reverse_lazy("password_reset_complete")), name="password_reset_confirm"),
+    path("password-reset/complete/", auth_views.PasswordResetCompleteView.as_view(
+        template_name="FIRE/account/password_reset_complete.html"), name="password_reset_complete"),
+    path("password-change/", auth_views.PasswordChangeView.as_view(
+        template_name="FIRE/account/password_change_form.html",
+        success_url=reverse_lazy("password_change_done")), name="password_change"),
+    path("password-change/done/", auth_views.PasswordChangeDoneView.as_view(
+        template_name="FIRE/account/password_change_done.html"), name="password_change_done"),
+
     #USER: Sign-up, Sign-up Save, Logout, Login, Plans, Feedback
+    path("signup/check-email/", views.check_email, name="check_email"),
     path("signup/", views.signupuser, name="signupuser"),
     path("signup/<str:plan_id>", views.signupsave, name="signupsave"),
     path('logout/', views.logoutuser, name='logoutuser'),
     path('login/', views.loginuser, name='loginuser'),
+    path("verify-email/<str:token>/", views.verify_email, name="verify_email"),
+    path("verify-email/", views.resend_verification, name="resend_verification"),
+    path("auth/google/", views.google_login, name="google_login"),
+    path("auth/google/callback/", views.google_callback, name="google_callback"),
     path("myplans/", views.userplans, name="userplans"),
+    path("account/", views.myaccount, name="myaccount"),
+    path("privacy/", views.privacy, name="privacy"),
+    path("terms/", views.terms, name="terms"),
+    path("faq/", views.faq, name="faq"),
+    path("robots.txt", views.robots_txt, name="robots_txt"),
+    path("sitemap.xml", views.sitemap_xml, name="sitemap_xml"),
+    path("billing/checkout/", views.start_checkout, name="start_checkout"),
+    path("billing/portal/", views.billing_portal, name="billing_portal"),
+    path("stripe/webhook/", views.stripe_webhook, name="stripe_webhook"),
     path('feedback/', views.feedback, name='feedback'),
 
-    #PLAN: New, Run, Edit, Download, Copy, Delete
+    #PLAN: New, Run, Download, Copy, Delete
     path("new/", views.newplan, name="newplan"),
     path("plan/<str:plan_id>", views.runplan, name="runplan"),
-    path("editplan/<str:plan_id>", views.editplan, name="editplan"),
     path("downloadplan/<str:plan_id>", views.downloadplan, name="downloadplan"),
+    path("downloadpdf/<str:plan_id>", views.downloadpdf, name="downloadpdf"),
     path("copyplan/<str:plan_id>", views.copyplan, name="copyplan"),
+    path("compare/", views.compareplans, name="compareplans"),
+    path("plan/<str:plan_id>/whatif/", views.whatif, name="whatif"),
+    path("plan/<str:plan_id>/withdrawal/", views.withdrawal, name="withdrawal"),
+    path("about/", views.about, name="about"),
+    path("renameplan/<str:plan_id>", views.renameplan, name="renameplan"),
     path("deleteplan/<str:plan_id>", views.deleteplan, name="deleteplan"),
 
     #HTMX: Section, Entry, Fields, Tables
@@ -52,14 +96,4 @@ urlpatterns = [
     #Admin, Landing
     path("admin/", admin.site.urls),
     path("", views.landing, name="landing"),
-
-    # To Delete
-    path("firesimulation/<str:simulation_id>", views.runsimulation, name="runsimulation"),
-    path('newlumpsumincome/', views.create_lumpsum_income, name="create-lumpsum-income"),
-    path('newlumpsumexpense/', views.create_lumpsum_expense, name="create-lumpsum-expense"),
-    path('newasset/', views.create_asset, name="create-asset"),
-    path('newfixedcostadjustment/', views.create_fixedcost_adjustment, name="create-fixedcost-adjustment"),
-    path('newvariablecostadjustment/', views.create_variablecost_adjustment, name="create-variablecost-adjustment"),
-    path('hsaoptin/', views.hsa_opt_in, name="hsa-opt-in"),
-    path('coastfireoptin/', views.coastfire_opt_in, name="coastfire-opt-in"),
 ]

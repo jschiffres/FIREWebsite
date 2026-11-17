@@ -1,0 +1,27 @@
+{% extends 'FIRE/base.html' %}
+{% block title %}Assumptions &amp; disclaimer | FI Planner{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5" style="max-width: 800px;">
+    <h1 class="fs-3 fw-bold">Assumptions &amp; Disclaimer</h1>
+    <div class="alert alert-warning" role="alert">
+        FI Planner is an educational projection tool. It is not financial, tax, or investment advice.
+        Projections are estimates based on the numbers you enter; actual results will differ.
+    </div>
+    <h2 class="fs-5 fw-bold">How projections work</h2>
+    <ul>
+        <li>Balances grow once per year at the rate of return you enter for each account.</li>
+        <li>Each year, income minus expenses is saved and allocated to your accounts according to your savings settings.</li>
+        <li>Employer matches are added on top of your own contributions.</li>
+        <li>Years where expenses exceed income are drawn down from your net worth and flagged as shortfalls.</li>
+        <li>The Magic Number is your annual recurring expenses divided by the safe withdrawal rate (a 4% rule gives 25&times; expenses).</li>
+        <li>FI age is the first year your net worth meets or exceeds the Magic Number.</li>
+    </ul>
+    <h2 class="fs-5 fw-bold">What is not modeled</h2>
+    <ul>
+        <li>Market volatility and sequence-of-returns risk; returns are constant.</li>
+        <li>Taxes on withdrawals and changes to tax law or contribution limits.</li>
+        <li>Social Security, pensions, or healthcare cost changes in retirement.</li>
+    </ul>
+</div>
+{% endblock %}

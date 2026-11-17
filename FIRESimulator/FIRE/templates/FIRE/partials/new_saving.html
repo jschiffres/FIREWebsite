@@ -12,6 +12,7 @@
                         <div class="col-lg-3">
                             <h5 class="input-name">Account Name</h5>              
                             <input type="text" class="form-control input-field saving_name" name="saving_name" value="My Account" required>
+                            <div class="form-text text-danger form-error-text saving-name-error"><small> Please provide a name for this account.</small></div>
                         </div>
                         <div class="col-lg-3">
                             <h5 class="input-name">Category</h5>              
@@ -30,6 +31,7 @@
                                     <option value="TBA">Taxable Brokerage Account (TBA)</option>
                                 {% endif %}
                             </select>
+                            <div class="form-text text-danger form-error-text saving-category-error"><small> Please select a category.</small></div>
                         </div>
                     </div>
                     <div class="saving-fields">

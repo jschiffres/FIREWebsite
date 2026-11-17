@@ -1,4 +1,5 @@
 {% extends 'FIRE/base.html' %}
+{% block title %}Log in | FI Planner{% endblock %}
 
 {% block content %}
 
@@ -10,15 +11,15 @@
 
     {% endif %}
 
-    <div class="col-4 mx-auto mt-3">
+    <div class="col-11 col-sm-8 col-md-6 col-lg-4 mx-auto mt-3">
 
         <h1 class="text-center m-5">Login</h1>
 
         <form method="POST"> 
         {% csrf_token %}
             <div class="form-floating mb-3">
-                <input type="text" class="form-control" id="username" name="username" placeholder="username">
-                <label for="username">Username</label>
+                <input type="text" class="form-control" id="username" name="email" placeholder="Email" autocomplete="username" required>
+                <label for="username">Email</label>
             </div>
 
             <div class="form-floating mb-3">
@@ -32,7 +33,14 @@
 
         </form>
 
-        <br>
+        {% if google_enabled %}
+        <div class="d-flex align-items-center my-3"><hr class="flex-grow-1"><span class="px-2 text-muted small">or</span><hr class="flex-grow-1"></div>
+        <div class="d-flex justify-content-center">
+            <a class="btn btn-action-empty" href="{% url 'google_login' %}"><i class="bi bi-google" aria-hidden="true"></i> Continue with Google</a>
+        </div>
+        {% endif %}
+
+        <p class="text-center mt-3"><a class="link-success" href="{% url 'password_reset' %}">Forgot your password?</a></p>
 
         <p class="text-center">Don't have an account? <a  class="link-success" href="{% url 'signupuser' %}">Sign-up</a></p>
 

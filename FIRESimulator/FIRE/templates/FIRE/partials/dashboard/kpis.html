@@ -1,0 +1,55 @@
+<section class="card dashboard-card dash-hero mb-3 {% if FIplan.fi_reached %}dash-hero-ok{% else %}dash-hero-warn{% endif %}" aria-labelledby="dash-status" role="status">
+    <div class="card-body">
+        <div class="row g-3 align-items-center">
+            <div class="col-lg-7">
+                {% if FIplan.fi_reached %}
+                <h2 class="fs-4 mb-1" id="dash-status"><i class="bi bi-check-circle-fill text-success" aria-hidden="true"></i> On track for financial independence</h2>
+                <p class="mb-0 text-muted">Your projected net worth covers your Magic Number{% if FIplan.fi_years_away != None %}, reaching FI at age <strong>{{ FIplan.fi_age }}</strong> ({{ FIplan.fi_years_away }} years away){% endif %}.</p>
+                {% else %}
+                <h2 class="fs-4 mb-1" id="dash-status"><i class="bi bi-exclamation-triangle-fill text-warning" aria-hidden="true"></i> Not yet on track</h2>
+                <p class="mb-0 text-muted">At retirement you are <strong>{{ FIplan.funded_percent }}%</strong> funded, a shortfall of <strong>{{ FIplan.funded_gap_display }}</strong>. Try the what-if sliders: working longer, saving more or a higher return can close the gap.</p>
+                {% endif %}
+            </div>
+            <div class="col-lg-5">
+                <div class="d-flex justify-content-between small mb-1"><span>Funded</span><strong>{{ FIplan.funded_percent }}%</strong></div>
+                <div class="progress dash-progress" role="progressbar" aria-label="Funded percentage of Magic Number" aria-valuenow="{{ FIplan.funded_percent }}" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar {% if FIplan.fi_reached %}bg-success{% endif %}" style="width: {% if FIplan.funded_percent > 100 %}100{% else %}{{ FIplan.funded_percent }}{% endif %}%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="row g-3 mt-2 dash-kpis">
+            <div class="col-6 col-lg-3">
+                <div class="dash-kpi-label">Projected net worth</div>
+                <div class="dash-kpi-value" id="kpi-net-worth">{{ FIplan.net_worths_last }}</div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="dash-kpi-label">Magic Number</div>
+                <div class="dash-kpi-value">{{ FIplan.magic_numbers_last }}</div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="dash-kpi-label">FI age</div>
+                <div class="dash-kpi-value">{{ FIplan.fi_age }}</div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="dash-kpi-label">Chance of reaching it <a tabindex="0" role="button" aria-label="How the Monte Carlo simulation works" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="top" data-bs-title="Monte Carlo simulation" data-bs-content="Real markets don't return the same amount every year. We replay your plan hundreds of times, each with randomly varying yearly returns, and count how many runs reach your Magic Number by retirement. The percentage is that share of runs. Higher means your plan is more resilient to bad market luck."><i class="bi bi-info-circle" aria-hidden="true"></i></a></div>
+                <div class="dash-kpi-value">{% if chart_data.scenarios.success_probability != None %}{{ chart_data.scenarios.success_probability }}%{% else %}N/A{% endif %}</div>
+                <div class="dash-kpi-note">Monte Carlo, {{ chart_data.scenarios.volatility|floatformat:0 }}% volatility</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="row g-2 dash-secondary mb-3">
+    <div class="col-6 col-lg-3"><div class="dash-chip"><span>Avg. savings rate</span><strong>{{ FIplan.average_savings_rate }}%</strong></div></div>
+    <div class="col-6 col-lg-3"><div class="dash-chip" title="{% if FIplan.coast_fi_years_away != None %}Stop contributing at this age and growth alone still reaches your Magic Number by retirement.{% else %}Growth alone cannot reach your Magic Number by retirement at any age in this plan.{% endif %}"><span>Coast FI age</span><strong id="kpi-coast-fi">{{ FIplan.coast_fi_age }}</strong></div></div>
+    <div class="col-6 col-lg-3"><div class="dash-chip"><span>Withdraw rate</span><strong>{{ FIplan.drawdowns_last }}</strong></div></div>
+    <div class="col-6 col-lg-3"><div class="dash-chip"><span>Retire at</span><strong>{{ plan.retirement_age }}</strong></div></div>
+</div>
+
+{% if FIplan.unallocated_total > 0 or FIplan.has_shortfall_years %}
+<div class="alert alert-info py-2 small mb-3" role="note">
+    <i class="bi bi-info-circle" aria-hidden="true"></i>
+    {% if FIplan.unallocated_total > 0 %}Some savings are not assigned to any account (over contribution limits and no taxable account) and are not counted in your net worth. Add a taxable brokerage account to include them.{% endif %}
+    {% if FIplan.has_shortfall_years %}In some years your expenses exceed your income; the difference is withdrawn from your accounts.{% endif %}
+</div>
+{% endif %}

@@ -1,0 +1,12 @@
+{% extends 'emails/base_email.html' %}
+{% block title %}Confirm your email{% endblock %}
+{% block heading %}Confirm your email address{% endblock %}
+{% block body %}
+<p>Hi {{ user.first_name|default:"there" }},</p>
+<p>Please confirm that this is your email address so we can keep your FI Planner account secure and reach you if something needs your attention.</p>
+<p style="text-align:center; margin:28px 0;">
+  <a href="{{ verify_url }}" style="display:inline-block; padding:12px 24px; background-color:#285C53; color:#ffffff; text-decoration:none; border-radius:6px; font-weight:600;">Confirm my email</a>
+</p>
+<p style="font-size:13px; color:#555;">If the button doesn't work, copy and paste this link into your browser:<br>{{ verify_url }}</p>
+{% endblock %}
+{% block footnote %}This link expires in 3 days. If you didn't create a FI Planner account, you can safely ignore this message.<br>{% endblock %}

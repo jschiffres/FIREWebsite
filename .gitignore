@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+db.sqlite3
+.venv/
+.env
+
+*.log
+.DS_Store
+staticfiles/
+.idea/
+.vscode/
+FIRESimulator/static/

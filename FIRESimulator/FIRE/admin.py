@@ -1,6 +1,7 @@
 from django.contrib import admin
-from .models import Simulation, Plan, Feedback
+from .models import Plan, Feedback, Profile
 
-admin.site.register(Simulation)
+admin.site.register(Profile)
+
 admin.site.register(Plan)
 admin.site.register(Feedback)

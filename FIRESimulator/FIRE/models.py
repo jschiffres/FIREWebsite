@@ -3,61 +3,26 @@ from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
 import uuid
 
-# Create your models here.
-class Simulation(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=50)
-    current_age = models.PositiveSmallIntegerField(validators=[MaxValueValidator(100), MinValueValidator(1)])
-    estimated_retirement_age = models.PositiveSmallIntegerField(validators=[MaxValueValidator(101), MinValueValidator(2)])
-    estimated_coastfire_age = models.PositiveSmallIntegerField(null=True, validators=[MaxValueValidator(100), MinValueValidator(1)])
-    current_yearly_salary = models.PositiveBigIntegerField()
-    estimated_salary_raise = models.FloatField()
-    estimated_bonus = models.FloatField()
-    current_yearly_other_income = models.PositiveSmallIntegerField()
-    estimated_other_income_increase = models.FloatField()
-    lumpsum_income_names = models.JSONField(null=True)
-    estimated_lumpsum_income_amounts = models.JSONField(null=True)
-    estimated_lumpsum_income_ages = models.JSONField(null=True)
-    current_yearly_fixed_costs = models.PositiveBigIntegerField()
-    estimated_fixed_costs_inflation = models.FloatField()
-    fixed_cost_adjustment_names = models.JSONField(null=True,max_length=50)
-    estimated_fixed_cost_adjustments = models.JSONField(null=True)
-    estimated_fixed_cost_adjustment_ages = models.JSONField(null=True)
-    current_yearly_variable_costs = models.PositiveBigIntegerField()
-    estimated_variable_costs_inflation = models.FloatField()
-    variable_cost_adjustment_names = models.JSONField(null=True,max_length=50)
-    estimated_variable_cost_adjustments = models.JSONField(null=True)
-    estimated_variable_cost_adjustment_ages = models.JSONField(null=True)
-    current_yearly_health_insurance_cost = models.PositiveBigIntegerField()
-    estimated_health_insurance_inflation = models.FloatField()
-    lumpsum_expense_names = models.JSONField(null=True)
-    estimated_lumpsum_expense_amounts = models.JSONField(null=True)
-    estimated_lumpsum_expense_ages = models.JSONField(null=True)
-    estimated_tax_rate = models.FloatField()
-    estimated_tax_rate_step = models.FloatField()
-    hsa_enrollment_opt_out = models.BooleanField(default=False)
-    current_hsa_balance = models.PositiveBigIntegerField()
-    current_hsa_yearly_contribution_limit = models.PositiveBigIntegerField()
-    estimated_hsa_yearly_contribution_limit_step = models.PositiveBigIntegerField()
-    esitmated_hsa_yearly_return = models.FloatField()
-    current_401k_balance = models.PositiveBigIntegerField()
-    current_401k_yearly_contribution_limit = models.PositiveBigIntegerField()
-    estimated_401k_yearly_contribution_limit_step = models.PositiveBigIntegerField()
-    current_401k_employer_contribution = models.FloatField()
-    esitmated_401k_yearly_return = models.FloatField()
-    current_ira_balance = models.PositiveBigIntegerField()
-    current_ira_yearly_contribution_limit = models.PositiveBigIntegerField()
-    estimated_ira_yearly_contribution_limit_step = models.PositiveBigIntegerField()
-    esitmated_ira_yearly_return = models.FloatField()
-    current_iba_balance = models.PositiveBigIntegerField()
-    esitmated_iba_yearly_return = models.FloatField()
-    asset_names = models.JSONField(null=True)
-    current_asset_values = models.JSONField(null=True)
-    estimated_asset_value_growths = models.JSONField(null=True)
-    final_net_worth = models.CharField(max_length=25, null=True)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True, null=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    is_premium = models.BooleanField(default=False)
+    premium_since = models.DateTimeField(null=True, blank=True)
+    email_verified = models.BooleanField(default=False)
+    stripe_customer_id = models.CharField(max_length=64, blank=True, default='')
+    stripe_subscription_id = models.CharField(max_length=64, blank=True, default='')
+    stripe_status = models.CharField(max_length=32, blank=True, default='')
+
+    def __str__(self):
+        return f"{self.user.username} ({'Premium' if self.is_premium else 'Free'})"
+
+
+def user_is_premium(user):
+    """True for an authenticated user on the Premium tier; the profile is created on first use."""
+    if not getattr(user, 'is_authenticated', False):
+        return False
+    profile, _ = Profile.objects.get_or_create(user=user)
+    return profile.is_premium
+
 
 class Feedback(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -77,7 +42,6 @@ class Plan(models.Model):
     updated_at = models.DateTimeField(auto_now=True, null=True)
     current_age = models.PositiveSmallIntegerField(validators=[MaxValueValidator(100), MinValueValidator(1)])
     retirement_age = models.PositiveSmallIntegerField(validators=[MaxValueValidator(101), MinValueValidator(2)])
-    coast_fire_age = models.PositiveSmallIntegerField(null=True, validators=[MaxValueValidator(100), MinValueValidator(2)])
     incomes = models.JSONField(null=True)
     expenses = models.JSONField(null=True)
     savings = models.JSONField(null=True)

@@ -1,10 +1,35 @@
 {% extends 'FIRE/base.html' %}
+{% block title %}FI Planner | Plan your path to financial independence{% endblock %}
 
 {% block content %}
 
 <div class="container mt-5 mb-5">
   <div class="row g-4">
       <div class="col-lg-6">
+        {% if user.is_authenticated %}
+        <h1 id="landing-header">Welcome back{% if user.first_name %}, {{ user.first_name }}{% endif %}</h1>
+        {% if latest_plan %}
+        <div class="card shadow-sm my-3">
+          <div class="card-body">
+            <h5 class="card-title mb-1">{{ latest_plan.plan_name }}</h5>
+            <p class="text-muted small mb-3">Your most recent plan</p>
+            <div class="row text-center mb-3">
+              <div class="col"><div class="fs-3 fw-bold">{{ latest_fi_age|default:"N/A" }}</div><div class="small text-muted">FI age</div></div>
+              <div class="col"><div class="fs-3 fw-bold">{% if latest_funded is not None %}{{ latest_funded|floatformat:0 }}%{% else %}N/A{% endif %}</div><div class="small text-muted">Funded</div></div>
+              <div class="col"><div class="fs-3 fw-bold">{{ plan_count }}{% if not is_premium %}/{{ free_plan_limit }}{% endif %}</div><div class="small text-muted">Plans</div></div>
+            </div>
+            <a href="{% url 'runplan' latest_plan.id %}" class="btn btn-action-filled"><i class="bi bi-speedometer2"></i> Open dashboard</a>
+            <a href="{% url 'userplans' %}" class="btn btn-outline-secondary">All plans</a>
+            {% if not at_limit %}<a href="{% url 'newplan' %}" class="btn btn-outline-secondary"><i class="bi bi-plus-circle"></i> New plan</a>{% endif %}
+          </div>
+        </div>
+        {% if at_limit %}<p class="small text-muted">You've used all {{ free_plan_limit }} free plans. <a href="{% url 'myaccount' %}">Upgrade to Premium</a> for unlimited plans.</p>{% endif %}
+        {% if email_unverified %}<p class="small text-muted"><i class="bi bi-envelope-exclamation"></i> Verify your email to unlock Premium upgrades.</p>{% endif %}
+        {% else %}
+        <p id="landing-subtext">You haven't created a plan yet. It only takes a few minutes.</p>
+        <a href="{% url 'newplan' %}" class="btn btn-lg btn-action-filled"><i class="bi bi-plus-circle"></i> Create your first plan</a>
+        {% endif %}
+        {% else %}
         <h1 id="landing-header">Plan your path to Financial Independence</h1>
         <p id="landing-subtext">Answer a few questions, see your FI timeline, and explore scenarios to reach your goals sooner.</p>
         <div class="row g-4 mb-3 mt-3">
@@ -14,35 +39,94 @@
             </form>
           </div>
         </div>
+        {% endif %}
       </div>
       <div class="col-lg-6 text-center align-self-center">
           {% load static %}
-          <img src="{% static 'FIplannerLOGO.svg' %}" alt="Logo">
+          <img src="{% static 'FIplannerLOGO.svg' %}" alt="FI Planner logo">
       </div>
   </div>
 </div>
 <div class="row g-0 mt-3 mb-0">
   <div class="col d-flex align-items-stretch">
     <div id="landing-card" class="p-5 text-center">
-      <h1 class="landing-card-icon"><i class="bi bi-gear"></i></h1>
+      <div class="landing-card-icon"><i class="bi bi-gear"></i></div>
       <h4 class="landing-card-header">How it works</h4>
       <p class="landing-card-text pe-5 ps-5 pb-5">Enter your age, income, expenses, savings, and goals, and we’ll simulate your yearly cash flow, returns, and net worth to show when you’ll hit your FI number, and how different choices change the timeline.</p>
     </div>
   </div>
   <div class="col d-flex align-items-stretch">
     <div id="landing-card2" class="p-5 text-center">
-      <h1 class="landing-card-icon"><i class="bi bi-map"></i></h1>
+      <div class="landing-card-icon"><i class="bi bi-map"></i></div>
       <h4 class="landing-card-header">Why use it</h4>
       <p class="landing-card-text pe-5 ps-5 pb-5">Turn assumptions into a concrete plan. See the tradeoffs between spending, saving, and retiring earlier, and test scenarios safely before making real-life changes.</p>
     </div>
   </div>
   <div class="col d-flex align-items-stretch">
     <div id="landing-card3" class="p-5 text-center">
-      <h1 class="landing-card-icon"><i class="bi bi-file-bar-graph"></i></h1>
+      <div class="landing-card-icon"><i class="bi bi-file-bar-graph"></i></div>
       <h4 class="landing-card-header">What you get</h4>
       <p class="landing-card-text pe-5 ps-5 pb-5">Get an interactive questionnaire with live-updating results, a FI age estimate with net worth projections, and clear inputs you can refine anytime.</p>
     </div>
   </div>
 </div>
+
+{% if not is_premium %}
+<section class="container my-5" aria-labelledby="pricing-heading">
+  <h2 id="pricing-heading" class="text-center mb-1">Start free, go further with Premium</h2>
+  <p class="text-center text-muted mb-4">Everything you need to find your FI age is free. Premium unlocks deeper planning tools.</p>
+  <div class="pricing-table-wrap">
+    <table class="table pricing-table align-middle text-center mb-0">
+      <thead>
+        <tr>
+          <th scope="col" class="text-start">Features</th>
+          <th scope="col" class="pricing-col-free">Free<div class="pricing-sub">$0 forever</div></th>
+          <th scope="col" class="pricing-col-premium"><i class="bi bi-star-fill" aria-hidden="true"></i> Premium</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><th scope="row" class="text-start">Saved plans</th><td class="pricing-col-free fw-bold">{{ free_plan_limit }}</td><td class="pricing-col-premium fw-bold">{{ premium_plan_limit }}</td></tr>
+        <tr><th scope="row" class="text-start">FI age and Coast FI age</th><td class="pricing-col-free"><i class="bi bi-check-square-fill pricing-yes" aria-label="Included"></i></td><td class="pricing-col-premium"><i class="bi bi-check-square-fill pricing-yes" aria-label="Included"></i></td></tr>
+        <tr><th scope="row" class="text-start">Interactive net worth charts</th><td class="pricing-col-free"><i class="bi bi-check-square-fill pricing-yes" aria-label="Included"></i></td><td class="pricing-col-premium"><i class="bi bi-check-square-fill pricing-yes" aria-label="Included"></i></td></tr>
+        <tr><th scope="row" class="text-start">Edit income, expenses and savings</th><td class="pricing-col-free"><i class="bi bi-check-square-fill pricing-yes" aria-label="Included"></i></td><td class="pricing-col-premium"><i class="bi bi-check-square-fill pricing-yes" aria-label="Included"></i></td></tr>
+        {% for name, description in premium_features %}
+        {% if name != 'More saved plans' %}
+        <tr><th scope="row" class="text-start">{{ name }}<div class="pricing-sub fw-normal">{{ description }}</div></th><td class="pricing-col-free"><i class="bi bi-square pricing-no" aria-label="Not included"></i></td><td class="pricing-col-premium"><i class="bi bi-check-square-fill pricing-yes" aria-label="Included"></i></td></tr>
+        {% endif %}
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td></td>
+          <td class="pricing-col-free">
+            {% if user.is_authenticated %}<span class="btn btn-action-empty disabled w-100">Your current plan</span>
+            {% else %}<a href="{% url 'signupuser' %}" class="btn btn-action-empty w-100">Sign up free</a>{% endif %}
+          </td>
+          <td class="pricing-col-premium">
+            {% if user.is_authenticated %}<a href="{% url 'myaccount' %}#premium" class="btn btn-action-filled w-100"><i class="bi bi-star" aria-hidden="true"></i> Upgrade to Premium</a>
+            {% else %}<a href="{% url 'signupuser' %}" class="btn btn-action-filled w-100"><i class="bi bi-rocket-takeoff" aria-hidden="true"></i> Sign up to get Premium</a>
+            <div class="pricing-sub mt-1">Create a free account, then upgrade anytime.</div>{% endif %}
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+{% if not user.is_authenticated %}
+<div class="container mb-5">
+  <h3>FAQ</h3>
+  <div class="accordion" id="landing-faq">
+    {% for q, a in faq %}
+    <div class="accordion-item">
+      <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq{{ forloop.counter }}" aria-expanded="false" aria-controls="faq{{ forloop.counter }}">{{ q }}</button></h2>
+      <div id="faq{{ forloop.counter }}" class="accordion-collapse collapse" data-bs-parent="#landing-faq"><div class="accordion-body">{{ a }}</div></div>
+    </div>
+    {% endfor %}
+  </div>
+  <p class="mt-3"><a href="{% url 'faq' %}">See all frequently asked questions &rarr;</a></p>
+</div>
+{% endif %}
 
 {% endblock %}

@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import sys
+
+RATELIMIT_ENABLED = 'test' not in sys.argv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,12 +24,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-rft#)3q3^xjwv+i&#pa66zjw3w%neri3hc#$@va$b$xu*rg$l+'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-dev-only-change-me')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [h for h in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',') if h]
 
 
 # Application definition
@@ -44,6 +47,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -64,6 +68,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'FIRE.context_processors.premium',
             ],
         },
     },
@@ -82,6 +87,36 @@ DATABASES = {
     }
 }
 
+# Hosted Postgres: set DATABASE_URL=postgres://user:password@host:5432/dbname
+_database_url = os.environ.get('DATABASE_URL', '')
+if _database_url:
+    from urllib.parse import urlparse, unquote
+    _db = urlparse(_database_url)
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': _db.path.lstrip('/'),
+        'USER': unquote(_db.username or ''),
+        'PASSWORD': unquote(_db.password or ''),
+        'HOST': _db.hostname or '',
+        'PORT': _db.port or '',
+        'CONN_MAX_AGE': 60,
+    }
+
+# Production hardening (HTTPS behind the host's proxy)
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = os.environ.get('DJANGO_SSL_REDIRECT', 'True').lower() == 'true'
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = int(os.environ.get('DJANGO_HSTS_SECONDS', '3600'))
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    CSRF_TRUSTED_ORIGINS = [o for o in os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',') if o]
+
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'},
+}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -98,6 +133,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+    {
+        'NAME': 'FIRE.validators.ComplexityValidator',
     },
 ]
 
@@ -125,11 +163,56 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_HOST_USER = 'jamieschiffres@gmail.com'
-EMAIL_HOST_PASSWORD = 'iowq cqsv bqrj gyec'
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+# Credentials come from the environment; without a password emails print to the console.
+# Google Workspace: sign in as the mailbox, create an App Password (requires 2-Step Verification),
+# then set EMAIL_HOST_USER=hello@fiplanner.app and EMAIL_HOST_PASSWORD=<app password>.
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '').replace(' ', '')
+EMAIL_BACKEND = (
+    'django.core.mail.backends.smtp.EmailBackend'
+    if EMAIL_HOST_PASSWORD
+    else 'django.core.mail.backends.console.EmailBackend'
+)
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_TIMEOUT = 15
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
+# Gmail rewrites the From address to the authenticated mailbox, so keep them the same.
+DEFAULT_FROM_EMAIL = os.environ.get(
+    'DEFAULT_FROM_EMAIL',
+    f'FI Planner <{EMAIL_HOST_USER}>' if EMAIL_HOST_USER else 'FI Planner <noreply@localhost>',
+)
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+# Base URL used for links inside emails; set to https://fiplanner.app in production.
+SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')
+
+# Premium tier. Without a payment provider wired in, self-service upgrade is a demo that only works in DEBUG
+# (or when explicitly enabled); production upgrades should go through a real checkout.
+FREE_PLAN_LIMIT = 3
+PREMIUM_DEMO_UPGRADE = os.environ.get('PREMIUM_DEMO_UPGRADE', str(DEBUG)).lower() == 'true'
+
+# Stripe billing. Real payments are enabled whenever a secret key is set (the demo upgrade is then disabled).
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '').strip()
+STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', '').strip()
+# Either give price IDs (price_...) directly, or product IDs (prod_...) and the default price is looked up.
+STRIPE_MONTHLY_PRICE_ID = os.environ.get('STRIPE_MONTHLY_PRICE_ID', '').strip()
+STRIPE_YEARLY_PRICE_ID = os.environ.get('STRIPE_YEARLY_PRICE_ID', '').strip()
+STRIPE_MONTHLY_PRODUCT_ID = os.environ.get('STRIPE_MONTHLY_PRODUCT_ID', '').strip()
+STRIPE_YEARLY_PRODUCT_ID = os.environ.get('STRIPE_YEARLY_PRODUCT_ID', '').strip()
+STRIPE_ENABLED = bool(STRIPE_SECRET_KEY)
+if STRIPE_ENABLED:
+    PREMIUM_DEMO_UPGRADE = False
+
+# Google sign-in (OAuth 2.0). The button only appears when both values are set.
+# Authorized redirect URI to register in Google Cloud: <SITE_URL>/auth/google/callback/
+def _clean_client_id(value):
+    value = value.strip().strip('"\'')
+    for prefix in ('https://', 'http://'):
+        if value.startswith(prefix):
+            value = value[len(prefix):]
+    return value.rstrip('/')
+
+
+GOOGLE_CLIENT_ID = _clean_client_id(os.environ.get('GOOGLE_CLIENT_ID', ''))
+GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '').strip().strip('"\'')

@@ -12,6 +12,39 @@ body {
     height: 100vh;
 }
 
+/* ACCESSIBILITY */
+:focus-visible { outline: 3px solid var(--Primary-Purple); outline-offset: 2px; }
+.skip-link { position: absolute; z-index: 2000; background: #fff; padding: .5rem 1rem; }
+#main:focus { outline: none; }
+.htmx-status { position: fixed; right: 1rem; bottom: 1rem; z-index: 2000; font-size: .9rem; }
+@media (max-width: 767.98px) {
+    .container, .container-fluid { padding-left: .75rem; padding-right: .75rem; }
+    .table-responsive-sm, .tbl-container { overflow-x: auto; }
+    h1 { font-size: 1.6rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
+}
+/* Darker muted text for AA contrast on the cream background */
+.text-muted, .form-text { color: #565d66 !important; }
+.text-danger { color: #b02a37 !important; }
+.table-responsive { -webkit-overflow-scrolling: touch; }
+img, svg { max-width: 100%; height: auto; }
+@media (max-width: 767.98px) {
+    /* 16px inputs stop iOS from zooming on focus; 44px targets for touch */
+    .form-control, .form-select { font-size: 16px; }
+    .btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: .35rem; }
+    .btn-sm { min-height: 38px; }
+    .nav-link, .dropdown-item { padding-top: .6rem; padding-bottom: .6rem; }
+    .landing-card-icon { font-size: 52px; }
+    #landing-card, #landing-card2, #landing-card3 { padding: 2rem 1rem !important; }
+    .landing-card-text { padding-left: 0 !important; padding-right: 0 !important; padding-bottom: 1rem !important; }
+    .modal-dialog { margin: .5rem; }
+    .modal-xl { --bs-modal-width: auto; }
+    .pricing-table { min-width: 480px; }
+    footer .nav { gap: .25rem .75rem; }
+}
+
 /* COLOR VARIABLES */
 :root {
   --Primary-Green: #285C53;
@@ -200,6 +233,32 @@ body {
     text-align: center;
     font-size: 76px;
   }
+
+  /* PRICING */
+  .pricing-table-wrap {
+    overflow-x: auto;
+    border-radius: 16px;
+    border: 2px solid var(--Muted-Purple);
+    font-family: Inter;
+  }
+  .pricing-table { --bs-table-bg: transparent; margin: 0; min-width: 560px; }
+  .pricing-table thead th {
+    font-size: 20px;
+    font-weight: 600;
+    padding: 16px;
+    border-bottom: 2px solid var(--Muted-Purple);
+  }
+  .pricing-table th[scope="row"] { font-weight: 500; }
+  .pricing-table td, .pricing-table th { padding: 14px 16px; vertical-align: middle; }
+  .pricing-col-free { background: var(--Muted-Green) !important; width: 22%; }
+  .pricing-col-premium { background: var(--Muted-Purple) !important; width: 28%; }
+  thead .pricing-col-premium { background: var(--Primary-Purple) !important; color: #FFF; }
+  .pricing-sub { font-size: 13px; font-weight: 400; color: var(--Light-Black); }
+  thead .pricing-col-premium .pricing-sub { color: #FFF; }
+  .pricing-yes { color: var(--Primary-Green); font-size: 22px; }
+  .pricing-col-premium .pricing-yes { color: var(--Primary-Purple); }
+  .pricing-no { color: var(--Muted-Black); font-size: 22px; }
+  .pricing-table tfoot td { border-bottom: 0; }
 
   /* NEW PLAN */
   .nav-link-personal.active { 
@@ -407,4 +466,9 @@ td {
 
 tr {
   border-bottom: 1px solid rgba(0, 0, 0, 0.12) ;
+}
+
+/* Inline field messages stay hidden until validation shows them */
+.form-error-text {
+  display: none;
 }

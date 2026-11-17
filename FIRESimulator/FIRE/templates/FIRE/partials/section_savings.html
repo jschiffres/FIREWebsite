@@ -6,6 +6,11 @@
             const saving_name_header = entry.querySelectorAll('.saving_name_header')[0]
             const saving_name = entry.querySelectorAll('.saving_name')[0].value
             saving_name_header.textContent = saving_name + " - Investment Priority: " + String(i + 1)
+            const nameError = entry.querySelector('.saving-name-error')
+            if (nameError) nameError.style.display = saving_name.trim() === '' ? 'block' : 'none'
+            const categoryError = entry.querySelector('.saving-category-error')
+            const category = entry.querySelector('.saving_category')
+            if (categoryError && category) categoryError.style.display = (category.value === 'None' || category.value === '') ? 'block' : 'none'
         })
     }
 
@@ -75,10 +80,30 @@
             <button type="button" class="btn btn-action-empty btn-lg" data-bs-toggle="modal" data-bs-target="#savings-Back-Modal"><i class="bi bi-arrow-left"></i> Back</i></button>
         </div>
         <div class="col-lg-6 col-md-6 col-sm-6 text-end mb-4">
-            <button type="submit" class="btn btn-action-empty btn-lg"><i class="bi bi-play"></i> Create Plan</button>
+            <button type="submit" id="create-plan-button" class="btn btn-action-empty btn-lg" disabled aria-describedby="create-plan-hint"><i class="bi bi-play" aria-hidden="true"></i> Create Plan</button>
+            <div id="create-plan-hint" class="form-text" role="status">Select a savings method to continue.</div>
         </div>
     </div>
-    <div class="modal fade" id="savings-Back-Modal" data-bs-backdrop="delete" data-bs-keyboard="false" tabindex="-1" aria-labelledby="income-Back-Modal" aria-hidden="true">
+    <script>
+        (function () {
+            const section = document.getElementById('savings');
+            const button = document.getElementById('create-plan-button');
+            const hint = document.getElementById('create-plan-hint');
+            function update() {
+                const chosen = section.querySelector('input[name="saving_option"]:checked');
+                let message = '';
+                if (!chosen) message = 'Select a savings method to continue.';
+                else if (chosen.value === 'Custom' && !section.querySelector('.saving-entry')) message = 'Add at least one account to continue.';
+                button.disabled = message !== '';
+                if (hint.textContent !== message) hint.textContent = message;
+            }
+            section.addEventListener('change', update);
+            section.addEventListener('click', () => setTimeout(update, 0));
+            new MutationObserver(update).observe(section, { childList: true, subtree: true });
+            update();
+        })();
+    </script>
+    <div class="modal fade" id="savings-Back-Modal" data-bs-backdrop="delete" data-bs-keyboard="false" tabindex="-1" aria-label="Leave savings?" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content back-modal">
                 <div class="modal-header">

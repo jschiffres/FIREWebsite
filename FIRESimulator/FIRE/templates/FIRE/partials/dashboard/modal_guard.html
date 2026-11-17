@@ -1,0 +1,216 @@
+<script>
+(function () {
+    const MODAL_IDS = ['income-Modal', 'expenses-Modal', 'savings-Modal'];
+    const guard = window.fireModalGuard = window.fireModalGuard || { snapshots: {} };
+
+    function controls(root) {
+        return Array.from(root.querySelectorAll('input, select, textarea'));
+    }
+
+    function serialize(body) {
+        return controls(body).map(el => {
+            const checkable = el.type === 'radio' || el.type === 'checkbox';
+            return el.name + ':' + el.value + (checkable ? ':' + el.checked : '');
+        }).join('|');
+    }
+
+    // Called on every render of the dashboard so the snapshots always match the saved plan.
+    guard.snapshot = function () {
+        guard.snapshots = {};
+        MODAL_IDS.forEach(id => {
+            const modal = document.getElementById(id);
+            const body = modal && modal.querySelector('.modal-body');
+            if (body) guard.snapshots[id] = { html: body.innerHTML, state: serialize(body) };
+        });
+    };
+
+    function isDirty(modal) {
+        const snap = guard.snapshots[modal.id];
+        const body = modal.querySelector('.modal-body');
+        return Boolean(snap && body && serialize(body) !== snap.state);
+    }
+
+    function revert(modal) {
+        const snap = guard.snapshots[modal.id];
+        const body = modal.querySelector('.modal-body');
+        if (!snap || !body) return;
+        body.innerHTML = snap.html;
+        if (window.htmx) htmx.process(body);
+        if (window.tooltips) tooltips();
+        guard.validate();
+    }
+
+    function ageValue(raw) {
+        const input = id => document.getElementById(id);
+        if (raw === 'Current Age') return input('current_age') ? Number(input('current_age').value) : NaN;
+        if (raw === 'Target Retirement Age') return input('retirement_age') ? Number(input('retirement_age').value) : NaN;
+        return Number(raw);
+    }
+
+    function inCol(el, selector) {
+        const col = el.closest('[class*="col-"]');
+        return col ? col.querySelector(selector) : null;
+    }
+
+    function show(error, invalid) {
+        if (error) error.style.display = invalid ? 'block' : 'none';
+    }
+
+    function autoMessage(el) {
+        if (el.validity.valueMissing || el.value === '') return 'Please fill in this field.';
+        if (el.min !== '' && el.max !== '') return 'Enter a number between ' + el.min + ' and ' + el.max + '.';
+        if (el.min !== '') return 'Enter a number of at least ' + el.min + '.';
+        return 'Enter a valid value.';
+    }
+
+    function validateModal(modal) {
+        const body = modal.querySelector('.modal-body');
+        if (!body) return true;
+        let ok = true;
+        const flagged = new Set();
+
+        function check(el, invalid, error) {
+            show(error, invalid);
+            if (invalid) { ok = false; flagged.add(el); }
+        }
+
+        body.querySelectorAll('.income_name, .expense_name, .saving_name').forEach(el => {
+            check(el, el.value.trim() === '', inCol(el, '[class*="-name-error"]'));
+        });
+        body.querySelectorAll('.income_category, .expense_category, .saving_category').forEach(el => {
+            check(el, el.value === 'None' || el.value === '', inCol(el, '[class*="-category-error"]'));
+        });
+        body.querySelectorAll('.income_starting_amount, .expense_starting_amount').forEach(el => {
+            const max = el.max === '' ? Infinity : Number(el.max);
+            check(el, !(Number(el.value) > 0) || el.value === '' || Number(el.value) > max, inCol(el, '[class*="-amount-error"]'));
+        });
+        body.querySelectorAll('.income_rate, .expense_rate').forEach(el => {
+            const value = Number(el.value);
+            check(el, el.value === '' || value < 0 || value > 99.9, inCol(el, '[class*="-rate-error"]'));
+        });
+        body.querySelectorAll('.income-entry, .expense-entry').forEach(entry => {
+            const start = entry.querySelector('.income_start_age, .expense_start_age');
+            const stop = entry.querySelector('.income_stop_age, .expense_stop_age');
+            if (!start || !stop) return;
+            check(stop, !(ageValue(stop.value) > ageValue(start.value)), inCol(stop, '[class*="-age-error"]'));
+        });
+
+        // Remaining inputs: fall back to the browser's min/max/required rules with an inline message.
+        controls(body).forEach(el => {
+            if (el.type === 'radio' || el.type === 'checkbox' || el.type === 'hidden' || el.tagName === 'SELECT') return;
+            if (!el.matches('.input-field, .form-control')) return;
+            const hasOwnMessage = el.matches('.income_name, .expense_name, .saving_name, .income_starting_amount, .expense_starting_amount, .income_rate, .expense_rate');
+            if (hasOwnMessage) return;
+            const holder = el.closest('.input-group') || el;
+            let auto = holder.nextElementSibling;
+            if (!auto || !auto.classList.contains('auto-error')) {
+                auto = document.createElement('div');
+                auto.className = 'form-text text-danger auto-error';
+                auto.setAttribute('role', 'alert');
+                holder.after(auto);
+            }
+            const invalid = !el.checkValidity();
+            auto.textContent = invalid ? autoMessage(el) : '';
+            auto.style.display = invalid ? 'block' : 'none';
+            if (invalid) { ok = false; flagged.add(el); }
+        });
+
+        controls(body).forEach(el => {
+            el.classList.toggle('is-invalid', flagged.has(el));
+            if (flagged.has(el)) el.setAttribute('aria-invalid', 'true'); else el.removeAttribute('aria-invalid');
+        });
+
+        const save = modal.querySelector('.modal-footer .btn-add');
+        if (save) {
+            save.disabled = !ok;
+            save.title = ok ? '' : 'Fix the highlighted fields to save';
+        }
+        return ok;
+    }
+
+    guard.validate = function () {
+        MODAL_IDS.forEach(id => {
+            const modal = document.getElementById(id);
+            if (modal) validateModal(modal);
+        });
+    };
+
+    guard.snapshot();
+    // The age inputs render after this script, so validate once the page is parsed.
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', guard.validate);
+    else guard.validate();
+
+    if (guard.bound) return;
+    guard.bound = true;
+
+    document.addEventListener('hide.bs.modal', function (e) {
+        const modal = e.target;
+        if (!guard.snapshots[modal.id] || modal.dataset.saving === '1' || modal.dataset.discard === '1') return;
+        if (!isDirty(modal)) return;
+        e.preventDefault();
+        if (window.confirm('You have unsaved changes. Close without saving and discard them?')) {
+            modal.dataset.discard = '1';
+            bootstrap.Modal.getOrCreateInstance(modal).hide();
+        }
+    });
+
+    document.addEventListener('hidden.bs.modal', function (e) {
+        const modal = e.target;
+        if (modal.dataset.discard === '1') {
+            delete modal.dataset.discard;
+            revert(modal);
+        }
+    });
+
+    document.addEventListener('click', function (e) {
+        const radio = e.target.closest && e.target.closest('#savings-Modal input[name="saving_option"]');
+        if (!radio) return;
+        const holder = document.getElementById('savings-method');
+        const current = holder.dataset.method;
+        if (radio.value === current) return;
+        const message = 'Switch to the ' + radio.value + ' method?\n\nThis replaces everything in your current ' + current +
+            ' savings setup (accounts, balances and growth rates) with ' + radio.value + ' defaults.\n\n' +
+            'Nothing is saved until you click "Save changes". Closing the window without saving restores your original setup.';
+        if (!window.confirm(message)) {
+            e.preventDefault();
+            return;
+        }
+        holder.dataset.method = radio.value;
+        htmx.ajax('GET', holder.dataset.methodUrl, { target: '#savings-method', swap: 'innerHTML', values: { saving_option: radio.value } });
+    });
+
+    document.addEventListener('input', function (e) {
+        const el = e.target;
+        if (!el.closest || !el.closest('.dashboard-modal')) return;
+        const header = el.matches('.income_name') ? el.closest('.income-entry') && el.closest('.income-entry').querySelector('.income_name_header')
+            : el.matches('.expense_name') ? el.closest('.expense-entry') && el.closest('.expense-entry').querySelector('.expense_name_header')
+            : null;
+        if (header) header.textContent = el.value.trim() || 'Untitled';
+        guard.validate();
+    });
+    document.addEventListener('change', function (e) {
+        if (e.target.closest && e.target.closest('.dashboard-modal')) guard.validate();
+    });
+    document.body.addEventListener('htmx:afterSettle', function () { guard.validate(); });
+    document.addEventListener('shown.bs.modal', function () { guard.validate(); });
+
+    // Close the modal first, then post, so the dashboard is only swapped once the modal is fully gone.
+    window.fireSaveModal = function (button) {
+        const modal = button.closest('.modal');
+        modal.dataset.saving = '1';
+        modal.addEventListener('hidden.bs.modal', function () {
+            htmx.trigger(button, 'save-now');
+        }, { once: true });
+        bootstrap.Modal.getOrCreateInstance(modal).hide();
+    };
+
+    if (!window.savingsAccordionAction) {
+        window.savingsAccordionAction = function (action) {
+            document.querySelectorAll('.saving-entry .accordion-collapse').forEach(panel => {
+                const instance = bootstrap.Collapse.getOrCreateInstance(panel, { toggle: false });
+                if (action === 'Expand') instance.show(); else instance.hide();
+            });
+        };
+    }
+})();
+</script>
