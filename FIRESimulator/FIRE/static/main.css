@@ -30,6 +30,8 @@ body {
 .text-danger { color: #b02a37 !important; }
 .table-responsive { -webkit-overflow-scrolling: touch; }
 img, svg { max-width: 100%; height: auto; }
+/* Fixed-height box so charts never collapse on narrow screens (Chart.js fills it) */
+.chart-box { position: relative; height: clamp(320px, 60vw, 460px); width: 100%; }
 @media (max-width: 767.98px) {
     /* 16px inputs stop iOS from zooming on focus; 44px targets for touch */
     .form-control, .form-select { font-size: 16px; }
