@@ -194,6 +194,16 @@
     document.body.addEventListener('htmx:afterSettle', function () { guard.validate(); });
     document.addEventListener('shown.bs.modal', function () { guard.validate(); });
 
+    // Close the modal first, then post, so the dashboard is only swapped once the modal is fully gone.
+    window.fireSaveModal = function (button) {
+        const modal = button.closest('.modal');
+        modal.dataset.saving = '1';
+        modal.addEventListener('hidden.bs.modal', function () {
+            htmx.trigger(button, 'save-now');
+        }, { once: true });
+        bootstrap.Modal.getOrCreateInstance(modal).hide();
+    };
+
     if (!window.savingsAccordionAction) {
         window.savingsAccordionAction = function (action) {
             document.querySelectorAll('.saving-entry .accordion-collapse').forEach(panel => {

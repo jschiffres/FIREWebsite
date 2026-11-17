@@ -228,10 +228,18 @@ class SurveyAndPermissionTests(TestCase):
         response = self.client.get(reverse('downloadplan', args=[plan.id]))
         self.assertEqual(response['Content-Type'], 'text/csv')
 
+    def test_pdf_download(self):
+        self.make_premium(self.owner)
+        self.client.force_login(self.owner)
+        plan = self.create_plan()
+        response = self.client.get(reverse('downloadpdf', args=[plan.id]))
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        self.assertTrue(response.content.startswith(b'%PDF'))
+
     def test_free_users_are_paywalled(self):
         self.client.force_login(self.owner)
         plan = self.create_plan()
-        for url in (reverse('downloadplan', args=[plan.id]), reverse('compareplans')):
+        for url in (reverse('downloadplan', args=[plan.id]), reverse('downloadpdf', args=[plan.id]), reverse('compareplans')):
             response = self.client.get(url)
             self.assertRedirects(response, reverse('myaccount'), fetch_redirect_response=False)
         self.assertEqual(self.client.get(reverse('whatif', args=[plan.id])).status_code, 403)

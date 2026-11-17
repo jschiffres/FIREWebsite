@@ -24,7 +24,7 @@ from .forms import CreateUserForm, FeedbackForm, PlanForm, EditPlanForm
 from .engine import PlanObject
 from .plan_input import saveplan
 from .emails import welcome_email
-from . import auth_flows, billing
+from . import auth_flows, billing, pdf_report
 
 import math
 import csv
@@ -652,6 +652,25 @@ def copyplan(request, plan_id):
         print(f"copyplan: {e}")
         messages.warning(request, f"Error copying {plan_name}.")
     return redirect('userplans')
+
+
+# PLANS: Download PDF (Premium)
+def downloadpdf(request, plan_id):
+    plan = get_object_or_404(Plan, id=plan_id)
+    if not _can_access_plan(request, plan):
+        raise Http404("Plan not found.")
+    if not user_is_premium(request.user):
+        return _premium_required(request, "PDF report")
+    try:
+        FIplan = _build_fiplan(plan)
+        pdf = pdf_report.build_plan_pdf(plan, FIplan, FIplan.chart_data())
+    except Exception:
+        logging.getLogger(__name__).exception("PDF generation failed")
+        messages.warning(request, f"Could not create the PDF for {plan.plan_name}.")
+        return redirect('runplan', plan_id=plan.id)
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="plan_{plan_id}.pdf"'
+    return response
 
 
 # PLANS: Download

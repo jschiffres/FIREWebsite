@@ -8,10 +8,10 @@
                     {% include 'FIRE/partials/dashboard/th.html' with color='#B34E82' label='Year' %}
                     {% for income in FIplan.incomes %}
                         {% with name=income.income_name %}
-                        <th class="header" scope="col">{{ name }}: Gross</th>
-                        {% if income.income_category == 'Salary' %}<th class="header" scope="col">{{ name }}: Bonus</th>{% endif %}
-                        <th class="header" scope="col">{{ name }}: Tax</th>
-                        <th class="header" scope="col">{{ name }}: Net</th>
+                        {% with l=name|add:': Gross' %}{% include 'FIRE/partials/dashboard/th.html' with color='#285C53' label=l %}{% endwith %}
+                        {% if income.income_category == 'Salary' %}{% with l=name|add:': Bonus' %}{% include 'FIRE/partials/dashboard/th.html' with color='#285C53' label=l %}{% endwith %}{% endif %}
+                        {% with l=name|add:': Tax' %}{% include 'FIRE/partials/dashboard/th.html' with color='#285C53' label=l %}{% endwith %}
+                        {% with l=name|add:': Net' %}{% include 'FIRE/partials/dashboard/th.html' with color='#285C53' label=l %}{% endwith %}
                         {% endwith %}
                     {% endfor %}
                     {% for expense in FIplan.expenses %}
@@ -19,21 +19,21 @@
                     {% endfor %}
                     {% include 'FIRE/partials/dashboard/th.html' with color='#000000' label='Savings' %}
                     {% if FIplan.accounts|first == 'Simple' %}
-                        <th class="header" scope="col">Net Worth: Start</th>
-                        <th class="header" scope="col">Net Worth: Cont. Amount</th>
-                        <th class="header" scope="col">Net Worth: End</th>
+                        {% include 'FIRE/partials/dashboard/th.html' with color='#4F378A' label='Net Worth: Start' %}
+                        {% include 'FIRE/partials/dashboard/th.html' with color='#4F378A' label='Net Worth: Cont. Amount' %}
+                        {% include 'FIRE/partials/dashboard/th.html' with color='#4F378A' label='Net Worth: End' %}
                     {% else %}
                         {% for account in FIplan.accounts|slice:"1:" %}
                             {% with name=account.saving_name %}
-                            <th class="header" scope="col">{{ name }}: Start</th>
+                            {% with l=name|add:': Start' %}{% include 'FIRE/partials/dashboard/th.html' with color='#4F378A' label=l %}{% endwith %}
                             {% if account.saving_category == 'ESRP' or account.saving_category == 'HSA' or account.saving_category == 'IRA' %}
-                                <th class="header" scope="col">{{ name }}: Cont. Limit</th>
+                                {% with l=name|add:': Cont. Limit' %}{% include 'FIRE/partials/dashboard/th.html' with color='#4F378A' label=l %}{% endwith %}
                             {% endif %}
-                            <th class="header" scope="col">{{ name }}: Cont. Amount</th>
+                            {% with l=name|add:': Cont. Amount' %}{% include 'FIRE/partials/dashboard/th.html' with color='#4F378A' label=l %}{% endwith %}
                             {% if account.saving_category == 'ESRP' %}
-                                <th class="header" scope="col">{{ name }}: Employer Cont. Amount</th>
+                                {% with l=name|add:': Employer Cont. Amount' %}{% include 'FIRE/partials/dashboard/th.html' with color='#4F378A' label=l %}{% endwith %}
                             {% endif %}
-                            <th class="header" scope="col">{{ name }}: End</th>
+                            {% with l=name|add:': End' %}{% include 'FIRE/partials/dashboard/th.html' with color='#4F378A' label=l %}{% endwith %}
                             {% endwith %}
                         {% endfor %}
                     {% endif %}

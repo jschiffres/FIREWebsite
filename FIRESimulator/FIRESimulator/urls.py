@@ -63,6 +63,7 @@ urlpatterns = [
     path("new/", views.newplan, name="newplan"),
     path("plan/<str:plan_id>", views.runplan, name="runplan"),
     path("downloadplan/<str:plan_id>", views.downloadplan, name="downloadplan"),
+    path("downloadpdf/<str:plan_id>", views.downloadpdf, name="downloadpdf"),
     path("copyplan/<str:plan_id>", views.copyplan, name="copyplan"),
     path("compare/", views.compareplans, name="compareplans"),
     path("plan/<str:plan_id>/whatif/", views.whatif, name="whatif"),

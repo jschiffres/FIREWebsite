@@ -169,6 +169,15 @@
         })
     });
 
+    // Re-measure once the swap, modal close and tab fade have settled so a chart never stays collapsed.
+    [50, 400].forEach(ms => setTimeout(() => {
+        ['NetWorthChart', 'YearlyBreakdownChart', 'YearlyInvestmentsChart'].forEach(id => {
+            const canvas = document.getElementById(id);
+            const chart = canvas && Chart.getChart(canvas);
+            if (chart && canvas.offsetParent !== null) chart.resize();
+        });
+    }, ms));
+
     // What-if sliders (Premium only)
     if (!document.getElementById('whatif-retirement')) return;
     const currentAge = data.ages[0];
