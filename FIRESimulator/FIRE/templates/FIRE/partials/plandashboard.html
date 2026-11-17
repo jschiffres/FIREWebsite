@@ -59,13 +59,45 @@
         {% endif %}
         {% include 'FIRE/partials/dashboard/age_inputs.html' %}
         {% include 'FIRE/partials/dashboard/kpis.html' %}
-        {% include 'FIRE/partials/dashboard/charts.html' %}
-        {% include 'FIRE/partials/dashboard/withdrawal.html' %}
-        {% include 'FIRE/partials/dashboard/table.html' %}
-        <div class="card dashboard-card mb-3">
-            <div class="card-body">
-                {{ sankey_chart|safe }}
+        <ul class="nav nav-tabs dash-tabs mb-3 no-print" id="dash-tabs" role="tablist">
+            <li class="nav-item" role="presentation"><button class="nav-link active" id="tab-overview" data-bs-toggle="tab" data-bs-target="#pane-overview" type="button" role="tab" aria-controls="pane-overview" aria-selected="true">Overview</button></li>
+            <li class="nav-item" role="presentation"><button class="nav-link" id="tab-cashflow" data-bs-toggle="tab" data-bs-target="#pane-cashflow" type="button" role="tab" aria-controls="pane-cashflow" aria-selected="false">Cash flow</button></li>
+            <li class="nav-item" role="presentation"><button class="nav-link" id="tab-retirement" data-bs-toggle="tab" data-bs-target="#pane-retirement" type="button" role="tab" aria-controls="pane-retirement" aria-selected="false">Retirement</button></li>
+            <li class="nav-item" role="presentation"><button class="nav-link" id="tab-table" data-bs-toggle="tab" data-bs-target="#pane-table" type="button" role="tab" aria-controls="pane-table" aria-selected="false">Table</button></li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane fade" id="pane-cashflow" role="tabpanel" aria-labelledby="tab-cashflow" tabindex="0">
+                {% include 'FIRE/partials/dashboard/charts_cashflow.html' %}
+                <div class="card dashboard-card mb-3">
+                    <div class="card-body">
+                        {{ sankey_chart|safe }}
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade show active" id="pane-overview" role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
+                {% include 'FIRE/partials/dashboard/charts.html' %}
+            </div>
+            <div class="tab-pane fade" id="pane-retirement" role="tabpanel" aria-labelledby="tab-retirement" tabindex="0">
+                {% include 'FIRE/partials/dashboard/withdrawal.html' %}
+            </div>
+            <div class="tab-pane fade" id="pane-table" role="tabpanel" aria-labelledby="tab-table" tabindex="0">
+                {% include 'FIRE/partials/dashboard/table.html' %}
             </div>
         </div>
     </div>
 </form>
+<script>
+    (function () {
+        var KEY = 'dash-tab';
+        var saved = sessionStorage.getItem(KEY);
+        var btn = saved && document.getElementById(saved);
+        if (btn && window.bootstrap && !btn.classList.contains('active')) bootstrap.Tab.getOrCreateInstance(btn).show();
+        document.querySelectorAll('#dash-tabs [data-bs-toggle="tab"]').forEach(function (b) {
+            b.addEventListener('shown.bs.tab', function () {
+                sessionStorage.setItem(KEY, b.id);
+                window.dispatchEvent(new Event('resize'));
+                if (window.Plotly) document.querySelectorAll('#pane-cashflow .js-plotly-plot').forEach(function (p) { Plotly.Plots.resize(p); });
+            });
+        });
+    })();
+</script>

@@ -1,17 +1,17 @@
-<div class="row g-4 mb-3">
-    <div class="col-lg-6">
-        <div class="card dashboard-card"><div class="card-body">
-            <label class="dashboard-input-name h5" for="current_age">Current Age</label>
-            <input type="number" class="form-control dashboard-input-field age-input" id="current_age" name="current_age" min="1" max="100" value="{{ plan.current_age }}" required aria-describedby="age-error" hx-post="{% url 'runplan' plan.id %}" hx-target="#runplan-div" hx-swap="innerHTML" hx-trigger="change[validateAges()] delay:1s">
-        </div></div>
+<div class="row g-3 mb-3 align-items-end dash-ages">
+    <div class="col-6 col-md-3">
+        <div>
+            <label class="dash-kpi-label" for="current_age">Current age</label>
+            <input type="number" class="form-control age-input" id="current_age" name="current_age" min="1" max="100" value="{{ plan.current_age }}" required aria-describedby="age-error" hx-post="{% url 'runplan' plan.id %}" hx-target="#runplan-div" hx-swap="innerHTML" hx-trigger="change[validateAges()] delay:1s">
+                    </div>
     </div>
-    <div class="col-lg-6">
-        <div class="card dashboard-card"><div class="card-body">
-            <label class="dashboard-input-name h5" for="retirement_age">Retirement Age</label>
+    <div class="col-6 col-md-3">
+        <div>
+            <label class="dash-kpi-label" for="retirement_age">Retirement age</label>
             <input type="number" class="form-control dashboard-input-field age-input" id="retirement_age" name="retirement_age" min="2" max="101" value="{{ plan.retirement_age }}" required aria-describedby="age-error" hx-post="{% url 'runplan' plan.id %}" hx-target="#runplan-div" hx-swap="innerHTML" hx-trigger="change[validateAges()] delay:1s">
-        </div></div>
+        </div>
     </div>
-    <div class="col-12">
+    <div class="col-12 col-md-6">
         <div id="age-error" class="text-danger small" role="alert" aria-live="polite"></div>
     </div>
 </div>

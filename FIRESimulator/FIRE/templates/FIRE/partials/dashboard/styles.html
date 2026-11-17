@@ -39,6 +39,18 @@
     @media print {
         #app-navbar, .alert .btn-close, .accordion, .tbl-container, .no-print, button, .navbar { display: none !important; }
         .card { break-inside: avoid; }
+        .tab-content > .tab-pane { display: block !important; opacity: 1 !important; }
         body { background: #fff !important; }
     }
+    .dash-hero { border-left: 6px solid var(--Primary-Orange); }
+    .dash-hero-ok { border-left-color: #198754; }
+    .dash-progress { height: 14px; }
+    .dash-kpi-label { font-size: .8rem; color: #555; text-transform: uppercase; letter-spacing: .03em; }
+    .dash-kpi-value { font-size: 1.6rem; font-weight: 700; color: var(--Primary-Green); }
+    .dash-kpi-note { font-size: .75rem; color: #666; }
+    .dash-chip { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid var(--Muted-Green); border-radius: 8px; padding: .4rem .75rem; font-size: .85rem; }
+    .dash-chip strong { color: var(--Primary-Green); }
+    .dash-tabs .nav-link { color: var(--Primary-Green); min-height: 44px; }
+    .dash-tabs .nav-link.active { font-weight: 600; border-bottom-color: var(--Primary-Orange); }
+    .dash-ages .age-input { max-width: 140px; }
 </style>
