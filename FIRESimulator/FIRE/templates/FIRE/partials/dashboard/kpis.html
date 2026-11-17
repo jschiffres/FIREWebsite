@@ -46,6 +46,25 @@
     <div class="col-6 col-lg-3"><div class="dash-chip"><span>Retire at</span><strong>{{ plan.retirement_age }}</strong></div></div>
 </div>
 
+{% if FIplan.allocation_summary %}
+{% with a=FIplan.allocation_summary %}
+<div class="mb-3" id="allocation-summary">
+    <div class="d-flex justify-content-between small mb-1">
+        <strong>Where your savings go (age {{ a.age }})</strong>
+        <span>${{ a.placed|floatformat:0 }} of ${{ a.total|floatformat:0 }} placed</span>
+    </div>
+    <div class="progress" role="img" aria-label="Savings allocation by account" style="height: 1.25rem;">
+        {% for item in a.items %}{% if item.percent > 0 %}<div class="progress-bar" style="width: {{ item.percent }}%; background-color: {{ item.color }};" title="{{ item.name }}: ${{ item.amount|floatformat:0 }}">{% if item.percent >= 12 %}{{ item.percent|floatformat:0 }}%{% endif %}</div>{% endif %}{% endfor %}
+        {% if a.unallocated > 0 %}<div class="progress-bar bg-secondary" style="width: {{ a.unallocated_percent }}%;" title="Unallocated: ${{ a.unallocated|floatformat:0 }}"></div>{% endif %}
+    </div>
+    <div class="small mt-1 text-muted">
+        {% for item in a.items %}<span class="me-3"><span style="color: {{ item.color }};">&#9632;</span> {{ item.name }} ${{ item.amount|floatformat:0 }}</span>{% endfor %}
+        {% if a.unallocated > 0 %}<span class="text-warning-emphasis">&#9632; Unallocated ${{ a.unallocated|floatformat:0 }}</span>{% endif %}
+    </div>
+</div>
+{% endwith %}
+{% endif %}
+
 {% if FIplan.unallocated_total > 0 or FIplan.has_shortfall_years %}
 <div class="alert alert-info py-2 small mb-3" role="note">
     <i class="bi bi-info-circle" aria-hidden="true"></i>

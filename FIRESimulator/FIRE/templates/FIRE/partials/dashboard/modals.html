@@ -66,7 +66,7 @@
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" name="saving_option" id="saving_option_custom" value="Custom" {% if FIplan.accounts|first == 'Custom' %} checked {% elif not is_premium %} disabled {% endif %}>
                         <label class="form-check-label" for="saving_option_custom">Custom{% if not is_premium %} <a href="{% url 'myaccount' %}#premium" class="badge text-bg-warning text-decoration-none"><i class="bi bi-lock-fill" aria-hidden="true"></i> Premium</a>{% endif %}</label>
-                        <a tabindex="0" role="button" aria-label="About the Custom method" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-title="Custom (Premium)" data-bs-content="Savings will be allocated per your priorities. Add your own accounts and order them yourself!"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+                        <a tabindex="0" role="button" aria-label="About the Custom method" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-title="Custom (Premium)" data-bs-content="Savings go into your accounts in the order listed. Add several accounts per type and choose how each fills: up to its limit, a fixed $ amount, a % of savings, or just the employer match. Mark old accounts dormant. A high yield savings account (HYSA) collects surplus savings and is drawn first in shortfall years."><i class="bi bi-question-circle" aria-hidden="true"></i></a>
                     </div>
                 </div>
                 <div id="savings-method" data-method="{{ FIplan.accounts|first }}" data-method-url="{% url 'savings-method' %}">

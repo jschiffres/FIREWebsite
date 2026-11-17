@@ -5,7 +5,7 @@
             <h5 class="input-name">Current Value</h5>   
             <div class="input-group">
                 <span class="input-group-text">$</span>             
-                <input type="number" class="form-control input-field" name="esrp_current_value" min="1" max="10000000" value="20000" required>
+                <input type="number" class="form-control input-field" name="esrp_current_value" min="0" max="10000000" value="20000" required>
             </div>
         </div>
         <div class="col-lg-3">
@@ -39,8 +39,9 @@
             <h5 class="input-name">Yearly Contribution Limit Increase</h5>   
             <div class="input-group">
                 <span class="input-group-text">$</span>             
-                <input type="number" class="form-control input-field" name="esrp_contribution_limit_step" min="1" max="100000" value="500" required>
+                <input type="number" class="form-control input-field" name="esrp_contribution_limit_step" min="0" max="100000" value="500" required>
             </div>
         </div>
     </div>
+    {% include 'FIRE/partials/fields_savings_alloc.html' with category='ESRP' %}
 </div>

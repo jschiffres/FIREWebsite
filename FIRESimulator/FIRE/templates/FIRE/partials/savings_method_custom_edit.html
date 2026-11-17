@@ -9,11 +9,14 @@ if (!window.savingSortableBound) {
     };
     document.body.addEventListener('htmx:afterSettle', initSortable);
     document.body.addEventListener('htmx:afterRequest', initSortable);
+    // Also bind lazily on first press, so reordering works however the list was inserted
+    ['pointerdown', 'mousedown', 'touchstart'].forEach(function (evt) { document.addEventListener(evt, initSortable, true); });
     initSortable();
 }
 </script>
 
 <!-- Savings Entries -->
+<p class="text-muted small mb-2"><i class="bi bi-grip-vertical" aria-hidden="true"></i> Tip: drag accounts by their header to reorder them. Savings fill accounts from top to bottom.</p>
 <div id="saving-div" data-sortable>
     {% for account in FIplan.accounts|slice:"1:" %}
         <div class="saving-entry">
@@ -34,13 +37,15 @@ if (!window.savingSortableBound) {
                                 </div>
                                 <div class="col-lg-3">
                                     <h5 class="input-name">Category</h5>              
-                                    <select class="form-select input-select saving_category" name="saving_category" hx-get="{% url 'saving-fields' %}" hx-target="next .saving-fields" hx-trigger="change" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value}">
+                                    <select class="form-select input-select saving_category" name="saving_category" hx-get="{% url 'saving-fields' %}" hx-target="next .saving-fields" hx-trigger="change" hx-swap="innerHTML" hx-vals="js:{custom: 1, max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value}">
                                         {% if account.saving_category == 'ESRP' %}
                                             <option value="ESRP">Employer Sponsored Retirement Account (401k/403b)</option>
                                         {% elif account.saving_category == 'HSA' %}
                                             <option value="HSA">Health Savings Account (HSA)</option>
                                         {% elif account.saving_category == 'IRA' %}
                                             <option value="IRA">Individual Retirement Account (IRA)</option>
+                                        {% elif account.saving_category == 'HYSA' %}
+                                            <option value="HYSA">High Yield Savings Account (HYSA)</option>
                                         {% else %}
                                             <option value="TBA">Taxable Brokerage Account (TBA)</option>
                                         {% endif %}
@@ -50,13 +55,15 @@ if (!window.savingSortableBound) {
                             </div>
                             <div class="saving-fields">
                                 {% if account.saving_category == 'ESRP' %}
-                                    {% include 'FIRE/partials/fields_savings_esrp_edit.html' with account=account %}
+                                    {% include 'FIRE/partials/fields_savings_esrp_edit.html' with account=account custom=True %}
                                 {% elif account.saving_category == 'HSA' %}
-                                    {% include 'FIRE/partials/fields_savings_hsa_edit.html' with account=account %}
+                                    {% include 'FIRE/partials/fields_savings_hsa_edit.html' with account=account custom=True %}
                                 {% elif account.saving_category == 'IRA' %}
-                                    {% include 'FIRE/partials/fields_savings_ira_edit.html' with account=account %}
+                                    {% include 'FIRE/partials/fields_savings_ira_edit.html' with account=account custom=True %}
+                                {% elif account.saving_category == 'HYSA' %}
+                                    {% include 'FIRE/partials/fields_savings_hysa_edit.html' with account=account custom=True %}
                                 {% else %}
-                                    {% include 'FIRE/partials/fields_savings_tba_edit.html' with account=account %}
+                                    {% include 'FIRE/partials/fields_savings_tba_edit.html' with account=account custom=True %}
                                 {% endif %}
                             </div>
                             <div class="text-end">
@@ -72,7 +79,7 @@ if (!window.savingSortableBound) {
 </div>
 <div class="btn-toolbar" role="toolbar">
     <div class="btn-group" role="group">
-        <button type="button" class="btn btn-add" hx-get="{% url 'create-saving' %}" hx-target="#saving-div" hx-swap="beforeend" hx-vals="js:{entry_count: document.querySelectorAll('.saving-entry').length, esrp_count: document.querySelectorAll('.esrp-entry').length, hsa_count: document.querySelectorAll('.hsa-entry').length, ira_count: document.querySelectorAll('.ira-entry').length, tba_count: document.querySelectorAll('.tba-entry').length}"><i class="bi bi-plus"></i>  Account</button>
+        <button type="button" class="btn btn-add" hx-get="{% url 'create-saving' %}" hx-target="#saving-div" hx-swap="beforeend" hx-vals="js:{custom: 1, entry_count: document.querySelectorAll('.saving-entry').length, esrp_count: document.querySelectorAll('.esrp-entry').length, hsa_count: document.querySelectorAll('.hsa-entry').length, ira_count: document.querySelectorAll('.ira-entry').length, tba_count: document.querySelectorAll('.tba-entry').length}"><i class="bi bi-plus"></i>  Account</button>
     </div>
     <div class="btn-group m-2 text-center" role="group">
         <button type="button" id="expand-savings-entries" class="btn btn-action-empty" onclick="savingsAccordionAction('Expand');"><i class="bi bi-arrows-expand"></i>  Expand All</button>

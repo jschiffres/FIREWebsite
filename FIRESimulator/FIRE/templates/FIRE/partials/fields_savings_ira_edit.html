@@ -5,7 +5,7 @@
             <h5 class="input-name">Current Value</h5>   
             <div class="input-group">
                 <span class="input-group-text">$</span>             
-                <input type="number" class="form-control input-field" name="ira_current_value" min="1" max="10000000" value="{{ account.current_value }}" required>
+                <input type="number" class="form-control input-field" name="ira_current_value" min="0" max="10000000" value="{{ account.current_value }}" required>
             </div>
         </div>
         <div class="col-lg-3">
@@ -29,8 +29,9 @@
             <h5 class="input-name">Yearly Contribution Limit Increase</h5>   
             <div class="input-group">
                 <span class="input-group-text">$</span>             
-                <input type="number" class="form-control input-field" name="ira_contribution_limit_step" min="1" max="100000" value="{{ account.contribution_limit_step }}" required>
+                <input type="number" class="form-control input-field" name="ira_contribution_limit_step" min="0" max="100000" value="{{ account.contribution_limit_step }}" required>
             </div>
         </div>
     </div>
+    {% include 'FIRE/partials/fields_savings_alloc.html' with category='IRA' %}
 </div>

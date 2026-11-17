@@ -170,9 +170,29 @@
         })
     });
 
+    const allocPalette = ['#285C53', '#EC652B', '#4F378A', '#B34E82', '#B8860B', '#2E86AB', '#6B8E23', '#8B5A2B'];
+    new Chart(document.getElementById('SavingsAllocationChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: data.ages,
+            datasets: data.allocations.map((a, i) => ({
+                label: a.name,
+                data: a.amounts,
+                backgroundColor: a.name === 'Unallocated' ? '#C9C9CE' : allocPalette[i % allocPalette.length],
+                stack: 'alloc'
+            }))
+        },
+        options: options('Where Your Savings Go Each Year', {
+            scales: {
+                x: { stacked: true, title: { display: true, text: 'Age' } },
+                y: { stacked: true, title: { display: true, text: 'Amount ($)' }, ticks: { callback: currency } }
+            }
+        })
+    });
+
     // Re-measure once the swap, modal close and tab fade have settled so a chart never stays collapsed.
     [50, 400].forEach(ms => setTimeout(() => {
-        ['NetWorthChart', 'YearlyBreakdownChart', 'YearlyInvestmentsChart'].forEach(id => {
+        ['NetWorthChart', 'YearlyBreakdownChart', 'YearlyInvestmentsChart', 'SavingsAllocationChart'].forEach(id => {
             const canvas = document.getElementById(id);
             const chart = canvas && Chart.getChart(canvas);
             if (chart && canvas.offsetParent !== null) chart.resize();

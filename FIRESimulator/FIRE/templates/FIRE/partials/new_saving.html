@@ -16,20 +16,13 @@
                         </div>
                         <div class="col-lg-3">
                             <h5 class="input-name">Category</h5>              
-                            <select class="form-select input-select saving_category" name="saving_category" hx-get="{% url 'saving-fields' %}" hx-target="next .saving-fields" hx-trigger="change" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, entry_count: document.querySelectorAll('.saving-entry').length, esrp_count: document.querySelectorAll('.esrp-entry').length, hsa_count: document.querySelectorAll('.hsa-entry').length, ira_count: document.querySelectorAll('.ira-entry').length, tba_count: document.querySelectorAll('.tba-entry').length}">
+                            <select class="form-select input-select saving_category" name="saving_category" hx-get="{% url 'saving-fields' %}" hx-target="next .saving-fields" hx-trigger="change" hx-swap="innerHTML" hx-vals="js:{custom: {% if custom %}1{% else %}0{% endif %}, max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, entry_count: document.querySelectorAll('.saving-entry').length, esrp_count: document.querySelectorAll('.esrp-entry').length, hsa_count: document.querySelectorAll('.hsa-entry').length, ira_count: document.querySelectorAll('.ira-entry').length, tba_count: document.querySelectorAll('.tba-entry').length}">
                                 <option value=None>--> Select a category <--</option>
-                                {% if esrp_count == 0 %}
-                                    <option value="ESRP">Employer Sponsored Retirement Account (401k/403b)</option>
-                                {% endif %}
-                                {% if hsa_count == 0 %}
-                                    <option value="HSA">Health Savings Account (HSA)</option>
-                                {% endif %}
-                                {% if ira_count == 0 %}
-                                    <option value="IRA">Individual Retirement Account (IRA)</option>
-                                {% endif %}
-                                {% if tba_count == 0 %}
-                                    <option value="TBA">Taxable Brokerage Account (TBA)</option>
-                                {% endif %}
+                                <option value="ESRP">Employer Sponsored Retirement Account (401k/403b)</option>
+                                <option value="HSA">Health Savings Account (HSA)</option>
+                                <option value="IRA">Individual Retirement Account (IRA)</option>
+                                <option value="TBA">Taxable Brokerage Account (TBA)</option>
+                                {% if custom %}<option value="HYSA">High Yield Savings Account (HYSA)</option>{% endif %}
                             </select>
                             <div class="form-text text-danger form-error-text saving-category-error"><small> Please select a category.</small></div>
                         </div>
