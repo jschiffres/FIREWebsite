@@ -107,6 +107,25 @@ letter-spacing: 0.17px;
 								<form action="{% url 'copyplan' plan.id %}">
 									<button type="submit" class="btn btn-sm me-2" aria-label="Copy {{ plan.plan_name }}"><i class="bi bi-copy" aria-hidden="true"></i></button>
 								</form>
+								<button type="button" class="btn btn-sm me-2" data-bs-toggle="modal" data-bs-target="#renamePlanModal{{plan.id}}" aria-label="Rename {{ plan.plan_name }}"><i class="bi bi-pencil-square" aria-hidden="true"></i></button>
+								<div class="modal fade" id="renamePlanModal{{plan.id}}" tabindex="-1" aria-labelledby="renameLabel{{plan.id}}" aria-hidden="true">
+									<div class="modal-dialog modal-dialog-centered">
+										<form class="modal-content back-modal" method="POST" action="{% url 'renameplan' plan.id %}">
+											{% csrf_token %}
+											<div class="modal-header">
+												<h5 class="modal-title" id="renameLabel{{plan.id}}">Rename plan</h5>
+												<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+											</div>
+											<div class="modal-body">
+												<label for="renameInput{{plan.id}}" class="form-label">Plan name</label>
+												<input type="text" class="form-control" id="renameInput{{plan.id}}" name="plan_name" value="{{ plan.plan_name }}" maxlength="50" required>
+											</div>
+											<div class="modal-footer" style="background: #FCFBF9;">
+												<button type="submit" class="btn btn-action-filled">Save</button>
+											</div>
+										</form>
+									</div>
+								</div>
 								<form method="POST" action="{% url 'deleteplan' plan.id %}">
 								{% csrf_token %}
 									<button type="button" class="btn btn-sm" data-bs-toggle="modal" data-bs-target="#deletePlanModal{{plan.id}}"><i class="bi bi-trash action-icon" aria-hidden="true"></i><span class="visually-hidden">Delete {{ plan.plan_name }}</span></button>

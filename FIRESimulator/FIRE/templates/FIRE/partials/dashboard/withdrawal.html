@@ -38,7 +38,7 @@
         </div>
         <p class="mb-2 mt-2" id="wd-summary" role="status" aria-live="polite"></p>
         <canvas id="WithdrawalChart" height="100" role="img" aria-label="Line chart of portfolio balance after retirement with a 10th to 90th percentile range. See the summary above for the headline result."></canvas>
-        <p class="text-muted small mb-0 mt-2">Shaded band: 10th&ndash;90th percentile of market-return sequences. The success rate is the share of simulated runs in which money lasts through the chosen age.</p>
+        <p class="text-muted small mb-0 mt-2">Shaded band: 10th&ndash;90th percentile of market-return sequences. The success rate is the share of simulated runs in which money lasts through the chosen age. <a tabindex="0" role="button" aria-label="About the withdrawal simulation" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-title="Withdrawal simulation" data-bs-content="Starting from your projected portfolio, we withdraw your inflation-adjusted spending each year while returns vary randomly, hundreds of times over. A run succeeds if money is left at the chosen age. Bad returns early in retirement (sequence risk) are the main reason runs fail."><i class="bi bi-info-circle" aria-hidden="true"></i> How does this work?</a></p>
         {% endif %}
     </div>
 </div>

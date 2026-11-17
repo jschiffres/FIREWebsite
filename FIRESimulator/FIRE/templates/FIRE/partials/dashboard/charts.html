@@ -4,7 +4,7 @@
         <canvas id="NetWorthChart" height="110" role="img" aria-label="Line chart of projected net worth by age compared with your Magic Number. Net worth reaches {{ FIplan.net_worths_last }} at retirement against a Magic Number of {{ FIplan.magic_numbers_last }}.">
             Projected net worth reaches {{ FIplan.net_worths_last }} at retirement against a Magic Number of {{ FIplan.magic_numbers_last }}.
         </canvas>
-        <p class="text-muted small mb-0 mt-2">Shaded band: likely range (10th&ndash;90th percentile of {{ chart_data.scenarios.volatility|floatformat:0 }}% volatility Monte Carlo runs). Dashed lines: returns {{ chart_data.scenarios.shift|floatformat:0 }} points lower and higher than assumed.</p>
+        <p class="text-muted small mb-0 mt-2">Shaded band: likely range (10th&ndash;90th percentile of {{ chart_data.scenarios.volatility|floatformat:0 }}% volatility Monte Carlo runs). Dashed lines: returns {{ chart_data.scenarios.shift|floatformat:0 }} points lower and higher than assumed. <a tabindex="0" role="button" aria-label="About the likely range" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-title="Reading the shaded band" data-bs-content="Each simulated run uses randomly varying yearly returns around your assumed return. The band shows where the middle 80% of runs land: only 1 in 10 ended above it and 1 in 10 below it. A wider band means more uncertainty, which grows the longer your time horizon."><i class="bi bi-info-circle" aria-hidden="true"></i> How is this calculated?</a></p>
     </div>
 </div>
 

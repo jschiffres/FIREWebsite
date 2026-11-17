@@ -75,6 +75,7 @@ urlpatterns = [
     path("plan/<str:plan_id>/whatif/", views.whatif, name="whatif"),
     path("plan/<str:plan_id>/withdrawal/", views.withdrawal, name="withdrawal"),
     path("about/", views.about, name="about"),
+    path("renameplan/<str:plan_id>", views.renameplan, name="renameplan"),
     path("deleteplan/<str:plan_id>", views.deleteplan, name="deleteplan"),
 
     #HTMX: Section, Entry, Fields, Tables

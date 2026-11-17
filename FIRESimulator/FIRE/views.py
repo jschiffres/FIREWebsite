@@ -727,6 +727,20 @@ def _owned_plan(request, plan_id):
         raise Http404("Plan not found.")
     return plan
 
+# PLANS: Rename
+@login_required
+@require_POST
+def renameplan(request, plan_id):
+    plan = _owned_plan(request, plan_id)
+    name = request.POST.get('plan_name', '').strip()[:50]
+    if not name:
+        messages.warning(request, "Plan name cannot be empty.")
+    else:
+        plan.plan_name = name
+        plan.save(update_fields=['plan_name'])
+        messages.success(request, f"Plan renamed to {name}.")
+    return redirect('userplans')
+
 # PLANS: Delete        
 @login_required
 @require_POST

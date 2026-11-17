@@ -523,3 +523,17 @@ class FaqFeedbackTests(TestCase):
     def test_premium_copy_mentions_pdf(self):
         self.assertIn('PDF', self.client.get('/').content.decode())
 
+
+
+class RenamePlanTests(TestCase):
+    def test_rename_only_own_plan(self):
+        u = User.objects.create_user('r1', 'r1@x.com', 'Passw0rd!x')
+        o = User.objects.create_user('r2', 'r2@x.com', 'Passw0rd!x')
+        p = Plan.objects.create(user=u, plan_name='Old', current_age=30, retirement_age=65)
+        self.client.login(username='r2', password='Passw0rd!x')
+        self.assertEqual(self.client.post(f'/renameplan/{p.id}', {'plan_name': 'X'}).status_code, 404)
+        self.client.login(username='r1', password='Passw0rd!x')
+        self.client.post(f'/renameplan/{p.id}', {'plan_name': ' New '})
+        p.refresh_from_db()
+        self.assertEqual(p.plan_name, 'New')
+

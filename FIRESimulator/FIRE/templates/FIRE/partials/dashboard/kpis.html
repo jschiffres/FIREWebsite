@@ -31,7 +31,7 @@
                 <div class="dash-kpi-value">{{ FIplan.fi_age }}</div>
             </div>
             <div class="col-6 col-lg-3">
-                <div class="dash-kpi-label">Chance of reaching it</div>
+                <div class="dash-kpi-label">Chance of reaching it <a tabindex="0" role="button" aria-label="How the Monte Carlo simulation works" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="top" data-bs-title="Monte Carlo simulation" data-bs-content="Real markets don't return the same amount every year. We replay your plan hundreds of times, each with randomly varying yearly returns, and count how many runs reach your Magic Number by retirement. The percentage is that share of runs. Higher means your plan is more resilient to bad market luck."><i class="bi bi-info-circle" aria-hidden="true"></i></a></div>
                 <div class="dash-kpi-value">{% if chart_data.scenarios.success_probability != None %}{{ chart_data.scenarios.success_probability }}%{% else %}N/A{% endif %}</div>
                 <div class="dash-kpi-note">Monte Carlo, {{ chart_data.scenarios.volatility|floatformat:0 }}% volatility</div>
             </div>
