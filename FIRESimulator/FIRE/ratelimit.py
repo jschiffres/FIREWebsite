@@ -6,6 +6,11 @@ from django.http import HttpResponse
 
 
 def _client_ip(request):
+    """Client IP, reading X-Forwarded-For only from the configured number of trusted proxies."""
+    hops = getattr(settings, 'TRUSTED_PROXY_HOPS', 0)
+    forwarded = [p.strip() for p in request.META.get('HTTP_X_FORWARDED_FOR', '').split(',') if p.strip()]
+    if hops and len(forwarded) >= hops:
+        return forwarded[-hops]
     return request.META.get('REMOTE_ADDR', 'unknown')
 
 

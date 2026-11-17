@@ -112,6 +112,18 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     CSRF_TRUSTED_ORIGINS = [o for o in os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',') if o]
 
+# Number of reverse proxies in front of the app (Render = 1; Render behind Cloudflare = 2).
+TRUSTED_PROXY_HOPS = int(os.environ.get('DJANGO_TRUSTED_PROXY_HOPS', '0' if DEBUG else '1'))
+
+# Rate-limit counters must be shared across gunicorn workers; use the database when hosted.
+if _database_url:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+            'LOCATION': 'django_cache',
+        }
+    }
+
 STORAGES = {
     'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
     'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'},
