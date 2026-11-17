@@ -683,3 +683,12 @@ class AnonymousTrialTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.plan.refresh_from_db()
         self.assertIsNotNone(self.plan.user)
+
+
+class AnalyticsTests(TestCase):
+    def test_banner_only_when_configured(self):
+        self.assertNotContains(self.client.get(reverse('faq')), 'consent-banner')
+        with override_settings(GA_MEASUREMENT_ID='G-TEST123'):
+            page = self.client.get(reverse('faq'))
+        self.assertContains(page, 'consent-banner')
+        self.assertContains(page, 'G\\u002DTEST123')
