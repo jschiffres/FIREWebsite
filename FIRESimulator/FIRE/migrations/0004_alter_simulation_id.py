@@ -4,6 +4,20 @@ from django.db import migrations, models
 import uuid
 
 
+class PostgresSafeAlterField(migrations.AlterField):
+    """PostgreSQL cannot cast bigint to uuid directly, so convert the column explicitly."""
+
+    def database_forwards(self, app_label, schema_editor, from_state, to_state):
+        if schema_editor.connection.vendor != 'postgresql':
+            return super().database_forwards(app_label, schema_editor, from_state, to_state)
+        table = schema_editor.quote_name(to_state.apps.get_model(app_label, self.model_name_lower)._meta.db_table)
+        schema_editor.execute(f'ALTER TABLE {table} ALTER COLUMN "id" DROP IDENTITY IF EXISTS')
+        schema_editor.execute(f'ALTER TABLE {table} ALTER COLUMN "id" DROP DEFAULT')
+        schema_editor.execute(
+            f"ALTER TABLE {table} ALTER COLUMN \"id\" TYPE uuid USING lpad(to_hex(\"id\"), 32, '0')::uuid"
+        )
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -11,7 +25,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
+        PostgresSafeAlterField(
             model_name='simulation',
             name='id',
             field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
