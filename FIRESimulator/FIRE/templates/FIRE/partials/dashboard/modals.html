@@ -6,6 +6,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                {% include 'FIRE/partials/tax_settings.html' with tax=plan.tax_settings %}
                 <div id="income-div">
                     {% for income in FIplan.incomes %}
                         {% include 'FIRE/partials/dashboard/income_entry.html' %}

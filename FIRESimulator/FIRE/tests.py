@@ -769,3 +769,69 @@ class AnalyticsTests(TestCase):
             page = self.client.get(reverse('faq'))
         self.assertContains(page, 'consent-banner')
         self.assertContains(page, 'G\\u002DTEST123')
+
+
+class AutomaticTaxTests(TestCase):
+    AUTO = {'mode': 'auto', 'filing_status': 'single', 'state': 'NONE'}
+
+    def tax_plan(self, settings=None, salary=100000):
+        plan = make_plan(['Simple', {'simple_net_worth': 0, 'simple_yearly_growth': 0.0}], salary=salary)
+        if settings is not None:
+            plan.tax_settings = settings
+        return plan
+
+    def test_federal_brackets_match_hand_calculation(self):
+        from . import taxes
+        # 100,000 - 15,750 deduction = 84,250 taxable: 10% / 12% / 22% brackets
+        self.assertEqual(round(taxes.federal_income_tax(100000, 'single')), 13449)
+        self.assertEqual(taxes.federal_income_tax(10000, 'single'), 0)
+        self.assertLess(taxes.federal_income_tax(100000, 'married'), taxes.federal_income_tax(100000, 'single'))
+
+    def test_plans_without_settings_keep_manual_rates(self):
+        for settings in (None, {'mode': 'manual'}):
+            fi = PlanObject(self.tax_plan(settings)).run()
+            self.assertEqual(fi.total_taxes, [20000] * 5)
+            self.assertIsNone(fi.tax_summary())
+
+    def test_auto_taxes_include_federal_fica_and_state(self):
+        from . import taxes
+        fi = PlanObject(self.tax_plan(self.AUTO)).run()
+        factor = taxes.index_factor(0)
+        federal = int(taxes.federal_income_tax(100000, 'single', factor))
+        fica = int(taxes.social_security_tax(100000, factor)) + int(taxes.medicare_tax(100000))
+        self.assertEqual(fi.tax_breakdown['federal'][0], federal)
+        self.assertEqual(fi.tax_breakdown['fica'][0], fica)
+        self.assertEqual(fi.total_taxes[0], federal + fica)
+        self.assertEqual(fi.total_net_income[0], 100000 - federal - fica)
+        self.assertEqual(fi.tax_summary()['total'], sum(fi.total_taxes))
+
+        with_state = PlanObject(self.tax_plan(dict(self.AUTO, state='NY'))).run()
+        self.assertGreater(with_state.total_taxes[0], fi.total_taxes[0])
+        self.assertGreater(with_state.tax_breakdown['state'][0], 0)
+        self.assertEqual(with_state.tax_summary()['state_name'], 'New York')
+        self.assertIsInstance(with_state.tax_summary()['state'], int)
+
+    def test_social_security_stops_at_wage_base(self):
+        fi = PlanObject(self.tax_plan(self.AUTO, salary=400000)).run()
+        low = PlanObject(self.tax_plan(self.AUTO, salary=200000)).run()
+        # Past the wage base only Medicare keeps growing, so FICA is far below 7.65% of pay
+        self.assertLess(fi.tax_breakdown['fica'][0], 400000 * 0.0765)
+        self.assertGreater(fi.tax_breakdown['fica'][0], low.tax_breakdown['fica'][0])
+
+    def test_survey_saves_tax_settings(self):
+        self.client.post(reverse('newplan'), survey_post(tax_mode='auto', tax_filing_status='married', tax_state='CA'))
+        self.assertEqual(Plan.objects.get().tax_settings, {'mode': 'auto', 'filing_status': 'married', 'state': 'CA'})
+
+    def test_survey_without_toggle_is_manual_and_bad_values_rejected(self):
+        self.client.post(reverse('newplan'), survey_post())
+        self.assertEqual(Plan.objects.get().tax_settings, {'mode': 'manual'})
+        Plan.objects.all().delete()
+        for bad in ({'tax_state': 'ZZ'}, {'tax_filing_status': 'bogus'}):
+            response = self.client.post(reverse('newplan'), survey_post(tax_mode='auto', **bad))
+            self.assertEqual(response.status_code, 200)
+        self.assertEqual(Plan.objects.count(), 0)
+
+    def test_dashboard_shows_estimated_taxes(self):
+        self.client.post(reverse('newplan'), survey_post(tax_mode='auto'))
+        response = self.client.get(reverse('runplan', args=[Plan.objects.get().id]))
+        self.assertContains(response, 'Estimated taxes over the plan')

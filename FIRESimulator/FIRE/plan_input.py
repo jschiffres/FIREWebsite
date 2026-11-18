@@ -1,4 +1,5 @@
 """Parsing and validation of plan survey / dashboard form submissions."""
+from . import taxes
 from .engine import CURRENT_AGE, RETIREMENT_AGE
 from .models import user_is_premium
 
@@ -223,6 +224,19 @@ def _parse_savings(request, allow_custom=False):
     return savings
 
 
+def _parse_tax_settings(request):
+    """Automatic tax estimates are opt-in per submission; otherwise manual rates apply."""
+    if request.POST.get('tax_mode') != 'auto':
+        return {'mode': 'manual'}
+    status = request.POST.get('tax_filing_status', 'single')
+    state = request.POST.get('tax_state', taxes.NO_STATE)
+    if status not in taxes.FILING_STATUSES:
+        raise PlanInputError("Invalid filing status.")
+    if state != taxes.NO_STATE and state not in taxes.STATE_RATES:
+        raise PlanInputError("Invalid state.")
+    return {'mode': 'auto', 'filing_status': status, 'state': state}
+
+
 def saveplan(form, request, dashboard_edit=False):
     """Validate the submitted plan and save it. Returns the Plan, or an error message string."""
     try:
@@ -230,6 +244,7 @@ def saveplan(form, request, dashboard_edit=False):
             return "Please provide a name for this plan."
         current_age, retirement_age = _parse_ages(request)
         incomes = _parse_incomes(request, current_age, retirement_age)
+        tax_settings = _parse_tax_settings(request)
         expenses = _parse_expenses(request, current_age, retirement_age)
         existing = getattr(form.instance, 'savings', None) or []
         allow_custom = user_is_premium(request.user) or (bool(existing) and existing[0] == 'Custom')
@@ -244,6 +259,7 @@ def saveplan(form, request, dashboard_edit=False):
         if request.user.is_authenticated:
             plan.user = request.user
         plan.incomes = incomes
+        plan.tax_settings = tax_settings
         plan.expenses = expenses
         plan.savings = savings
         plan.save()

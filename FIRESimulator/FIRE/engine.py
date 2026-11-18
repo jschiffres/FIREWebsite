@@ -9,8 +9,8 @@ import math
 import random
 from datetime import date
 
-import plotly.graph_objects as go
-
+from . import taxes
+from .taxes import state_rate
 CURRENT_AGE = "Current Age"
 RETIREMENT_AGE = "Target Retirement Age"
 SAFE_WITHDRAWAL_MULTIPLE = 25
@@ -58,6 +58,10 @@ class PlanObject:
         self.incomes = copy.deepcopy(plan.incomes or [])
         self.expenses = copy.deepcopy(plan.expenses or [])
         self.accounts = copy.deepcopy(plan.savings or ['Simple'])
+        # Plans without tax settings keep the manual per-income tax rates
+        self.tax_settings = getattr(plan, 'tax_settings', None) or {}
+        self.auto_taxes = self.tax_settings.get('mode') == 'auto'
+        self.tax_breakdown = None
 
     def run(self):
         self.personal_infos()
@@ -106,7 +110,7 @@ class PlanObject:
     # ----------------------------------------------------------------- incomes
     def compute_incomes(self):
         n = self.years_until_retirement
-        gross_all, bonuses, taxes, nets = [], [], [], []
+        gross_all, bonuses = [], []
         salary, recurring, one_time = [], [], []
         counts = {'Salary': 0, 'Recurring': 0, 'One-time': 0}
 
@@ -118,6 +122,7 @@ class PlanObject:
             if category == 'One-time':
                 rate = min(max(income['tax_rate'], 0), 100)
                 income['gross_amounts'] = [income['amount'] if age == income['age'] else 0 for age in self.ages]
+                income['taxable_amounts'] = income['gross_amounts']
                 income['tax_amounts'] = [math.floor(g * pct(rate)) for g in income['gross_amounts']]
                 one_time.append(income['gross_amounts'])
             else:
@@ -133,22 +138,78 @@ class PlanObject:
                 else:
                     taxable = gross
                     recurring.append(gross)
+                income['taxable_amounts'] = taxable
                 income['tax_amounts'] = [math.floor(t * pct(r)) for t, r in zip(taxable, rates)]
                 income['net_amounts'] = [t - x for t, x in zip(taxable, income['tax_amounts'])]
 
             if category == 'One-time':
                 income['net_amounts'] = [g - x for g, x in zip(income['gross_amounts'], income['tax_amounts'])]
             gross_all.append(income['gross_amounts'])
-            taxes.append(income['tax_amounts'])
-            nets.append(income['net_amounts'])
+
+        if self.auto_taxes:
+            self._estimate_taxes()
+        tax_series = [income['tax_amounts'] for income in self.incomes]
+        nets = [income['net_amounts'] for income in self.incomes]
 
         self.total_salary_income = sum_series(salary, n)
         self.total_recurring_income = sum_series(recurring, n)
         self.total_one_time_income = sum_series(one_time, n)
         self.total_gross_income = sum_series(gross_all, n)
         self.total_bonuses = sum_series(bonuses, n)
-        self.total_taxes = sum_series(taxes, n)
+        self.total_taxes = sum_series(tax_series, n)
         self.total_net_income = sum_series(nets, n)
+
+    def _estimate_taxes(self):
+        """Replace per-income manual rates with federal, payroll and state estimates on total income."""
+        n = self.years_until_retirement
+        status = self.tax_settings.get('filing_status')
+        if status not in taxes.FEDERAL:
+            status = 'single'
+        state = state_rate(self.tax_settings.get('state'))
+        parts = {key: [0] * n for key in ('federal', 'fica', 'state')}
+
+        for year in range(n):
+            factor = taxes.index_factor(year)
+            total = sum(i['taxable_amounts'][year] for i in self.incomes)
+            wages = {id(i): i['taxable_amounts'][year] for i in self.incomes if i['income_category'] == 'Salary'}
+            total_wages = sum(wages.values())
+            federal = taxes.federal_income_tax(total, status, factor)
+            state_tax = total * pct(state)
+            extra_medicare = taxes.additional_medicare_tax(total_wages, status)
+
+            for income in self.incomes:
+                amount = income['taxable_amounts'][year]
+                share = amount / total if total else 0
+                fica = 0
+                if id(income) in wages:
+                    fica = (taxes.social_security_tax(amount, factor) + taxes.medicare_tax(amount)
+                            + (extra_medicare * amount / total_wages if total_wages else 0))
+                components = {'federal': math.floor(federal * share), 'fica': math.floor(fica),
+                              'state': math.floor(state_tax * share)}
+                for key, value in components.items():
+                    income.setdefault(f'tax_{key}', [0] * n)[year] = value
+                    parts[key][year] += value
+
+        for income in self.incomes:
+            income['tax_amounts'] = [sum(values) for values in zip(income['tax_federal'], income['tax_fica'], income['tax_state'])]
+            income['net_amounts'] = [t - x for t, x in zip(income['taxable_amounts'], income['tax_amounts'])]
+            income['tax_rates'] = [round(100 * x / t, 1) if t else 0 for x, t in zip(income['tax_amounts'], income['taxable_amounts'])]
+        self.tax_breakdown = parts
+
+    def tax_summary(self):
+        """Lifetime totals of estimated taxes by type, or None when taxes are entered manually."""
+        if not self.tax_breakdown:
+            return None
+        totals = {key: sum(values) for key, values in self.tax_breakdown.items()}
+        total = sum(totals.values())
+        gross = sum(self.total_gross_income)
+        return {
+            **totals,
+            'total': total,
+            'effective_rate': round(100 * total / gross, 1) if gross else 0,
+            'filing_status': taxes.FILING_STATUSES.get(self.tax_settings.get('filing_status'), 'Single'),
+            'state_name': taxes.STATE_RATES.get(self.tax_settings.get('state'), ('No state income tax', 0))[0],
+        }
 
     # ---------------------------------------------------------------- expenses
     def compute_expenses(self):
@@ -494,6 +555,7 @@ class PlanObject:
             'coast_fi_age': self.coast_fi_age if isinstance(self.coast_fi_age, int) else None,
             'accounts': accounts,
             'scenarios': self.scenario_bands(),
+            'sankey': self.sankey_data(),
         }
 
     def withdrawal_data(self, end_age=95, inflation=2.5, annual_return=None, spending_percent=100):
@@ -617,79 +679,69 @@ class PlanObject:
         self.plan.save(update_fields=['final_net_worth'])
 
     # ------------------------------------------------------------------ sankey
-    def sankey_chart(self):
-        labels, node_colors = [], []
-        sources, targets, values, link_colors = [], [], [], []
-
-        def node(label, color):
-            labels.append(label)
-            node_colors.append(color)
-            return len(labels) - 1
-
-        def link(source, target, value, color):
-            if value > 0:
-                sources.append(source)
-                targets.append(target)
-                values.append(value)
-                link_colors.append(color)
-
+    def sankey_data(self):
+        """Total cash flow for the Chart.js sankey: ``flows`` (from, to, flow) and a ``nodes`` colour/label map."""
+        nodes, flows = {}, []
         income_color, expense_color, saving_color = "#285C53", "#EC652B", "#4F378A"
-        total_income = node("Total Income", income_color)
 
-        for label, series in (
-            ("Salary", self.total_salary_income),
-            ("Bonuses", self.total_bonuses),
-            ("Recurring", self.total_recurring_income),
-            ("One-time", self.total_one_time_income),
+        def node(key, label, color):
+            nodes[key] = {'label': label, 'color': color}
+            return key
+
+        def link(source, target, value):
+            if value > 0:
+                flows.append({'from': source, 'to': target, 'flow': round(value)})
+
+        total_income = node('total_income', 'Total income', income_color)
+
+        for key, label, series in (
+            ('salary', 'Salary', self.total_salary_income),
+            ('bonuses', 'Bonuses', self.total_bonuses),
+            ('recurring_income', 'Recurring income', self.total_recurring_income),
+            ('one_time_income', 'One-time income', self.total_one_time_income),
         ):
             if sum(series) > 0:
-                link(node(label, income_color), total_income, sum(series), "#DFF5F1")
+                link(node(key, label, income_color), total_income, sum(series))
 
-        link(total_income, node("Taxes", expense_color), sum(self.total_taxes), "#FFEDDD")
+        link(total_income, node('taxes', 'Taxes', expense_color), sum(self.total_taxes))
 
-        expenses = node("Total Expenses", expense_color)
-        link(total_income, expenses, sum(self.total_expenses), "#FFEDDD")
-        for label, series in (("Recurring", self.total_recurring_expenses), ("One-time", self.total_one_time_expenses)):
+        expenses = node('total_expenses', 'Total expenses', expense_color)
+        link(total_income, expenses, sum(self.total_expenses))
+        for key, label, series in (
+            ('recurring_expenses', 'Recurring expenses', self.total_recurring_expenses),
+            ('one_time_expenses', 'One-time expenses', self.total_one_time_expenses),
+        ):
             if sum(series) > 0:
-                link(expenses, node(label, expense_color), sum(series), "#FFEDDD")
+                link(expenses, node(key, label, expense_color), sum(series))
 
-        savings = node("Total Savings", saving_color)
-        link(total_income, savings, sum(s for s in self.total_savings if s > 0), "#EDE6F8")
+        savings = node('total_savings', 'Total savings', saving_color)
+        link(total_income, savings, sum(s for s in self.total_savings if s > 0))
 
         if self.is_simple:
-            link(savings, node("Investments", saving_color), sum(c for c in self.accounts[1]['contribution_amounts'] if c > 0), "#EDE6F8")
+            link(savings, node('investments', 'Investments', saving_color),
+                 sum(c for c in self.accounts[1]['contribution_amounts'] if c > 0))
         else:
             esrp_node = None
-            for label, series in (
-                ("HSA", self.hsa_contribution_amounts),
-                ("IRA", self.ira_contribution_amounts),
-                ("TBA", self.tba_contribution_amounts),
-                ("HYSA", self.hysa_contribution_amounts),
-                ("401k/403b", self.esrp_contribution_amounts),
+            for key, label, series in (
+                ('hsa', 'HSA', self.hsa_contribution_amounts),
+                ('ira', 'IRA', self.ira_contribution_amounts),
+                ('tba', 'Brokerage', self.tba_contribution_amounts),
+                ('hysa', 'HYSA', self.hysa_contribution_amounts),
+                ('esrp', '401k/403b', self.esrp_contribution_amounts),
             ):
                 total = sum(v for v in series if v > 0)
                 if total > 0:
-                    account_node = node(label, saving_color)
-                    link(savings, account_node, total, "#EDE6F8")
-                    if label == "401k/403b":
+                    account_node = node(key, label, saving_color)
+                    link(savings, account_node, total)
+                    if key == 'esrp':
                         esrp_node = account_node
             employer_total = sum(self.esrp_employer_contribution_amounts)
             if employer_total > 0 and esrp_node is not None:
-                link(node("Employer Contribution", saving_color), esrp_node, employer_total, "#EDE6F8")
+                link(node('employer', 'Employer contribution', saving_color), esrp_node, employer_total)
 
-        fig = go.Figure(data=[go.Sankey(
-            valueformat="$,.0f",
-            node=dict(pad=15, thickness=20, line=dict(color="black", width=0.5), label=labels, color=node_colors),
-            link=dict(source=sources, target=targets, value=values, color=link_colors),
-        )])
-        fig.update_layout(
-            title={
-                "text": f"Total Cash Flow: {self.plan.current_age} to {self.plan.retirement_age - 1}",
-                "font": {'color': '#777980', 'family': 'Inter', 'size': 16, 'style': 'normal', 'weight': 500},
-            },
-            title_x=0.05,
-            paper_bgcolor="#FCFBF9",
-            plot_bgcolor="#FCFBF9",
-            font=dict(family="Inter", size=16, color="black"),
-        )
-        return fig.to_html(full_html=True)
+        used = {f['from'] for f in flows} | {f['to'] for f in flows}
+        return {
+            'flows': flows,
+            'nodes': {key: value for key, value in nodes.items() if key in used},
+            'years': f"{self.plan.current_age} to {self.plan.retirement_age - 1}",
+        }

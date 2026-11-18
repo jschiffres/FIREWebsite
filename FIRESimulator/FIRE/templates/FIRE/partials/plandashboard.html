@@ -70,7 +70,16 @@
                 {% include 'FIRE/partials/dashboard/charts_cashflow.html' %}
                 <div class="card dashboard-card mb-3">
                     <div class="card-body">
-                        {{ sankey_chart|safe }}
+                        <div class="chart-box sankey-box"><canvas id="SankeyChart" role="img" aria-label="Sankey diagram of total income flowing to taxes, expenses and savings accounts over the plan. The Table tab lists the yearly numbers."></canvas></div>
+                        {% with t=FIplan.tax_summary %}
+                        {% if t %}
+                        <p class="text-muted small mt-3 mb-0">
+                            <strong>Estimated taxes over the plan: ${{ t.total|floatformat:"0g" }}</strong>
+                            ({{ t.effective_rate }}% of gross income): federal ${{ t.federal|floatformat:"0g" }}, Social Security and Medicare ${{ t.fica|floatformat:"0g" }}, state ${{ t.state|floatformat:"0g" }}.
+                            Based on {{ t.filing_status }} filing{% if t.state_name != 'No state income tax' %} in {{ t.state_name }}{% else %} with no state income tax{% endif %}, 2025 US tax law indexed for inflation. An estimate, not tax advice.
+                        </p>
+                        {% endif %}
+                        {% endwith %}
                     </div>
                 </div>
             </div>
@@ -96,7 +105,6 @@
             b.addEventListener('shown.bs.tab', function () {
                 sessionStorage.setItem(KEY, b.id);
                 window.dispatchEvent(new Event('resize'));
-                if (window.Plotly) document.querySelectorAll('#pane-cashflow .js-plotly-plot').forEach(function (p) { Plotly.Plots.resize(p); });
             });
         });
     })();
