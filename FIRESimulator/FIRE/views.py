@@ -390,7 +390,7 @@ PREMIUM_FEATURES = [
     ('Plan comparison', 'Compare up to three plans side by side on one chart.'),
     ('CSV & PDF downloads', 'Export the full year-by-year projection to a spreadsheet, or download a polished PDF report of your plan to save or share.'),
     ('Custom savings method', 'Add several accounts of any type, order them by priority, and choose how savings fill each one (up to the limit, a fixed amount, a percent, or just the employer match), mark old accounts as dormant, and keep a high yield savings account for surplus cash and shortfall years. Free plans use the Simple or Recommended methods.'),
-    ('More saved plans', 'Save up to 50 plans instead of the free limit.'),
+    ('More saved plans', 'Save up to 50 plans instead of just 1.'),
 ]
 
 # USER: My Account
@@ -658,7 +658,7 @@ def _plan_limit_error(request):
         count = Plan.objects.filter(user=request.user).count()
         if not user_is_premium(request.user):
             if count >= settings.FREE_PLAN_LIMIT:
-                return f"Free accounts can save {settings.FREE_PLAN_LIMIT} plans. Delete a plan or upgrade to Premium to create more."
+                return f"Free accounts can save {settings.FREE_PLAN_LIMIT} plan{'' if settings.FREE_PLAN_LIMIT == 1 else 's'}. Delete a plan or upgrade to Premium to save more."
         elif count >= MAX_USER_PLANS:
             return f"You have reached the limit of {MAX_USER_PLANS} plans. Delete one to create another."
     elif len(request.session.get('anonymous_plans', [])) >= MAX_ANONYMOUS_PLANS:
@@ -687,6 +687,44 @@ def newplan(request):
     except Exception as e:
         print(e)
         return render(request, 'FIRE/newplan.html', {'form': form, 'error': "Error saving plan, please try again."})
+
+TEMPLATE_PLAN = {
+    'plan_name': 'Sample plan: Start from template',
+    'current_age': 30,
+    'retirement_age': 55,
+    'incomes': [{
+        'income_category': 'Salary', 'income_name': 'Salary', 'starting_amount': 85000, 'yearly_change': 3.0,
+        'bonus_rate': 0.0, 'tax_rate': 22.0, 'tax_rate_change': 0.0,
+        'start_age': 'Current Age', 'stop_age': 'Target Retirement Age',
+    }],
+    'expenses': [{
+        'expense_category': 'Recurring', 'expense_name': 'Living expenses', 'starting_amount': 48000,
+        'yearly_change': 3.0, 'start_age': 'Current Age', 'stop_age': 'Target Retirement Age',
+    }],
+    'savings': ['Recommended',
+        {'saving_category': 'ESRP', 'saving_name': '401(k)', 'current_value': 40000, 'yearly_growth': 7.0,
+         'employer_contribution_rate': 4.0, 'contribution_limit': 24500, 'contribution_limit_step': 500},
+        {'saving_category': 'HSA', 'saving_name': 'HSA', 'current_value': 5000, 'yearly_growth': 6.0,
+         'contribution_limit': 4400, 'contribution_limit_step': 100},
+        {'saving_category': 'IRA', 'saving_name': 'Roth IRA', 'current_value': 15000, 'yearly_growth': 7.0,
+         'contribution_limit': 7500, 'contribution_limit_step': 0},
+        {'saving_category': 'TBA', 'saving_name': 'Brokerage', 'current_value': 10000, 'yearly_growth': 7.0},
+    ],
+}
+
+# PLANS: Start from a ready-made sample plan
+@require_POST
+def templateplan(request):
+    limit_error = _plan_limit_error(request)
+    if limit_error:
+        messages.warning(request, limit_error)
+        return redirect('userplans' if request.user.is_authenticated else 'newplan')
+    plan = Plan.objects.create(
+        user=request.user if request.user.is_authenticated else None,
+        **copy.deepcopy(TEMPLATE_PLAN))
+    if not request.user.is_authenticated:
+        request.session['anonymous_plans'] = request.session.get('anonymous_plans', []) + [str(plan.id)]
+    return redirect('runplan', plan_id=plan.id)
 
 # PLANS: Withdrawal-phase projection (Premium, never saved)
 def withdrawal(request, plan_id):

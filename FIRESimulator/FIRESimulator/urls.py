@@ -73,6 +73,7 @@ urlpatterns = [
 
     #PLAN: New, Run, Download, Copy, Delete
     path("new/", views.newplan, name="newplan"),
+    path("new/template/", views.templateplan, name="templateplan"),
     path("plan/<str:plan_id>", views.runplan, name="runplan"),
     path("downloadplan/<str:plan_id>", views.downloadplan, name="downloadplan"),
     path("downloadpdf/<str:plan_id>", views.downloadpdf, name="downloadpdf"),

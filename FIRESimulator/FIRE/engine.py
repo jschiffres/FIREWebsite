@@ -678,6 +678,7 @@ class PlanObject:
                 link(node("Employer Contribution", saving_color), esrp_node, employer_total, "#EDE6F8")
 
         fig = go.Figure(data=[go.Sankey(
+            valueformat="$,.0f",
             node=dict(pad=15, thickness=20, line=dict(color="black", width=0.5), label=labels, color=node_colors),
             link=dict(source=sources, target=targets, value=values, color=link_colors),
         )])

@@ -86,22 +86,21 @@
           </button>
         {% if user.is_authenticated %}
           <div class="collapse navbar-collapse" id="navbarText">
-            <ul class="nav ms-auto me-3">
-              <li class="nav-item dropdown navbar-main-dropdown">
-                <a class="nav-link  link-light dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  Welcome, {{ user.first_name|default:user.email|default:user.username }}
-                </a>
-                <ul class="dropdown-menu text-center">
-                  <li><a class="dropdown-item" href="{% url 'newplan' %}">New Plan</a></li>
-                  <li><a class="dropdown-item" href="{% url 'userplans' %}">My Plans</a></li>
-                  <li><a class="dropdown-item" href="{% url 'myaccount' %}">My Account{% if is_premium %} <i class="bi bi-star-fill text-warning" aria-label="Premium"></i>{% endif %}</a></li>
-                  <li class="text-center">
-                    <form action="{% url 'logoutuser' %}" method="POST">
-                    {% csrf_token %}
-                      <button type="submit" class="btn btn-remove"><i class="bi bi-person-fill-x" aria-hidden="true"></i> Logout</button>
-                    </form>
-                  </li>
-                </ul>
+            <ul class="nav ms-auto me-2">
+              <li class="nav-item">
+                <a class="nav-link link-light" href="{% url 'newplan' %}">New Plan</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link link-light" href="{% url 'userplans' %}">My Plans</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link link-light" href="{% url 'myaccount' %}">My Account{% if is_premium %} <i class="bi bi-star-fill text-warning" aria-label="Premium"></i>{% endif %}</a>
+              </li>
+              <li class="nav-item">
+                <form action="{% url 'logoutuser' %}" method="POST">
+                  {% csrf_token %}
+                  <button type="submit" class="nav-link link-light bg-transparent border-0">Logout</button>
+                </form>
               </li>
             </ul>
           </div>
@@ -157,16 +156,37 @@
       {% block content %}
       {% endblock %}
     </main>  
-    <footer id="footer" class="pb-0 w-100">
-      <ul class="nav justify-content-center flex-wrap" aria-label="Footer">
-        <li><p class="me-2">&copy; {% now "Y" %} FI Planner</p></li>
-        <li><a class="link-light me-2" href="mailto:hello@fiplanner.app">Contact</a></li>
-        <li><a class="link-light me-2" href="{% url 'faq' %}">FAQ</a></li>
-        <li><a class="link-light me-2" href="{% url 'feedback' %}">Feedback</a></li>
-        <li><a class="link-light me-2" href="{% url 'about' %}">Assumptions &amp; Disclaimer</a></li>
-        <li><a class="link-light me-2" href="{% url 'privacy' %}">Privacy</a></li>
-        <li><a class="link-light me-2" href="{% url 'terms' %}">Terms</a></li>
-      </ul>
+    <footer id="footer" class="w-100" aria-label="Site footer">
+      <div class="footer-inner container">
+        <div class="row gy-4 text-start">
+          <div class="col-12 col-md-5">
+            <a class="footer-brand" href="{% url 'landing' %}"><i class="bi bi-arrow-up-right-square-fill" aria-hidden="true"></i> <b>FI</b> Planner</a>
+            <p class="footer-tagline mt-2 mb-0">Plan your path to financial independence with clear projections, your Magic Number and a timeline you can act on.</p>
+          </div>
+          <div class="col-6 col-md-3 offset-md-1">
+            <h2 class="footer-heading">Product</h2>
+            <ul class="list-unstyled mb-0">
+              <li><a href="{% url 'newplan' %}">New plan</a></li>
+              <li><a href="{% url 'faq' %}">FAQ</a></li>
+              <li><a href="{% url 'about' %}">Assumptions &amp; disclaimer</a></li>
+            </ul>
+          </div>
+          <div class="col-6 col-md-3">
+            <h2 class="footer-heading">Company</h2>
+            <ul class="list-unstyled mb-0">
+              <li><a href="mailto:hello@fiplanner.app">Contact</a></li>
+              <li><a href="{% url 'feedback' %}">Feedback</a></li>
+              <li><a href="{% url 'privacy' %}">Privacy</a></li>
+              <li><a href="{% url 'terms' %}">Terms</a></li>
+            </ul>
+          </div>
+        </div>
+        <hr class="footer-divider">
+        <div class="d-flex flex-column flex-md-row justify-content-between gap-2 footer-legal">
+          <span>&copy; {% now "Y" %} FI Planner. All rights reserved.</span>
+          <span>For educational purposes only. Not financial, tax or investment advice.</span>
+        </div>
+      </div>
     </footer>
   </div>
   {% if ga_measurement_id %}
