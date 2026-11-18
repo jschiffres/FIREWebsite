@@ -66,6 +66,7 @@
                         </li>
                         {% endfor %}
                     </ul>
+                    {% if not profile.is_premium %}<p class="fw-semibold mb-3">$4.99/month or $19.99/year <span class="text-muted fw-normal small">(save about 67% with yearly)</span></p>{% endif %}
                     {% if profile.is_premium %}
                     {% if stripe_enabled and has_customer %}
                     <form method="POST" action="{% url 'billing_portal' %}">
@@ -83,8 +84,8 @@
                     {% elif stripe_enabled and billing_intervals %}
                     <form method="POST" action="{% url 'start_checkout' %}" class="d-flex flex-wrap gap-2">
                         {% csrf_token %}
-                        {% if 'month' in billing_intervals %}<button type="submit" name="interval" value="month" class="btn btn-action-filled"><i class="bi bi-star" aria-hidden="true"></i> Upgrade &ndash; monthly</button>{% endif %}
-                        {% if 'year' in billing_intervals %}<button type="submit" name="interval" value="year" class="btn btn-action-empty"><i class="bi bi-star" aria-hidden="true"></i> Upgrade &ndash; yearly</button>{% endif %}
+                        {% if 'month' in billing_intervals %}<button type="submit" name="interval" value="month" class="btn btn-action-filled"><i class="bi bi-star" aria-hidden="true"></i> Upgrade &ndash; $4.99/month</button>{% endif %}
+                        {% if 'year' in billing_intervals %}<button type="submit" name="interval" value="year" class="btn btn-action-empty"><i class="bi bi-star" aria-hidden="true"></i> Upgrade &ndash; $19.99/year</button>{% endif %}
                     </form>
                     <p class="text-muted small mt-2 mb-0">Secure checkout by Stripe. Cancel anytime.</p>
                     {% elif can_upgrade %}

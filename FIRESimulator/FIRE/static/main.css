@@ -489,3 +489,10 @@ tr {
 .form-error-text {
   display: none;
 }
+.promo-banner{display:flex;align-items:center;justify-content:center;gap:.75rem;padding:.5rem 2.5rem;background:var(--bs-warning-bg-subtle,#fff3cd);color:var(--bs-warning-text-emphasis,#664d03);text-align:center;font-size:.95rem;position:relative}
+.promo-banner[hidden]{display:none}
+.promo-close{position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:0;font-size:1.4rem;line-height:1;color:inherit;cursor:pointer}
+
+#site-top{z-index:1030}
+#app-navbar.sticky-top{top:var(--site-top-h,0)}
+@media (max-width:575.98px){.promo-banner{font-size:.8rem;padding:.35rem 2rem}}
