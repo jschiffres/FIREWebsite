@@ -74,12 +74,16 @@
     })
 </script>
   <div class="site">
+    <div id="site-top" class="sticky-top">
+    {% if not is_premium %}
+    <div id="promo-banner" class="promo-banner" role="region" aria-label="Promotion" hidden>
+      <span><i class="bi bi-tag-fill" aria-hidden="true"></i> Use code <strong>FIRSTMONTH50</strong> for 50% off your first month of Premium.</span>
+      <button type="button" class="promo-close" aria-label="Dismiss promotion" onclick="try{localStorage.setItem('promoDismissed','FIRSTMONTH50')}catch(e){};this.parentElement.hidden=true;">&times;</button>
+    </div>
+    <script>try{if(localStorage.getItem('promoDismissed')!=='FIRSTMONTH50')document.getElementById('promo-banner').hidden=false}catch(e){document.getElementById('promo-banner').hidden=false}</script>
+    {% endif %}
     <header>
-      {% if request.path == "/new/" or "plan" in request.path %}
       <nav id="navbar-main" class="navbar navbar-expand-lg mb-0 rounded-top" data-bs-theme="dark" aria-label="Main">
-      {% else %}
-      <nav id="navbar-main" class="navbar navbar-expand-lg sticky-top mb-0 rounded-top" data-bs-theme="dark" aria-label="Main">
-      {% endif %}
         <div class="container-fluid">
           <a class="appname ms-3" href="{% url 'landing' %}"><i class="bi bi-arrow-up-right-square-fill"></i> <b class="">FI</b> Planner</a>
           <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
@@ -135,6 +139,16 @@
         </div>
       </nav>
     </header>
+    </div>
+    <script>
+      (function () {
+        const top = document.getElementById('site-top');
+        const set = () => document.documentElement.style.setProperty('--site-top-h', top.offsetHeight + 'px');
+        set();
+        window.addEventListener('resize', set);
+        if (window.ResizeObserver) new ResizeObserver(set).observe(top);
+      })();
+    </script>
     <main id="main" tabindex="-1">
       {% if messages %}
         {% for message in messages %}
