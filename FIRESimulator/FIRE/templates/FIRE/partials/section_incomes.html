@@ -153,11 +153,11 @@
         </div>
     </div>
     <div class="row g-4">
-        <div class="col-lg-6 col-md-6 col-sm-6 text-start mt-4 mb-4">
+        <div class="col-6 text-start mt-4 mb-4">
             <!-- <button type="button" class="btn btn-action-empty btn-lg" hx-delete hx-target="#income" hx-swap="delete" hx-on::before-request="document.getElementById('personalInfo').hidden = false"><i class="bi bi-arrow-left"></i> Back</i></button> -->
             <button type="button" class="btn btn-action-empty btn-lg" data-bs-toggle="modal" data-bs-target="#income-Back-Modal"><i class="bi bi-arrow-left"></i> Personal Info</i></button>
         </div>
-        <div class="col-lg-6 col-md-6 col-sm-6 text-end mb-4">
+        <div class="col-6 text-end mb-4">
             <button id="expenses-button" type="button" class="btn btn-action-empty btn-lg" hx-get="{% url 'create-expenses-section' %}" hx-target="#expenses-div" hx-swap="beforeend transition:true" hx-on::before-request="document.getElementById('income').hidden = true">Expenses <i class="bi bi-arrow-right"></i></button>
         </div>
     </div>
