@@ -508,3 +508,13 @@ tr {
 .faq-accordion .accordion-button:focus{box-shadow:0 0 0 .2rem rgba(40,92,83,.25)}
 .faq-accordion .accordion-body{color:var(--Light-Black);line-height:1.6;padding:.25rem 1.25rem 1.25rem}
 @media (max-width:575.98px){.faq-block{padding:1.75rem .75rem;border-radius:1.1rem}}
+
+.plan-summary-card{background:linear-gradient(135deg,#285C53 0%,#1d4640 100%);color:#fff;border:0;border-radius:1.25rem;box-shadow:0 .75rem 2rem rgba(40,92,83,.25)}
+.plan-summary-card .card-body{padding:1.75rem}
+.plan-summary-eyebrow{text-transform:uppercase;letter-spacing:.08em;font-size:.75rem;font-weight:600;color:rgba(255,255,255,.7)}
+.plan-summary-title{font-size:1.5rem;font-weight:700;color:#fff}
+.plan-kpi{background:rgba(255,255,255,.12);border-radius:.85rem;padding:.8rem .25rem}
+.plan-kpi .small{color:rgba(255,255,255,.75)}
+.plan-summary-primary{background:var(--Primary-Orange);color:#fff;border:0;font-weight:600}
+.plan-summary-primary:hover{background:#d4571f;color:#fff}
+.plan-summary-card .btn-outline-light:hover{color:var(--Primary-Green)}
