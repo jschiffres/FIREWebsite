@@ -527,3 +527,6 @@ tr {
 @media (max-width:575.98px){
   .col-6 > .btn.btn-lg{padding:.5rem .65rem;font-size:.95rem;white-space:nowrap}
 }
+
+#landing-header{font-size:clamp(2rem,9vw,4rem);line-height:1.2;overflow-wrap:break-word}
+@media (min-width:992px){#landing-header{font-size:64px;line-height:82px}}
