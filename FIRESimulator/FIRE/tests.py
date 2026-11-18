@@ -285,12 +285,11 @@ class SurveyAndPermissionTests(TestCase):
 
     def test_free_plan_limit_and_premium_lifts_it(self):
         self.client.force_login(self.owner)
-        for _ in range(3):
-            self.create_plan()
+        self.create_plan()
         blocked = self.client.post(reverse('newplan'), survey_post())
         self.assertEqual(blocked.status_code, 200)
         self.assertRedirects(self.client.get(reverse('newplan')), reverse('myaccount'), fetch_redirect_response=False)
-        self.assertEqual(Plan.objects.filter(user=self.owner).count(), 3)
+        self.assertEqual(Plan.objects.filter(user=self.owner).count(), 1)
         self.make_premium(self.owner)
         self.assertEqual(self.client.post(reverse('newplan'), survey_post()).status_code, 302)
 
@@ -431,6 +430,7 @@ class SurveyAndPermissionTests(TestCase):
 
     def test_userplans_search_and_sort(self):
         self.client.force_login(self.owner)
+        self.make_premium(self.owner)
         first = self.create_plan()
         first.plan_name = 'Alpha'
         first.save()
@@ -706,6 +706,25 @@ class AnonymousLiveTableTests(TestCase):
             'bonus_rate': 1, 'tax_rate': 15, 'tax_rate_change': 0, 'start_age': 30, 'stop_age': 34})
         self.assertEqual(table.status_code, 200)
         self.assertIn('<table', table.content.decode())
+
+
+class TemplatePlanTests(TestCase):
+    def test_anonymous_template_plan_opens_dashboard(self):
+        page = self.client.get(reverse('landing'))
+        self.assertContains(page, 'Start from template')
+        self.assertContains(page, 'Start from scratch')
+        response = self.client.post(reverse('templateplan'))
+        self.assertEqual(response.status_code, 302)
+        plan = Plan.objects.get()
+        self.assertIsNone(plan.user)
+        self.assertEqual(self.client.get(response['Location']).status_code, 200)
+        self.assertEqual(self.client.get(reverse('templateplan')).status_code, 405)
+
+    def test_template_plan_attaches_to_signed_in_user(self):
+        user = User.objects.create_user('t', 't@example.com', 'pw-12345-xyz')
+        self.client.force_login(user)
+        self.client.post(reverse('templateplan'))
+        self.assertEqual(Plan.objects.get().user, user)
 
 
 class AnonymousTrialTests(TestCase):

@@ -23,22 +23,29 @@
             {% if not at_limit %}<a href="{% url 'newplan' %}" class="btn btn-outline-secondary"><i class="bi bi-plus-circle"></i> New plan</a>{% endif %}
           </div>
         </div>
-        {% if at_limit %}<p class="small text-muted">You've used all {{ free_plan_limit }} free plans. <a href="{% url 'myaccount' %}">Upgrade to Premium</a> for unlimited plans.</p>{% endif %}
+        {% if at_limit %}<p class="small text-muted">Free accounts can save {{ free_plan_limit }} plan{{ free_plan_limit|pluralize }}. <a href="{% url 'myaccount' %}">Upgrade to Premium</a> to save up to {{ premium_plan_limit }}.</p>{% endif %}
         {% if email_unverified %}<p class="small text-muted"><i class="bi bi-envelope-exclamation"></i> Verify your email to unlock Premium upgrades.</p>{% endif %}
         {% else %}
         <p id="landing-subtext">You haven't created a plan yet. It only takes a few minutes.</p>
         <a href="{% url 'newplan' %}" class="btn btn-lg btn-action-filled"><i class="bi bi-plus-circle"></i> Create your first plan</a>
+        <form action="{% url 'templateplan' %}" method="POST" class="d-inline ms-2">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-lg btn-action-empty"><i class="bi bi-lightning-charge" aria-hidden="true"></i> Start from template</button>
+        </form>
         {% endif %}
         {% else %}
         <h1 id="landing-header">Plan your path to Financial Independence</h1>
         <p id="landing-subtext">Answer a few questions, see your FI timeline, and explore scenarios to reach your goals sooner.</p>
-        <div class="row g-4 mb-3 mt-3">
-          <div class="col-lg-6">
-            <form action="{% url 'newplan' %}">
-              <button type="submit" class="btn btn-lg btn-action-filled"><i class="bi bi-plus-circle"></i> Start Here!</button>
+        <div class="d-flex flex-wrap gap-2 mb-3 mt-3">
+            <form action="{% url 'templateplan' %}" method="POST">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-lg btn-action-filled"><i class="bi bi-lightning-charge" aria-hidden="true"></i> Start from template</button>
             </form>
-          </div>
+            <form action="{% url 'newplan' %}">
+              <button type="submit" class="btn btn-lg btn-action-empty"><i class="bi bi-plus-circle" aria-hidden="true"></i> Start from scratch</button>
+            </form>
         </div>
+        <p class="small text-muted">Not sure where to begin? The template loads a sample plan you can explore right away.</p>
         {% endif %}
       </div>
       <div class="col-lg-6 text-center align-self-center">
