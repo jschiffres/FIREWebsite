@@ -27,7 +27,7 @@
     </div>
     <!-- INCOME FIELDS ROW -->
     <div class="row g-4 mb-3">
-        <div class="col-lg-12">
+        <div class="col-lg-12 manual-tax">
             <h5 class="input-name">Tax Rate <i class="bi bi-question-circle" data-bs-toggle="tooltip" data-bs-title="On average, what percentage of this income will be taken out as taxes each year?"></i></h5>   
             <div class="input-group">           
                 <input type="number" class="form-control input-field tax_rate income_rate" name="one_time_income_tax_rate" min="0" max="99.9" value="{{ income.tax_rate }}" step="0.1" required hx-get="{% url 'income-table' %}" hx-target="next .income-table" hx-trigger="change delay:1s" hx-swap="innerHTML" hx-vals="js:{max_age: document.getElementById('retirement_age').value, min_age: document.getElementById('current_age').value, amount: document.getElementsByName('one_time_income_amount')[{{ income.category_index }}].value, tax_rate: document.getElementsByName('one_time_income_tax_rate')[{{ income.category_index }}].value, age: document.getElementsByName('one_time_income_age')[{{ income.category_index }}].value, income_category: 'One-time'}">

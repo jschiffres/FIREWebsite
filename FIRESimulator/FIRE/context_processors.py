@@ -2,6 +2,7 @@ import os
 
 from django.conf import settings
 
+from . import taxes
 from .models import Profile, user_is_premium
 
 _CSS_PATH = os.path.join(os.path.dirname(__file__), 'static', 'main.css')
@@ -27,4 +28,7 @@ def premium(request):
         'free_plan_limit': settings.FREE_PLAN_LIMIT,
         'email_unverified': unverified,
         'google_enabled': bool(settings.GOOGLE_CLIENT_ID and settings.GOOGLE_CLIENT_SECRET),
+        'tax_filing_statuses': list(taxes.FILING_STATUSES.items()),
+        'tax_states': taxes.state_choices(),
+        'tax_defaults': taxes.DEFAULT_SETTINGS,
     }

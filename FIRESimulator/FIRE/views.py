@@ -65,11 +65,11 @@ FAQ_SECTIONS = [
         ('How does the FI Planner survey work?',
          'You answer four short steps: personal details such as current and retirement age, income, expenses, and savings and investment accounts. FI Planner then builds a year-by-year projection of your net worth and compares it to your Magic Number to estimate the age you can reach financial independence.'),
         ('Should I enter income before or after tax?',
-         'Enter income before tax and add your tax rate. FI Planner calculates the take-home amount and uses it to work out how much you can save each year.'),
+         'Enter income before tax. By default FI Planner estimates your yearly US federal, Social Security, Medicare and state taxes from your total income, then uses the take-home amount to work out how much you can save. You can turn that off and enter your own tax rate for each income instead.'),
         ('How are my savings and investments projected?',
          'Each account grows once per year at the rate of return you enter. Your yearly savings are allocated across accounts using the savings method you choose (Simple or Recommended, plus Custom with Premium), and any employer match is added on top of your own contributions.'),
         ('Does FI Planner account for inflation and taxes?',
-         'Inflation is included in the retirement withdrawal planner, which grows your spending each year. Taxes on income are modeled through your tax rate, but taxes on withdrawals and changes to tax law are not. See the Assumptions and Disclaimer page for the full list.'),
+         'Inflation is included in the retirement withdrawal planner, which grows your spending each year. Taxes on income are estimated from 2025 US tax law (or from your own tax rates if you turn automatic taxes off), but taxes on withdrawals and changes to tax law are not. See the Assumptions and Disclaimer page for the full list.'),
         ('How accurate are the projections?',
          'Projections are only as good as the numbers you enter and assume constant returns, so real results will differ. Use the What-if tool and the withdrawal planner, which includes randomised market returns, to see how sensitive your plan is.'),
         ('Can I compare different scenarios?',
@@ -626,10 +626,8 @@ def runplan(request, plan_id):
             plan.refresh_from_db()
 
     FIplan = None
-    sankey = None
     try:
         FIplan = _build_fiplan(plan)
-        sankey = FIplan.sankey_chart()
     except Exception as e:
         print(f"Error generating: {e}")
         error = error or f"Error generating {plan.plan_name}."
@@ -638,7 +636,7 @@ def runplan(request, plan_id):
         messages.warning(request, error)
         return render(request, 'FIRE/newplan.html', {'form': PlanForm(), 'error': error})
 
-    context = {'plan': plan, 'FIplan': FIplan, 'sankey_chart': sankey, 'chart_data': FIplan.chart_data()}
+    context = {'plan': plan, 'FIplan': FIplan, 'chart_data': FIplan.chart_data()}
     if error:
         context['error'] = error
     if request.method == "POST":
@@ -690,25 +688,28 @@ def newplan(request):
 
 TEMPLATE_PLAN = {
     'plan_name': 'Sample plan: Start from template',
-    'current_age': 30,
-    'retirement_age': 55,
+    'current_age': 27,
+    'retirement_age': 45,
     'incomes': [{
-        'income_category': 'Salary', 'income_name': 'Salary', 'starting_amount': 85000, 'yearly_change': 3.0,
-        'bonus_rate': 0.0, 'tax_rate': 22.0, 'tax_rate_change': 0.0,
+        'income_category': 'Salary', 'income_name': 'Salary', 'starting_amount': 94000, 'yearly_change': 6.0,
+        'bonus_rate': 7.0, 'tax_rate': 22.0, 'tax_rate_change': 0.0,
         'start_age': 'Current Age', 'stop_age': 'Target Retirement Age',
     }],
-    'expenses': [{
-        'expense_category': 'Recurring', 'expense_name': 'Living expenses', 'starting_amount': 48000,
-        'yearly_change': 3.0, 'start_age': 'Current Age', 'stop_age': 'Target Retirement Age',
-    }],
+    'tax_settings': {'mode': 'auto', 'filing_status': 'single', 'state': 'NONE'},
+    'expenses': [
+        {'expense_category': 'Recurring', 'expense_name': 'Cost of living', 'starting_amount': 25000,
+         'yearly_change': 2.7, 'start_age': 'Current Age', 'stop_age': 'Target Retirement Age'},
+        {'expense_category': 'Recurring', 'expense_name': 'Bills', 'starting_amount': 18000,
+         'yearly_change': 2.7, 'start_age': 'Current Age', 'stop_age': 'Target Retirement Age'},
+    ],
     'savings': ['Recommended',
-        {'saving_category': 'ESRP', 'saving_name': '401(k)', 'current_value': 40000, 'yearly_growth': 7.0,
+        {'saving_category': 'ESRP', 'saving_name': '401(k)', 'current_value': 47000, 'yearly_growth': 7.0,
          'employer_contribution_rate': 4.0, 'contribution_limit': 24500, 'contribution_limit_step': 500},
-        {'saving_category': 'HSA', 'saving_name': 'HSA', 'current_value': 5000, 'yearly_growth': 6.0,
+        {'saving_category': 'HSA', 'saving_name': 'HSA', 'current_value': 13000, 'yearly_growth': 6.0,
          'contribution_limit': 4400, 'contribution_limit_step': 100},
-        {'saving_category': 'IRA', 'saving_name': 'Roth IRA', 'current_value': 15000, 'yearly_growth': 7.0,
+        {'saving_category': 'IRA', 'saving_name': 'Roth IRA', 'current_value': 17000, 'yearly_growth': 7.0,
          'contribution_limit': 7500, 'contribution_limit_step': 0},
-        {'saving_category': 'TBA', 'saving_name': 'Brokerage', 'current_value': 10000, 'yearly_growth': 7.0},
+        {'saving_category': 'TBA', 'saving_name': 'Brokerage', 'current_value': 28000, 'yearly_growth': 7.0},
     ],
 }
 

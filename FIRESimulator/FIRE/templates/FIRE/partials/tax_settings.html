@@ -1,0 +1,37 @@
+<div class="tax-settings mb-3" id="tax-settings">
+    <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" role="switch" id="tax_mode" name="tax_mode" value="auto" {% if tax.mode == 'auto' %}checked{% endif %}>
+        <label class="form-check-label" for="tax_mode"><strong>Estimate my taxes automatically</strong></label>
+    </div>
+    <p class="form-text mb-2">Calculates US federal income tax, Social Security and Medicare, and an approximate state rate on your total income each year, so you only enter pre-tax amounts. Turn this off to enter your own tax rate for each income.</p>
+    <div class="row g-3 tax-auto-fields">
+        <div class="col-md-6">
+            <label class="input-name" for="tax_filing_status">Filing status</label>
+            <select class="form-select input-select" id="tax_filing_status" name="tax_filing_status">
+                {% for code, label in tax_filing_statuses %}
+                    <option value="{{ code }}" {% if tax.filing_status == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label class="input-name" for="tax_state">State</label>
+            <select class="form-select input-select" id="tax_state" name="tax_state">
+                <option value="NONE" {% if tax.state == 'NONE' or not tax.state %}selected{% endif %}>No state income tax</option>
+                {% for code, name in tax_states %}
+                    <option value="{{ code }}" {% if tax.state == code %}selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-12">
+            <div class="form-text">Based on 2025 US tax law, indexed for inflation. Uses the standard deduction and an average state rate. Estimates for planning only, not tax advice.</div>
+        </div>
+    </div>
+</div>
+<script>
+    (function () {
+        const toggle = document.getElementById('tax_mode');
+        const apply = () => document.body.classList.toggle('tax-auto', toggle.checked);
+        toggle.addEventListener('change', apply);
+        apply();
+    })();
+</script>

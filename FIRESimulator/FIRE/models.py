@@ -45,4 +45,5 @@ class Plan(models.Model):
     incomes = models.JSONField(null=True)
     expenses = models.JSONField(null=True)
     savings = models.JSONField(null=True)
+    tax_settings = models.JSONField(null=True, blank=True)
     final_net_worth = models.CharField(max_length=25, null=True)

@@ -190,9 +190,70 @@
         })
     });
 
+    // Total cash flow sankey (Chart.js plugin, same fonts/palette as the other charts)
+    (function () {
+        const canvas = document.getElementById('SankeyChart');
+        const sankey = data.sankey;
+        if (!canvas || !sankey || !sankey.flows.length || !Chart.registry.controllers.get('sankey')) return;
+        const meta = sankey.nodes;
+        const inflow = {}, outflow = {};
+        sankey.flows.forEach(f => {
+            outflow[f.from] = (outflow[f.from] || 0) + f.flow;
+            inflow[f.to] = (inflow[f.to] || 0) + f.flow;
+        });
+        const labels = {};
+        Object.keys(meta).forEach(key => {
+            labels[key] = meta[key].label + ' ' + currency(Math.max(inflow[key] || 0, outflow[key] || 0));
+        });
+        const colorOf = key => (meta[key] && meta[key].color) || '#999999';
+        const narrow = canvas.parentElement.clientWidth < 520;
+        Object.keys(meta).forEach(key => {
+            if (narrow) labels[key] = meta[key].label;
+        });
+        new Chart(canvas.getContext('2d'), {
+            type: 'sankey',
+            data: {
+                datasets: [{
+                    label: 'Total cash flow',
+                    data: sankey.flows,
+                    labels: labels,
+                    colorFrom: c => colorOf(c.dataset.data[c.dataIndex].from),
+                    colorTo: c => colorOf(c.dataset.data[c.dataIndex].to),
+                    colorMode: 'gradient',
+                    alpha: 0.35,
+                    borderWidth: 0,
+                    nodeWidth: 12,
+                    padding: 14,
+                    size: 'max',
+                    font: { family: 'Inter', size: narrow ? 11 : 13, weight: '500' },
+                    color: '#222'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                layout: { padding: { right: 8 } },
+                plugins: {
+                    legend: { display: false },
+                    title: { display: true, text: 'Total Cash Flow: ages ' + sankey.years, align: 'start', font: font },
+                    tooltip: {
+                        callbacks: {
+                            title: () => '',
+                            label: c => {
+                                const f = c.raw;
+                                return meta[f.from].label + ' \u2192 ' + meta[f.to].label + ': ' + currency(f.flow);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    })();
+
     // Re-measure once the swap, modal close and tab fade have settled so a chart never stays collapsed.
     [50, 400].forEach(ms => setTimeout(() => {
-        ['NetWorthChart', 'YearlyBreakdownChart', 'YearlyInvestmentsChart', 'SavingsAllocationChart'].forEach(id => {
+        ['NetWorthChart', 'YearlyBreakdownChart', 'YearlyInvestmentsChart', 'SavingsAllocationChart', 'SankeyChart'].forEach(id => {
             const canvas = document.getElementById(id);
             const chart = canvas && Chart.getChart(canvas);
             if (chart && canvas.offsetParent !== null) chart.resize();
