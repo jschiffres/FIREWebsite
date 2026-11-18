@@ -518,3 +518,8 @@ tr {
 .plan-summary-primary{background:var(--Primary-Orange);color:#fff;border:0;font-weight:600}
 .plan-summary-primary:hover{background:#d4571f;color:#fff}
 .plan-summary-card .btn-outline-light:hover{color:var(--Primary-Green)}
+
+@media (max-width:767.98px){
+  .step-nav{display:grid;grid-template-columns:1fr 1fr;gap:.25rem;width:100%;order:3;margin-bottom:.5rem}
+  .step-nav .nav-link{white-space:nowrap;text-align:center}
+}
