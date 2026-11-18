@@ -78,6 +78,45 @@
   </div>
 </div>
 
+{% load static %}
+<section class="container my-5 feature-showcase" aria-labelledby="features-heading">
+  <h2 id="features-heading" class="text-center mb-1">See your whole financial picture</h2>
+  <p class="text-center text-muted mb-5">Interactive charts that show when you can retire and what gets you there sooner. Shown here with the sample template plan.</p>
+  <div class="row align-items-center g-4 mb-5">
+    <div class="col-lg-5">
+      <h3 class="h4"><i class="bi bi-bullseye text-success" aria-hidden="true"></i> Know your FI age</h3>
+      <p class="text-muted">Get a clear answer to &ldquo;when can I stop working?&rdquo; See your FI age, your Coast FI age, and how your net worth grows toward your FI number.</p>
+      <ul class="list-unstyled text-muted mb-0">
+        <li><i class="bi bi-check2-circle text-success" aria-hidden="true"></i> Live-updating net worth projection</li>
+        <li><i class="bi bi-check2-circle text-success" aria-hidden="true"></i> Coast FI age and FI number at a glance</li>
+      </ul>
+    </div>
+    <div class="col-lg-7"><img class="feature-img" src="{% static 'img/feature-networth.png' %}" alt="FI Planner dashboard showing net worth growing past the FI number at age 39" loading="lazy" width="1690" height="1066"></div>
+  </div>
+  <div class="row align-items-center g-4 mb-5 flex-lg-row-reverse">
+    <div class="col-lg-5">
+      <h3 class="h4"><i class="bi bi-diagram-3 text-success" aria-hidden="true"></i> Follow every dollar</h3>
+      <p class="text-muted">See how your income splits into taxes, expenses and savings each year, then how your savings are divided across your 401(k), HSA, IRA and brokerage accounts.</p>
+      <ul class="list-unstyled text-muted mb-0">
+        <li><i class="bi bi-check2-circle text-success" aria-hidden="true"></i> Cash flow Sankey and yearly breakdown</li>
+        <li><i class="bi bi-check2-circle text-success" aria-hidden="true"></i> Employer match included</li>
+      </ul>
+    </div>
+    <div class="col-lg-7"><img class="feature-img" src="{% static 'img/feature-cashflow.png' %}" alt="Chart of yearly take-home income split between expenses and savings" loading="lazy" width="1690" height="1066"></div>
+  </div>
+  <div class="row align-items-center g-4">
+    <div class="col-lg-5">
+      <h3 class="h4"><i class="bi bi-piggy-bank text-success" aria-hidden="true"></i> Make your savings work harder</h3>
+      <p class="text-muted">Tune contributions by account and watch your timeline move. Estimated taxes are calculated for you, so you can test a raise, a bigger match or lower spending before you commit.</p>
+      <ul class="list-unstyled text-muted mb-0">
+        <li><i class="bi bi-check2-circle text-success" aria-hidden="true"></i> Automatic federal, FICA and state tax estimates</li>
+        <li><i class="bi bi-check2-circle text-success" aria-hidden="true"></i> Compare plans side by side</li>
+      </ul>
+    </div>
+    <div class="col-lg-7"><img class="feature-img" src="{% static 'img/feature-savings.png' %}" alt="Bar chart of total contributions by account: brokerage, 401(k), Roth IRA, employer match and HSA" loading="lazy" width="1690" height="1066"></div>
+  </div>
+</section>
+
 {% if not is_premium %}
 <section class="container my-5" aria-labelledby="pricing-heading">
   <h2 id="pricing-heading" class="text-center mb-1">Start free, go further with Premium</h2>

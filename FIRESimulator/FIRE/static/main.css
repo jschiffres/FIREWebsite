@@ -496,3 +496,5 @@ tr {
 #site-top{z-index:1030}
 #app-navbar.sticky-top{top:var(--site-top-h,0)}
 @media (max-width:575.98px){.promo-banner{font-size:.8rem;padding:.35rem 2rem}}
+
+.feature-img{width:100%;height:auto;border-radius:1rem;box-shadow:0 .75rem 2rem rgba(40,92,83,.18)}
