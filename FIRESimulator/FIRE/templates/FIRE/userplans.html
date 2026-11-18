@@ -126,9 +126,9 @@ letter-spacing: 0.17px;
 										</form>
 									</div>
 								</div>
-								<form method="POST" action="{% url 'deleteplan' plan.id %}">
+								<form id="deleteForm{{plan.id}}" method="POST" action="{% url 'deleteplan' plan.id %}">
 								{% csrf_token %}
-									<button type="button" class="btn btn-sm" data-bs-toggle="modal" data-bs-target="#deletePlanModal{{plan.id}}"><i class="bi bi-trash action-icon" aria-hidden="true"></i><span class="visually-hidden">Delete {{ plan.plan_name }}</span></button>
+									<button type="button" class="btn btn-sm" data-bs-toggle="modal" data-bs-target="#deletePlanModal{{plan.id}}"><i class="bi bi-trash action-icon" aria-hidden="true"></i><span class="visually-hidden">Delete {{ plan.plan_name }}</span>									</button>
 									<div class="modal fade" id="deletePlanModal{{plan.id}}" data-bs-backdrop="delete" data-bs-keyboard="false" tabindex="-1" aria-label="Delete {{ plan.plan_name }}?" aria-hidden="true">
 										<div class="modal-dialog modal-dialog-centered">
 											<div class="modal-content back-modal">
@@ -140,7 +140,7 @@ letter-spacing: 0.17px;
 													Are you sure you want to <b style="color:red">DELETE</b> this plan?
 												</div>
 												<div class="modal-footer" style="background: #FCFBF9;">
-													<button type="submit" class="btn btn-danger" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill"> </i>Delete</i></button>
+													<button type="submit" form="deleteForm{{plan.id}}" class="btn btn-danger" data-bs-dismiss="modal"><i class="bi bi-x-circle-fill"> </i>Delete</button>
 												</div>
 											</div>
 										</div>
@@ -212,6 +212,8 @@ letter-spacing: 0.17px;
 	<a class="btn btn-action-empty" href="{% url 'myaccount' %}#premium"><i class="bi bi-lock-fill" aria-hidden="true"></i> Compare plans <span class="badge text-bg-warning">Premium</span></a>
 	{% endif %}
 	<script>
+		// Modals inside the table sit in a stacking context below the backdrop on small screens; move them to <body>.
+		document.querySelectorAll('.tbl-container .modal').forEach(m => document.body.appendChild(m));
 		const compareChecks = document.querySelectorAll('.compare-check');
 		function updateCompareButton() {
 			const button = document.getElementById('compare-button');
