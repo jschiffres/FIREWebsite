@@ -9,18 +9,18 @@
         {% if user.is_authenticated %}
         <h1 id="landing-header">Welcome back{% if user.first_name %}, {{ user.first_name }}{% endif %}</h1>
         {% if latest_plan %}
-        <div class="card shadow-sm my-3">
+        <div class="card plan-summary-card my-3">
           <div class="card-body">
-            <h5 class="card-title mb-1">{{ latest_plan.plan_name }}</h5>
-            <p class="text-muted small mb-3">Your most recent plan</p>
-            <div class="row text-center mb-3">
-              <div class="col"><div class="fs-3 fw-bold">{{ latest_fi_age|default:"N/A" }}</div><div class="small text-muted">FI age</div></div>
-              <div class="col"><div class="fs-3 fw-bold">{% if latest_funded is not None %}{{ latest_funded|floatformat:0 }}%{% else %}N/A{% endif %}</div><div class="small text-muted">Funded</div></div>
-              <div class="col"><div class="fs-3 fw-bold">{{ plan_count }}{% if not is_premium %}/{{ free_plan_limit }}{% endif %}</div><div class="small text-muted">Plans</div></div>
+            <p class="plan-summary-eyebrow mb-1">Your most recent plan</p>
+            <h2 class="plan-summary-title mb-3">{{ latest_plan.plan_name }}</h2>
+            <div class="row g-2 text-center mb-4">
+              <div class="col"><div class="plan-kpi"><div class="fs-3 fw-bold">{{ latest_fi_age|default:"N/A" }}</div><div class="small">FI age</div></div></div>
+              <div class="col"><div class="plan-kpi"><div class="fs-3 fw-bold">{% if latest_funded is not None %}{{ latest_funded|floatformat:0 }}%{% else %}N/A{% endif %}</div><div class="small">Funded</div></div></div>
+              <div class="col"><div class="plan-kpi"><div class="fs-3 fw-bold">{{ plan_count }}{% if not is_premium %}/{{ free_plan_limit }}{% endif %}</div><div class="small">Plans</div></div></div>
             </div>
-            <a href="{% url 'runplan' latest_plan.id %}" class="btn btn-action-filled"><i class="bi bi-speedometer2"></i> Open dashboard</a>
-            <a href="{% url 'userplans' %}" class="btn btn-outline-secondary">All plans</a>
-            {% if not at_limit %}<a href="{% url 'newplan' %}" class="btn btn-outline-secondary"><i class="bi bi-plus-circle"></i> New plan</a>{% endif %}
+            <a href="{% url 'runplan' latest_plan.id %}" class="btn plan-summary-primary"><i class="bi bi-speedometer2"></i> Open dashboard</a>
+            <a href="{% url 'userplans' %}" class="btn btn-outline-light">All plans</a>
+            {% if not at_limit %}<a href="{% url 'newplan' %}" class="btn btn-outline-light"><i class="bi bi-plus-circle"></i> New plan</a>{% endif %}
           </div>
         </div>
         {% if at_limit %}<p class="small text-muted">Free accounts can save {{ free_plan_limit }} plan{{ free_plan_limit|pluralize }}. <a href="{% url 'myaccount' %}">Upgrade to Premium</a> to save up to {{ premium_plan_limit }}.</p>{% endif %}
