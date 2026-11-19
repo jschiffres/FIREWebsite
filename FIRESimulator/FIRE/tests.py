@@ -577,6 +577,11 @@ class FaqFeedbackTests(TestCase):
         self.assertIn('Sitemap:', self.client.get('/robots.txt').content.decode())
         self.assertIn('/faq/', self.client.get('/sitemap.xml').content.decode())
 
+    def test_private_pages_are_noindex_not_disallowed(self):
+        self.assertNotIn('Disallow', self.client.get('/robots.txt').content.decode())
+        self.assertEqual(self.client.get('/myplans/')['X-Robots-Tag'], 'noindex, nofollow')
+        self.assertNotIn('X-Robots-Tag', self.client.get('/'))
+
     def test_feedback_sends_email(self):
         from django.core import mail
         from .models import Feedback

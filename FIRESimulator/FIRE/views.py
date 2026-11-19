@@ -117,11 +117,6 @@ def robots_txt(request):
     body = (
         'User-agent: *\n'
         'Allow: /\n'
-        'Disallow: /plan/\n'
-        'Disallow: /myplans/\n'
-        'Disallow: /account/\n'
-        'Disallow: /admin/\n'
-        'Disallow: /billing/\n'
         f'Sitemap: {site}/sitemap.xml\n'
     )
     return HttpResponse(body, content_type='text/plain')
