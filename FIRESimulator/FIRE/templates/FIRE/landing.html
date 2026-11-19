@@ -151,7 +151,7 @@
           </td>
           <td class="pricing-col-premium">
             {% if user.is_authenticated %}<a href="{% url 'myaccount' %}#premium" class="btn btn-action-filled w-100"><i class="bi bi-star" aria-hidden="true"></i> Upgrade to Premium</a>
-            {% else %}<a href="{% url 'signupuser' %}" class="btn btn-action-filled w-100"><i class="bi bi-rocket-takeoff" aria-hidden="true"></i> Sign up to get Premium</a>
+            {% else %}<a href="{% url 'signupuser' %}?next=upgrade" class="btn btn-action-filled w-100"><i class="bi bi-rocket-takeoff" aria-hidden="true"></i> Sign up to get Premium</a>
             <div class="pricing-sub mt-1">Create a free account, then upgrade anytime.</div>{% endif %}
           </td>
         </tr>

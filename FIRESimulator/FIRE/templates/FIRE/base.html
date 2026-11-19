@@ -104,6 +104,11 @@
               <li class="nav-item">
                 <a class="nav-link link-light" href="{% url 'myaccount' %}">My Account{% if is_premium %} <i class="bi bi-star-fill text-warning" aria-label="Premium"></i>{% endif %}</a>
               </li>
+              {% if not is_premium %}
+              <li class="nav-item d-flex align-items-center">
+                <a class="nav-link link-warning" href="{% url 'myaccount' %}#premium"><i class="bi bi-star" aria-hidden="true"></i> Go Premium</a>
+              </li>
+              {% endif %}
               <li class="nav-item">
                 <form action="{% url 'logoutuser' %}" method="POST">
                   {% csrf_token %}

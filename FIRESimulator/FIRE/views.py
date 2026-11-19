@@ -147,6 +147,12 @@ def _can_access_plan(request, plan):
     # Unowned (anonymous) plans stay reachable by their unguessable UUID
     return plan.user is None or plan.user == request.user
 
+def _post_signup_redirect(request, upgrade=None):
+    """Send new users straight to the Premium section when they signed up from an upgrade button."""
+    if upgrade is None:
+        upgrade = request.GET.get('next') == 'upgrade'
+    return redirect(reverse('myaccount') + '#premium') if upgrade else redirect('userplans')
+
 def _create_account(request, plan=None):
     """Shared signup logic; returns (redirect_response, None) or (None, error_response)."""
     form = CreateUserForm(request.POST)
@@ -170,9 +176,7 @@ def _create_account(request, plan=None):
     messages.success(request, "User created successfully! Check your email to confirm your address.")
     welcome_email(user)
     auth_flows.send_verification_email(user)
-    return redirect('userplans'), None
-
-# USER: Email verification
+    return _post_signup_redirect(request), None
 def verify_email(request, token):
     user = auth_flows.read_verification_token(token)
     if user is None:
@@ -206,6 +210,7 @@ def google_login(request):
         return redirect('loginuser')
     state = auth_flows.new_state()
     request.session['google_state'] = state
+    request.session['google_upgrade'] = request.GET.get('next') == 'upgrade'
     plan_id = request.GET.get('plan')
     if plan_id and _is_uuid(plan_id):
         request.session['google_plan'] = plan_id
@@ -216,6 +221,7 @@ def google_login(request):
 def google_callback(request):
     expected = request.session.pop('google_state', None)
     plan_id = request.session.pop('google_plan', None)
+    upgrade = request.session.pop('google_upgrade', False)
     if not expected or request.GET.get('state') != expected or not request.GET.get('code'):
         messages.error(request, "Google sign-in was cancelled or could not be verified.")
         return redirect('loginuser')
@@ -254,7 +260,7 @@ def google_callback(request):
             plan.user = user
             plan.save()
     messages.success(request, "Signed in with Google.")
-    return redirect('userplans')
+    return _post_signup_redirect(request, upgrade)
 
 # USER: Signup email availability (used for inline validation)
 @ratelimit('checkemail', 30, 600, methods=('GET',))
