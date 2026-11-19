@@ -64,6 +64,7 @@ urlpatterns = [
     path("terms/", views.terms, name="terms"),
     path("faq/", views.faq, name="faq"),
     path("robots.txt", views.robots_txt, name="robots_txt"),
+    path("favicon.ico", RedirectView.as_view(url=staticfiles_storage.url("favicon.ico"), permanent=True)),
     path("favicon.ico", RedirectView.as_view(url=staticfiles_storage.url("favicon.svg"), permanent=True)),
     path("sitemap.xml", views.sitemap_xml, name="sitemap_xml"),
     path("billing/checkout/", views.start_checkout, name="start_checkout"),
