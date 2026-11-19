@@ -577,6 +577,12 @@ class FaqFeedbackTests(TestCase):
         self.assertIn('Sitemap:', self.client.get('/robots.txt').content.decode())
         self.assertIn('/faq/', self.client.get('/sitemap.xml').content.decode())
 
+    def test_signup_from_upgrade_button_lands_on_premium_section(self):
+        data = {'email': 'up@example.com', 'password1': 'Str0ng-pass-99!', 'password2': 'Str0ng-pass-99!'}
+        r = self.client.post(reverse('signupuser') + '?next=upgrade', data)
+        self.assertEqual(r.url, reverse('myaccount') + '#premium')
+        self.assertContains(self.client.get(reverse('myaccount')), 'Go Premium')
+
     def test_private_pages_are_noindex_not_disallowed(self):
         self.assertNotIn('Disallow', self.client.get('/robots.txt').content.decode())
         self.assertEqual(self.client.get('/myplans/')['X-Robots-Tag'], 'noindex, nofollow')
