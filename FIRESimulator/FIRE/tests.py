@@ -584,7 +584,7 @@ class FaqFeedbackTests(TestCase):
         self.assertContains(self.client.get(reverse('myaccount')), 'Go Premium')
 
     def test_public_learn_and_calculator_pages(self):
-        for url in ['/learn/', '/fire-calculator/', '/coast-fire-calculator/', '/learn/what-is-coast-fire/']:
+        for url in ['/learn/', '/fire-calculator/', '/coast-fire-calculator/', '/learn/what-is-coast-fire/', '/learn/having-kids-on-the-path-to-fire/', '/learn/retirement-expenses-and-healthcare-costs/']:
             self.assertEqual(self.client.get(url).status_code, 200, url)
         self.assertEqual(self.client.get('/learn/nope/').status_code, 404)
         sitemap = self.client.get('/sitemap.xml').content.decode()

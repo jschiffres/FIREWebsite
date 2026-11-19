@@ -111,6 +111,76 @@ ARTICLES = [
 <p>You do not need to pick one forever. Build a plan in FI Planner and use the what-if tools to see how each path changes your timeline. <a href="/signup/">Create a free account</a> to start.</p>
 """,
     },
+    {
+        'slug': 'retirement-expenses-and-healthcare-costs',
+        'title': 'Expenses and healthcare costs in retirement: what to plan for',
+        'summary': 'How spending changes after you stop working, and how to budget for health insurance before and after Medicare.',
+        'description': 'What to expect for living expenses and healthcare costs in early retirement, including health insurance before Medicare, Medicare costs, long-term care and how to budget for them.',
+        'body': """
+<p>Your <a href="/learn/fire-number-and-the-4-percent-rule/">FIRE number</a> is only as good as the spending figure behind it. Two questions matter most: what will everyday life cost after you stop working, and how will you pay for healthcare?</p>
+<h2>How spending changes in retirement</h2>
+<p>Some costs usually fall: commuting, work clothes, payroll taxes and retirement contributions. Others often rise: travel, hobbies, healthcare and the simple fact that you have more free time. A good starting point is your current spending minus work-related costs, plus a realistic allowance for the things you plan to do with your time.</p>
+<ul>
+<li><strong>Housing</strong>: is the mortgage paid off? Property tax, insurance and maintenance never go away.</li>
+<li><strong>Food, transport and utilities</strong>: usually stable.</li>
+<li><strong>Travel and leisure</strong>: often highest in the first years.</li>
+<li><strong>Taxes</strong>: withdrawals from pre-tax accounts are taxable income.</li>
+<li><strong>Buffer</strong>: add 10% or so for the unexpected.</li>
+</ul>
+<h2>Healthcare before Medicare (US)</h2>
+<p>If you retire before 65, you need your own health insurance. Common options are:</p>
+<ul>
+<li><strong>ACA marketplace plans</strong>: premiums can be reduced by subsidies that depend on your taxable income, so planning how much income you show can matter a lot.</li>
+<li><strong>COBRA</strong>: continues your employer plan for a limited time, usually at full cost.</li>
+<li><strong>A spouse's plan</strong>, if available.</li>
+</ul>
+<p>Rules and subsidy levels change, so check current rules on healthcare.gov before you rely on them.</p>
+<h2>Healthcare after 65</h2>
+<p>Medicare starts at 65, but it is not free. Expect premiums, deductibles and copays, and possibly supplemental coverage. Fidelity's annual estimate for a 65-year-old retiree's lifetime healthcare costs has been well into six figures per person, and that excludes long-term care.</p>
+<h2>Long-term care</h2>
+<p>Nursing or in-home care is expensive and not covered by regular health insurance. Options include long-term care insurance, hybrid life policies, or simply holding extra savings.</p>
+<h2>How to build it into your plan</h2>
+<ol>
+<li>Add a separate healthcare line to your retirement budget.</li>
+<li>Use a higher figure before 65 if you will buy your own insurance.</li>
+<li>Contribute to an HSA while you are eligible. Money used for qualified medical expenses comes out tax-free.</li>
+<li>Test a higher spending number and see how your FI date changes.</li>
+</ol>
+<p>In FI Planner you can enter different expenses for different life stages and see your retirement date move. <a href="/signup/">Create a free account</a> to try it, or start with the <a href="/fire-calculator/">FIRE calculator</a>.</p>
+<p class="small text-muted">General information only, not medical, insurance or financial advice. Costs and rules vary by country and change over time.</p>
+""",
+    },
+    {
+        'slug': 'having-kids-on-the-path-to-fire',
+        'title': 'Having kids on the path to FIRE: costs, trade-offs and planning',
+        'summary': 'What children really cost, how they change your FI number and timeline, and how to plan for them.',
+        'description': 'How having children affects your path to FIRE: the real cost of raising a child, childcare and college, how it changes your FI number, and practical ways to plan.',
+        'body': """
+<p>Children are the biggest change most people make to their finances, and they do not have to end your FIRE plans. They do change the numbers, so it helps to plan for them rather than be surprised.</p>
+<h2>What kids cost</h2>
+<p>Estimates for raising a child to age 18 in the US commonly land in the low-to-mid six figures per child, before college. Costs vary hugely by where you live and how you parent. The big categories are:</p>
+<ul>
+<li><strong>Housing</strong>: often a bigger home or a better school district.</li>
+<li><strong>Childcare</strong>: frequently the largest expense in the early years, and can rival a mortgage.</li>
+<li><strong>Food, healthcare and activities</strong>.</li>
+<li><strong>College</strong>: optional to fund, but worth deciding on early.</li>
+</ul>
+<h2>How kids change your FIRE math</h2>
+<p>Higher spending raises your <a href="/learn/fire-number-and-the-4-percent-rule/">FIRE number</a>: every extra $1,000 a month of spending adds about $300,000 to your target at a 4% withdrawal rate. At the same time you may save less while costs are highest, which pushes the date out. Many families see their timeline stretch by several years.</p>
+<p>It can also help: when children are grown, spending often drops again, and some families reach <a href="/learn/what-is-coast-fire/">Coast FIRE</a> in the early years and keep working at a gentler pace.</p>
+<h2>Ways to plan</h2>
+<ol>
+<li><strong>Model it before it happens.</strong> Add the expected extra costs, and any reduced income while a parent takes leave, to your plan.</li>
+<li><strong>Plan the childcare years.</strong> Dependent-care FSAs and tax credits may reduce the cost, depending on where you live.</li>
+<li><strong>Decide on education early.</strong> A 529 plan or similar account lets money grow tax-advantaged, but you do not have to fully fund college.</li>
+<li><strong>Keep your own retirement on track.</strong> Children can borrow for college, but you cannot borrow for retirement.</li>
+<li><strong>Review yearly.</strong> Costs and income change, so update your plan as they do.</li>
+</ol>
+<h2>Try it yourself</h2>
+<p>The what-if tools in FI Planner let you add new expenses and see how your FI age changes. <a href="/signup/">Create a free account</a> and compare a plan with and without children.</p>
+<p class="small text-muted">General information only, not financial or tax advice. Child-related costs and tax benefits vary by country and change over time.</p>
+""",
+    },
 ]
 
 ARTICLES_BY_SLUG = {a['slug']: a for a in ARTICLES}
