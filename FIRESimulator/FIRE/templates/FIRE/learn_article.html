@@ -1,0 +1,26 @@
+{% extends 'FIRE/base.html' %}
+{% block title %}{{ article.title }} | FI Planner{% endblock %}
+{% block description %}{{ article.description }}{% endblock %}
+{% block og_title %}{{ article.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5" style="max-width: 760px;">
+  <nav aria-label="breadcrumb" class="small mb-2"><a href="{% url 'learn' %}">Learn</a> &rsaquo; {{ article.title }}</nav>
+  <h1 class="fs-2 fw-bold">{{ article.title }}</h1>
+  <article class="learn-article">{{ article.body|safe }}</article>
+
+  <div class="card p-4 text-center my-4 plan-summary-card">
+    <h2 class="fs-5 fw-bold">Plan your own path to financial independence</h2>
+    <p class="mb-3">Build a free plan in minutes and see your FI number, timeline and projected net worth.</p>
+    <div><a class="btn btn-action-filled" href="{% url 'newplan' %}">Build your plan free</a></div>
+  </div>
+
+  <h2 class="fs-5 fw-bold">More guides</h2>
+  <ul>
+    {% for a in others %}<li><a href="{% url 'learn_article' a.slug %}">{{ a.title }}</a></li>{% endfor %}
+    <li><a href="{% url 'fire_calculator' %}">FIRE calculator</a></li>
+    <li><a href="{% url 'coast_fire_calculator' %}">Coast FIRE calculator</a></li>
+  </ul>
+  <p class="small text-muted">For education only, not financial advice. See <a href="{% url 'about' %}">Assumptions &amp; Disclaimer</a>.</p>
+</div>
+{% endblock %}

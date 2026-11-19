@@ -1,0 +1,23 @@
+{% extends 'FIRE/base.html' %}
+{% block title %}Learn: Financial Independence & FIRE Guides | FI Planner{% endblock %}
+{% block description %}Plain-English guides to financial independence: what FIRE is, Coast FIRE, the 4% rule and your FIRE number, plus free calculators.{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5" style="max-width: 800px;">
+  <h1 class="fs-3 fw-bold">Learn about financial independence</h1>
+  <p class="text-muted">Plain-English guides and free calculators. Have a question that isn't covered? Check the <a href="{% url 'faq' %}">FAQ</a>.</p>
+
+  <h2 class="fs-5 fw-bold mt-4">Free calculators</h2>
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-md-6"><a class="card p-3 h-100 text-decoration-none" href="{% url 'fire_calculator' %}"><span class="fw-bold">FIRE calculator</span><span class="text-muted small">Your FIRE number and years to financial independence.</span></a></div>
+    <div class="col-12 col-md-6"><a class="card p-3 h-100 text-decoration-none" href="{% url 'coast_fire_calculator' %}"><span class="fw-bold">Coast FIRE calculator</span><span class="text-muted small">Your Coast FI number and whether you are already there.</span></a></div>
+  </div>
+
+  <h2 class="fs-5 fw-bold">Guides</h2>
+  <div class="d-flex flex-column gap-3">
+    {% for a in articles %}
+    <a class="card p-3 text-decoration-none" href="{% url 'learn_article' a.slug %}"><span class="fw-bold">{{ a.title }}</span><span class="text-muted small">{{ a.summary }}</span></a>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

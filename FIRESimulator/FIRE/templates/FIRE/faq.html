@@ -22,6 +22,7 @@
     </div>
     {% endfor %}
 
-    <p class="mt-4 small text-muted">FI Planner is an educational tool and not financial advice. See <a href="{% url 'about' %}">Assumptions &amp; Disclaimer</a>.</p>
+    <p class="mt-4">Want to go deeper? Browse our <a href="{% url 'learn' %}">guides</a>: <a href="{% url 'learn_article' 'what-is-fire' %}">What is FIRE?</a>, <a href="{% url 'learn_article' 'what-is-coast-fire' %}">What is Coast FIRE?</a> and <a href="{% url 'learn_article' 'fire-number-and-the-4-percent-rule' %}">the 4% rule</a>, or try the <a href="{% url 'fire_calculator' %}">FIRE calculator</a>.</p>
+    <p class="mt-2 small text-muted">FI Planner is an educational tool and not financial advice. See <a href="{% url 'about' %}">Assumptions &amp; Disclaimer</a>.</p>
 </div>
 {% endblock %}
