@@ -204,7 +204,7 @@ GA_MEASUREMENT_ID = os.environ.get('GA_MEASUREMENT_ID', '').strip()
 
 # Premium tier. Without a payment provider wired in, self-service upgrade is a demo that only works in DEBUG
 # (or when explicitly enabled); production upgrades should go through a real checkout.
-FREE_PLAN_LIMIT = 1
+FREE_PLAN_LIMIT = 2
 PREMIUM_DEMO_UPGRADE = os.environ.get('PREMIUM_DEMO_UPGRADE', str(DEBUG)).lower() == 'true'
 
 # Stripe billing. Real payments are enabled whenever a secret key is set (the demo upgrade is then disabled).

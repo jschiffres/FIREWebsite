@@ -286,10 +286,11 @@ class SurveyAndPermissionTests(TestCase):
     def test_free_plan_limit_and_premium_lifts_it(self):
         self.client.force_login(self.owner)
         self.create_plan()
+        self.create_plan()
         blocked = self.client.post(reverse('newplan'), survey_post())
         self.assertEqual(blocked.status_code, 200)
         self.assertRedirects(self.client.get(reverse('newplan')), reverse('myaccount'), fetch_redirect_response=False)
-        self.assertEqual(Plan.objects.filter(user=self.owner).count(), 1)
+        self.assertEqual(Plan.objects.filter(user=self.owner).count(), 2)
         self.make_premium(self.owner)
         self.assertEqual(self.client.post(reverse('newplan'), survey_post()).status_code, 302)
 
