@@ -583,6 +583,14 @@ class FaqFeedbackTests(TestCase):
         self.assertEqual(r.url, reverse('myaccount') + '#premium')
         self.assertContains(self.client.get(reverse('myaccount')), 'Go Premium')
 
+    def test_public_learn_and_calculator_pages(self):
+        for url in ['/learn/', '/fire-calculator/', '/coast-fire-calculator/', '/learn/what-is-coast-fire/']:
+            self.assertEqual(self.client.get(url).status_code, 200, url)
+        self.assertEqual(self.client.get('/learn/nope/').status_code, 404)
+        sitemap = self.client.get('/sitemap.xml').content.decode()
+        self.assertIn('/learn/what-is-fire/', sitemap)
+        self.assertIn('/coast-fire-calculator/', sitemap)
+
     def test_private_pages_are_noindex_not_disallowed(self):
         self.assertNotIn('Disallow', self.client.get('/robots.txt').content.decode())
         self.assertEqual(self.client.get('/myplans/')['X-Robots-Tag'], 'noindex, nofollow')

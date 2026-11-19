@@ -1,0 +1,62 @@
+{% extends 'FIRE/base.html' %}
+{% block title %}Coast FIRE Calculator: Find Your Coast FI Number | FI Planner{% endblock %}
+{% block description %}Free Coast FIRE calculator. Enter your age, retirement age and spending to see your Coast FI number and whether you can stop saving and let compounding do the rest. No signup needed.{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5" style="max-width: 800px;">
+  <h1 class="fs-3 fw-bold">Coast FIRE calculator</h1>
+  <p class="text-muted">Find the amount you need invested today so growth alone reaches your retirement number. Everything is in today's dollars and runs in your browser, with no signup.</p>
+
+  <div class="card p-3 mb-3">
+    <div class="row g-3">
+      <div class="col-6 col-md-4"><label class="form-label" for="age">Current age</label><input id="age" type="number" class="form-control calc-in" value="30" min="16" max="90"></div>
+      <div class="col-6 col-md-4"><label class="form-label" for="rage">Retirement age</label><input id="rage" type="number" class="form-control calc-in" value="60" min="17" max="100"></div>
+      <div class="col-6 col-md-4"><label class="form-label" for="exp">Retirement spending / yr ($)</label><input id="exp" type="number" class="form-control calc-in" value="50000" min="0"></div>
+      <div class="col-6 col-md-4"><label class="form-label" for="sav">Invested today ($)</label><input id="sav" type="number" class="form-control calc-in" value="150000" min="0"></div>
+      <div class="col-6 col-md-4"><label class="form-label" for="ret">Real return (%)</label><input id="ret" type="number" step="0.1" class="form-control calc-in" value="5"></div>
+      <div class="col-6 col-md-4"><label class="form-label" for="wr">Withdrawal rate (%)</label><input id="wr" type="number" step="0.1" class="form-control calc-in" value="4" min="0.5"></div>
+    </div>
+  </div>
+
+  <div class="row g-3 text-center mb-3" aria-live="polite">
+    <div class="col-6"><div class="card p-3 h-100"><div class="text-muted small">Full FI number</div><div class="fs-3 fw-bold" id="out-fi">&ndash;</div></div></div>
+    <div class="col-6"><div class="card p-3 h-100"><div class="text-muted small">Coast FI number today</div><div class="fs-3 fw-bold" id="out-coast">&ndash;</div></div></div>
+  </div>
+  <p id="out-note" class="fw-semibold"></p>
+
+  <div class="card p-4 text-center mb-4 plan-summary-card">
+    <h2 class="fs-5 fw-bold">See your Coast FI age on a chart</h2>
+    <p class="mb-3">FI Planner plots the age you hit Coast FI and your projected net worth, with taxes and income changes included.</p>
+    <div><a class="btn btn-action-filled" href="{% url 'newplan' %}">Build your plan free</a></div>
+  </div>
+
+  <h2 class="fs-5 fw-bold">How it works</h2>
+  <p>Your Coast FI number is your full FI number (spending &divide; withdrawal rate) divided by (1 + real return) raised to the years until retirement. If you already have at least that much invested, you can stop saving for retirement and only cover current living costs. Read <a href="{% url 'learn_article' 'what-is-coast-fire' %}">What is Coast FIRE?</a> for a worked example, or use the <a href="{% url 'fire_calculator' %}">FIRE calculator</a> for your full FI number.</p>
+  <p class="small text-muted">For education only, not financial advice. Returns are not guaranteed.</p>
+</div>
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
+  function calc(){
+    const age = +$('age').value || 0, rage = +$('rage').value || 0;
+    const exp = +$('exp').value || 0, sav = +$('sav').value || 0;
+    const r = (+$('ret').value || 0) / 100, wr = (+$('wr').value || 0) / 100;
+    const note = $('out-note');
+    if (wr <= 0 || rage <= age) { $('out-fi').textContent = '–'; $('out-coast').textContent = '–'; note.textContent = 'Retirement age must be above your current age.'; return; }
+    const fi = exp / wr, years = rage - age, coast = fi / Math.pow(1 + r, years);
+    $('out-fi').textContent = fmt(fi);
+    $('out-coast').textContent = fmt(coast);
+    if (sav >= coast) {
+      note.className = 'fw-semibold text-success';
+      note.textContent = 'You are Coast FI. Your ' + fmt(sav) + ' should grow to about ' + fmt(sav * Math.pow(1 + r, years)) + ' by age ' + rage + ' without further saving.';
+    } else {
+      note.className = 'fw-semibold';
+      note.textContent = 'You are ' + fmt(coast - sav) + ' short of Coast FI (' + Math.round(sav / coast * 100) + '% of the way there).';
+    }
+  }
+  document.querySelectorAll('.calc-in').forEach(el => el.addEventListener('input', calc));
+  calc();
+})();
+</script>
+{% endblock %}

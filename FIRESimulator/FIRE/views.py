@@ -25,6 +25,7 @@ from .forms import CreateUserForm, FeedbackForm, PlanForm, EditPlanForm
 from .engine import PlanObject
 from .plan_input import saveplan, MAX_CUSTOM_ACCOUNTS
 from .emails import welcome_email
+from .articles import ARTICLES, ARTICLES_BY_SLUG
 from . import emails
 from . import auth_flows, billing, pdf_report
 from .ratelimit import ratelimit
@@ -34,6 +35,22 @@ import csv
 
 def about(request):
     return render(request, 'FIRE/about.html')
+
+def learn_index(request):
+    return render(request, 'FIRE/learn_index.html', {'articles': ARTICLES})
+
+def learn_article(request, slug):
+    article = ARTICLES_BY_SLUG.get(slug)
+    if article is None:
+        raise Http404
+    others = [a for a in ARTICLES if a['slug'] != slug]
+    return render(request, 'FIRE/learn_article.html', {'article': article, 'others': others})
+
+def fire_calculator(request):
+    return render(request, 'FIRE/calculator_fire.html')
+
+def coast_fire_calculator(request):
+    return render(request, 'FIRE/calculator_coast.html')
 
 LEGAL_CONTEXT = {
     'effective_date': 'January 1, 2026',
@@ -124,8 +141,9 @@ def robots_txt(request):
 
 def sitemap_xml(request):
     site = settings.SITE_URL.rstrip('/')
-    names = ['landing', 'faq', 'about', 'privacy', 'terms', 'signupuser', 'loginuser', 'feedback']
-    urls = ''.join(f'<url><loc>{site}{reverse(n)}</loc></url>' for n in names)
+    names = ['landing', 'learn', 'fire_calculator', 'coast_fire_calculator', 'faq', 'about', 'privacy', 'terms', 'signupuser', 'loginuser', 'feedback']
+    paths = [reverse(n) for n in names] + [reverse('learn_article', args=[a['slug']]) for a in ARTICLES]
+    urls = ''.join(f'<url><loc>{site}{p}</loc></url>' for p in paths)
     xml = ('<?xml version="1.0" encoding="UTF-8"?>'
            f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>')
     return HttpResponse(xml, content_type='application/xml')
