@@ -1,0 +1,15 @@
+{% extends "FIRE/base.html" %}
+{% block title %}FI Planner Lab{% endblock %}
+{% block content %}
+<div class="text-center py-5" style="max-width:520px;margin:0 auto">
+  <span class="badge text-bg-warning mb-3">Experimental</span>
+  <h1 class="fw-bold mb-3">How old are you?</h1>
+  <p class="text-muted mb-4">Start with your age, then build your plan one income, expense and account at a time.</p>
+  <form method="post" class="d-flex gap-2 justify-content-center">
+    {% csrf_token %}
+    <input type="number" name="age" min="16" max="90" class="form-control form-control-lg" style="max-width:140px" placeholder="Age" required autofocus>
+    <button class="btn btn-action-filled btn-lg px-4">Go!</button>
+  </form>
+  {% if error %}<p class="text-danger mt-3">{{ error }}</p>{% endif %}
+</div>
+{% endblock %}

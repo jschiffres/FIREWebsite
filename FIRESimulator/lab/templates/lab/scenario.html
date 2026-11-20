@@ -1,0 +1,522 @@
+{% extends "FIRE/base.html" %}
+{% block title %}FI Planner Lab{% endblock %}
+{% block content %}
+<style>
+  .lab-item{border-left:6px solid;border-radius:8px;background:#fff;padding:.5rem .75rem;margin-bottom:.5rem;position:relative;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .lab-item.income{border-color:#285C53}.lab-item.expense{border-color:#EC652B}.lab-item.account{border-color:#4F378A}
+  .lab-item .detail{display:none;font-size:.8rem;color:#555}
+  .lab-item:hover .detail,.lab-item:focus-within .detail{display:block}
+  .lab-kpi{background:#fff;border-radius:10px;padding:.75rem 1rem;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+  .lab-kpi .v{font-size:clamp(1.1rem,4.5vw,1.5rem);font-weight:700;overflow-wrap:anywhere}
+  .grp{display:none}
+  #itemForm{border-left:8px solid var(--kc,#999);background:color-mix(in srgb,var(--kc,#999) 6%,#fff)}
+  #itemForm.kind-income{--kc:#285C53}#itemForm.kind-expense{--kc:#EC652B}#itemForm.kind-account{--kc:#4F378A}
+  #itemForm h5{color:var(--kc)}
+  #itemForm .btn-action-filled{background:var(--kc);border-color:var(--kc)}
+  .tip{display:inline-block;width:1.1rem;height:1.1rem;line-height:1.1rem;text-align:center;border-radius:50%;background:#e4e4e4;color:#555;font-size:.7rem;font-weight:700;cursor:help;margin-left:.15rem}
+  .chart-box{position:relative;height:360px}
+</style>
+<div class="container-fluid py-3" style="max-width:1300px">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div><span class="badge text-bg-warning">Experimental</span> <strong class="ms-2">FI Planner Lab</strong></div>
+    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#settings">Settings</button>
+  </div>
+  <div id="settings" class="collapse mb-3">
+    <div class="row g-2 align-items-end">
+      <div class="col-6 col-md-2"><label class="form-label small">Your age</label><input id="s_age" type="number" class="form-control" value="{{ sc.age }}"></div>
+      <div class="col-6 col-md-2"><label class="form-label small">Plan to age</label><input id="s_plan" type="number" class="form-control" value="{{ sc.plan_to_age }}"></div>
+      <div class="col-6 col-md-3"><label class="form-label small">Filing status</label>
+        <select id="s_status" class="form-select"><option value="single">Single</option><option value="married">Married filing jointly</option></select></div>
+      <div class="col-6 col-md-3"><label class="form-label small">State</label>
+        <select id="s_state" class="form-select">{% for code, name in states %}<option value="{{ code }}">{{ name }}</option>{% endfor %}</select></div>
+      <div class="col-12 col-md-2"><button id="s_save" class="btn btn-action-filled w-100">Update</button></div>
+    </div>
+    <div id="s_err" class="text-danger small mt-1"></div>
+  </div>
+
+  <div class="row g-3 mb-3" id="kpis">
+    <div class="col-6 col-md-3"><div class="lab-kpi"><div class="small text-muted">Current net worth</div><div class="v" id="k_nw">$0</div></div></div>
+    <div class="col-6 col-md-3"><div class="lab-kpi"><div class="small text-muted">FI age</div><div class="v" id="k_fi">Never</div></div></div>
+    <div class="col-6 col-md-3"><div class="lab-kpi"><div class="small text-muted">Coast FI age <span class="tip" data-bs-toggle="tooltip" title="The earliest age you could stop saving and still reach your FI number by your FI age, with your investments just growing at their expected return. It uses your FI age as the target retirement age.">?</span></div><div class="v" id="k_coast">&mdash;</div></div></div>
+    <div class="col-6 col-md-3"><div class="lab-kpi"><div class="small text-muted">Chance plan holds to <span id="k_plan"></span></div><div class="v" id="k_succ">&mdash;</div></div></div>
+  </div>
+  <div id="headline" class="alert alert-secondary"></div>
+
+  <div class="d-flex flex-wrap gap-2 mb-3">
+    <button class="btn btn-action-filled" data-add="income">+ Income</button>
+    <button class="btn btn-action-filled" data-add="expense">+ Expense</button>
+    <button class="btn btn-action-filled" data-add="account">+ Account</button>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-3 order-lg-1">
+      <h6 class="text-muted">Your plan</h6>
+      <div id="sidebar"><p class="small text-muted">Nothing yet.</p></div>
+    </div>
+    <div class="col-lg-9 order-lg-2">
+      <form id="itemForm" class="card card-body mb-3" style="display:none" novalidate>
+        <h5 id="formTitle"></h5>
+        <div class="row g-2">
+          <div class="col-md-6"><label class="form-label small">Name</label><input class="form-control" name="name" maxlength="60"></div>
+          <div class="col-md-3"><label class="form-label small"><span id="amountLabel">Amount</span></label><div class="input-group"><span class="input-group-text">$</span><input class="form-control" type="number" step="0.01" min="0" name="amount"></div></div>
+          <div class="col-md-3 grp g-flow"><label class="form-label small">Frequency</label>
+            <select class="form-select" name="frequency">{% for v, l in frequencies %}<option value="{{ v }}"{% if v == 'monthly' %} selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+
+          <div class="col-md-3 grp g-flow">          <label class="form-label small"><span id="growthLabel">Annual change</span> <span class="tip" data-bs-toggle="tooltip" title="How much this amount grows each year. For income this is a raise; for expenses it is inflation.">?</span></label><div class="input-group"><input class="form-control" type="number" step="0.1" name="growth_pct" value="0"><span class="input-group-text">%</span></div></div>
+                    <div class="col-md-3 grp g-income"><label class="form-label small">Bonus <span class="tip" data-bs-toggle="tooltip" title="Yearly bonus as a percent of your regular pay.">?</span></label><div class="input-group"><input class="form-control" type="number" step="0.1" min="0" name="bonus_pct" value="0"><span class="input-group-text">%</span></div></div>
+                    <div class="col-md-3 grp g-income"><label class="form-label small">Taxed? <span class="tip" data-bs-toggle="tooltip" title="Choose No for income that is already after tax or not taxable.">?</span></label><select class="form-select" name="taxed"><option value="1">Yes</option><option value="0">No</option></select></div>
+                    <div class="col-md-3 grp g-income"><label class="form-label small">Payroll taxes? <span class="tip" data-bs-toggle="tooltip" title="Social Security and Medicare apply to wages. Choose No for income such as rental or investment income.">?</span></label><select class="form-select" name="payroll_taxed"><option value="1">Yes (wages)</option><option value="0">No (other income)</option></select></div>
+                    <div class="col-md-3 grp g-flow"><label class="form-label small">Starts <span class="tip" data-bs-toggle="tooltip" title="Now begins immediately. At age begins at the age you choose. At FI begins when you reach financial independence, such as health insurance after you stop working.">?</span></label>
+            <select class="form-select" id="startMode"><option value="now">Now</option><option value="age">At age&hellip;</option><option value="fi">At FI</option></select></div>
+                    <div class="col-md-3 grp g-flow" id="startAgeBox"><label class="form-label small">Start age</label><input class="form-control" type="number" name="start_age"></div>
+                    <div class="col-md-3 grp g-flow"><label class="form-label small">End age <span class="tip" data-bs-toggle="tooltip" title="Until FI stops when you reach financial independence. At age stops at the age you choose. For life runs to the end of your plan.">?</span></label>
+            <select class="form-select" name="end_mode"><option value="fi">Until FI</option><option value="age">At age&hellip;</option><option value="life">For life</option></select></div>
+          <div class="col-md-3 grp g-flow" id="endAgeBox"><label class="form-label small">Age</label><input class="form-control" type="number" name="end_age"></div>
+                    <div class="col-md-3 grp g-expense"><label class="form-label small">Tax deferred? <span class="tip" data-bs-toggle="tooltip" title="Pre-tax expenses, such as health insurance premiums, lower your taxable income.">?</span></label><select class="form-select" name="tax_deferred"><option value="0">No</option><option value="1">Yes</option></select></div>
+
+          <div class="col-md-6 grp g-account"><label class="form-label small">Account type</label>
+            <select class="form-select" name="account_type"><option value="">Choose&hellip;</option>{% for v, l in account_types %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+          <div class="col-md-3 grp g-account">          <label class="form-label small">Contributions <span class="tip" data-bs-toggle="tooltip" title="Pre tax lowers your taxable income now. Post tax does not. Dormant accounts receive no new savings.">?</span></label>
+            <select class="form-select" name="contribution_type">{% for v, l in contribution_types %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+                    <div class="col-md-3 grp g-account"><label class="form-label small">Yearly limit <span class="tip" data-bs-toggle="tooltip" title="The most you can contribute each year, in today's dollars. Leave blank to use the default for this account type.">?</span></label><div class="input-group"><span class="input-group-text">$</span><input class="form-control" type="number" min="0" name="contribution_limit"></div></div>
+                    <div class="col-md-3 grp g-account"><label class="form-label small">Fixed growth rate? <span class="tip" data-bs-toggle="tooltip" title="No uses Monte Carlo simulation of market returns. Yes uses one steady rate every year.">?</span></label><select class="form-select" name="fixed_growth"><option value="0">No</option><option value="1">Yes</option></select></div>
+                    <div class="col-md-3 grp g-account" id="fixedBox"><label class="form-label small">Growth</label><div class="input-group"><input class="form-control" type="number" step="0.1" name="fixed_growth_pct"><span class="input-group-text">%</span></div></div>
+                    <div class="col-md-3 grp g-account g-employer"><label class="form-label small">Employer match <span class="tip" data-bs-toggle="tooltip" title="What your employer adds, as a percent of the linked income's yearly pay.">?</span></label><div class="input-group"><input class="form-control" type="number" step="0.1" min="0" name="employer_match_pct" value="0"><span class="input-group-text">%</span></div></div>
+                    <div class="col-md-6 grp g-account g-employer"><label class="form-label small">Match is based on income <span class="tip" data-bs-toggle="tooltip" title="The salary this match is a percent of. The match stops when that income ends.">?</span></label><select class="form-select" name="linked_income"></select></div>
+        </div>
+        <div id="formErr" class="text-danger small mt-2"></div>
+        <div class="d-flex gap-2 mt-3">
+          <button type="submit" class="btn btn-action-filled">Save</button>
+          <button type="button" id="discard" class="btn btn-action-empty">Discard</button>
+          <button type="button" id="del" class="btn btn-outline-danger ms-auto" style="display:none">Delete</button>
+        </div>
+      </form>
+
+      <div id="viewCard" class="card card-body mb-3" style="display:none">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="mb-0" id="viewTitle"></h6>
+          <button type="button" class="btn-close" id="viewClose" aria-label="Close"></button>
+        </div>
+        <div class="chart-box" style="height:260px"><canvas id="itemChart"></canvas></div>
+        <p class="small text-muted mb-0 mt-2">Yearly amount by age, from now until the end of your plan.</p>
+      </div>
+
+      <div id="allocCard" class="card card-body mb-3" style="display:none">
+        <div class="d-flex justify-content-between align-items-center">
+          <h6 class="mb-0">Savings allocation preferences</h6>
+          <button type="button" class="btn btn-sm btn-link p-0" id="allocToggle" aria-expanded="true" title="Collapse">&#9650; Hide</button>
+        </div>
+        <div id="allocBody" class="mt-2">
+        <p class="small text-muted mb-2" id="allocHint"></p>
+        <div id="allocAdv" class="mb-3">
+          <div class="fw-semibold small">1. Tax-advantaged accounts</div>
+          <div class="small text-muted mb-1">Drag to set priority. Savings fill the top account first, then the next.</div>
+          <div id="advList"></div>
+        </div>
+        <div id="allocTax" class="mb-3">
+          <div class="fw-semibold small">2. Taxable accounts</div>
+          <div class="small text-muted mb-1">Everything left after the accounts above is split across these accounts. The total is always 100%, so moving one slider adjusts the others. To hold cash, add a savings account.</div>
+          <div id="taxList"></div>
+        </div>
+        <div id="allocDorm">
+          <div class="fw-semibold small">3. Dormant accounts</div>
+          <div class="small text-muted mb-1">No savings go to these accounts. They only grow.</div>
+          <div id="dormList" class="small"></div>
+        </div>
+        </div>
+      </div>
+
+      <div id="charts" style="display:none">
+        <div class="card card-body mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0">Your financial timeline</h6>
+            <div class="form-check form-switch small"><input class="form-check-input" type="checkbox" id="real"><label class="form-check-label" for="real">Today's dollars</label></div>
+          </div>
+          <div class="chart-box"><canvas id="timeline"></canvas></div>
+          <p class="small text-muted mb-0 mt-2">Lines show the 10th, 50th and 90th percentile of 1,000 Monte Carlo simulations. Bars show yearly savings (up) and withdrawals (down).</p>
+        </div>
+        <div class="card card-body mb-3">
+          <h6>Cash flow at age <span id="sankeyAge"></span></h6>
+          <input type="range" class="form-range" id="yearSlider" value="0" min="0" max="0">
+          <div class="chart-box"><canvas id="sankey"></canvas></div>
+        </div>
+        <div class="card card-body mb-3">
+          <h6 class="mb-2">Your account balances over time</h6>
+          <div class="chart-box"><canvas id="acctStack"></canvas></div>
+          <p class="small text-muted mb-0 mt-2">Median balance of each account (stacked). It shows which accounts carry your plan and how your mix shifts as you save, then draw down after FI. Follows the Today's dollars switch above.</p>
+        </div>
+        <div class="card card-body mb-3">
+          <h6 class="mb-2">What if you retire at a different age?</h6>
+          <div class="chart-box" style="height:260px"><canvas id="retireOpts"></canvas></div>
+          <p class="small text-muted mb-0 mt-2">Chance your money lasts to <span class="plan-age"></span> for each possible retirement age. Your FI age is the earliest age at or above 85%.</p>
+        </div>
+        <div class="card card-body mb-3">
+          <h6 class="mb-2">Income, spending and savings rate</h6>
+          <div class="chart-box"><canvas id="cashLines"></canvas></div>
+          <p class="small text-muted mb-0 mt-2">Yearly income against spending (including taxes while you work), with the share of your income that you save. Savings rate is the biggest lever on how soon you reach FI.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{{ state|json_script:"lab-state" }}
+<div class="modal fade" id="delModal" data-bs-backdrop="delete" data-bs-keyboard="false" tabindex="-1" aria-label="Delete item?" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content back-modal">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi-exclamation-circle-fill"></i> <span id="delName"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">Are you sure you want to <b style="color:red">DELETE</b> this item?</div>
+      <div class="modal-footer" style="background: #FCFBF9;">
+        <button type="button" id="delConfirm" class="btn btn-danger"><i class="bi bi-x-circle-fill"> </i>Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  const urls = {
+    add: "{% url 'lab_item_add' sc.pk %}", edit: id => "{% url 'lab_item_add' sc.pk %}" + id + "/",
+    del: id => "{% url 'lab_item_add' sc.pk %}" + id + "/delete/",
+    settings: "{% url 'lab_settings' sc.pk %}", allocate: "{% url 'lab_allocate' sc.pk %}"};
+  const csrf = "{{ csrf_token }}";
+  const $ = s => document.querySelector(s);
+  const money = n => (n < 0 ? '-$' : '$') + Math.abs(Math.round(n)).toLocaleString();
+  const COLORS = {income:'#285C53', expense:'#EC652B', account:'#4F378A'};
+  let S = JSON.parse($('#lab-state').textContent), editing = null, kind = null, tl = null, sk = null, st = null, ro = null, cl = null;
+
+  async function post(url, body){
+    const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':csrf}, body:JSON.stringify(body||{})});
+    return {ok:r.ok, data:await r.json()};
+  }
+
+  function describe(i){
+    const when = i.kind==='account' ? '' : ` &middot; age ${i.start_at_fi?'FI':(i.start_age ?? S.scenario.age)}&ndash;${i.end_mode==='fi'?'FI':i.end_mode==='age'?i.end_age:'life'}`;
+    if (i.kind==='account') return `${money(i.amount)} &middot; ${i.account_type} &middot; ${i.contribution_type}`;
+    return `${money(i.amount)} ${i.frequency}${when}`;
+  }
+  function renderSidebar(){
+    const el = $('#sidebar');
+    if (!S.items.length){ el.innerHTML = '<p class="small text-muted">Nothing yet.</p>'; return; }
+    el.innerHTML = '';
+    ['income','expense','account'].forEach(k => S.items.filter(i=>i.kind===k).forEach(i=>{
+      const d = document.createElement('div'); d.className = 'lab-item '+k; d.tabIndex = 0;
+      d.innerHTML = `<div class="d-flex justify-content-between"><strong></strong><span class="text-nowrap"><button class="btn btn-sm btn-link p-0 me-2 v" style="display:none" title="View" aria-label="View"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.17 8a13 13 0 0 1 1.66-2.04C4.12 4.67 5.88 3.5 8 3.5s3.88 1.17 5.17 2.46A13 13 0 0 1 14.83 8a13 13 0 0 1-1.66 2.04C11.88 11.33 10.12 12.5 8 12.5s-3.88-1.17-5.17-2.46A13 13 0 0 1 1.17 8"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/></svg></button><button class="btn btn-sm btn-link p-0 e" title="Edit" aria-label="Edit"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/></svg></button></span></div><div class="detail">${describe(i)}</div>`;
+      d.querySelector('strong').textContent = i.name;
+      d.querySelector('.e').onclick = () => openForm(k, i);
+      const v = d.querySelector('.v'); v.style.display = 'inline'; v.onclick = () => viewItem(i);
+      el.appendChild(d);
+    }));
+  }
+
+  function openForm(k, item){
+    kind = k; editing = item || null;
+    const f = $('#itemForm'); f.reset(); $('#formErr').textContent = '';
+    f.style.display = 'block';
+    f.querySelectorAll('.grp').forEach(g => g.style.display = 'none');
+    f.querySelectorAll(k==='account' ? '.g-account' : '.g-flow, .g-'+k).forEach(g => g.style.display = 'block');
+    $('#formTitle').textContent = (item ? 'Edit ' : 'New ') + k;
+    f.classList.remove('kind-income','kind-expense','kind-account'); f.classList.add('kind-'+k);
+    $('#amountLabel').textContent = k==='account' ? 'Current balance' : k==='income' ? 'Pre-tax amount per period' : 'Amount per period';
+    $('#growthLabel').textContent = k==='income' ? 'Annual raise' : 'Annual inflation';
+    if (!item && k==='expense'){ f.growth_pct.value = 2.5; f.end_mode.value = 'life'; }
+    if (item) for (const el of f.elements){
+      if (!el.name || item[el.name]===undefined || item[el.name]===null) continue;
+      const v = item[el.name]; el.value = typeof v==='boolean' ? (v?'1':'0') : (el.name==='contribution_type' && v==='none' ? 'dormant' : v);
+    }
+    $('#del').style.display = item ? 'inline-block' : 'none';
+    fillIncomes(f.linked_income);
+    if (item && item.linked_income) f.linked_income.value = item.linked_income;
+    if (item) $('#startMode').value = item.start_at_fi ? 'fi' : item.start_age != null ? 'age' : 'now';
+    syncToggles(); f.scrollIntoView({behavior:'smooth', block:'nearest'}); f.name.focus();
+  }
+  function syncToggles(){
+    const f = $('#itemForm');
+    $('#startAgeBox').style.display = kind!=='account' && $('#startMode').value==='age' ?     'block':'none';
+        $('#endAgeBox').style.display = kind!=='account' && f.end_mode.value==='age' ? 'block':'none';
+        $('#fixedBox').style.display = kind==='account' && f.fixed_growth.value==='1' ? 'block':'none';
+    f.querySelectorAll('.g-employer').forEach(g => g.style.display = kind==='account' && f.account_type.value==='employer' ? 'block':'none');
+    const lo = S.scenario.age + 1, hi = S.scenario.plan_to_age - 1;
+    f.start_age.min = lo; f.start_age.max = hi;
+    const s = parseInt(f.start_age.value);
+    f.end_age.min = Math.max(lo, isNaN(s) ? lo : s); f.end_age.max = hi;
+    f.start_age.placeholder = 'Now (' + S.scenario.age + ' earliest)';
+  }
+  function fillIncomes(sel){
+    sel.innerHTML = '<option value="">Choose&hellip;</option>';
+    S.items.filter(i=>i.kind==='income').forEach(i => { const o = document.createElement('option'); o.value = i.id; o.textContent = i.name; sel.appendChild(o); });
+  }
+  function clampAge(el){
+    if (el.value==='') return;
+    const v = parseInt(el.value), lo = +el.min, hi = +el.max;
+    if (!isNaN(v)) el.value = Math.min(hi, Math.max(lo, v));
+  }
+  const FREQ = {weekly:52, biweekly:26, bimonthly:24, monthly:12, quarterly:4, biannual:2, yearly:1};
+  let ic = null;
+  function viewAccount(i){
+    const R = S.results, rows = (R.acct_bal||{})[i.id];
+    if (!rows){ return; }
+    const ages = R.ages.map(String);
+    $('#viewTitle').textContent = i.name + ' \u2013 projected balance (median, with 10th\u201390th percentile range)';
+    $('#viewCard').style.display = 'block';
+    if (ic) ic.destroy();
+    const color = COLORS.account, defl = R.defl;
+    const adj = row => row.map((v,t) => ($('#real') && $('#real').checked) ? Math.round(v*defl[t]) : v);
+    ic = new Chart($('#itemChart'), {type:'line', data:{labels:ages, datasets:[
+      {label:'90th percentile', data:adj(rows[2]), borderColor:color+'55', borderDash:[4,3], pointRadius:0, fill:false},
+      {label:'Median', data:adj(rows[1]), borderColor:color, backgroundColor:color+'22', pointRadius:0, borderWidth:2, fill:false},
+      {label:'10th percentile', data:adj(rows[0]), borderColor:color+'55', borderDash:[4,3], pointRadius:0, fill:false}]},
+      options:{responsive:true, maintainAspectRatio:false, interaction:{mode:'index', intersect:false},
+        plugins:{legend:{display:true, position:'bottom'}, tooltip:{callbacks:{label:c=>c.dataset.label+': '+money(c.parsed.y)}}},
+        scales:{y:{ticks:{callback:v=>money(v)}}, x:{ticks:{maxTicksLimit:14}}}}});
+    $('#viewCard').scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+  function viewItem(i){
+    const R = S.results, s = S.scenario, ages = [];
+    if (i.kind==='account'){ viewAccount(i); return; }
+    for (let a = s.age; a <= s.plan_to_age; a++) ages.push(a);
+    const start = i.start_at_fi ? (R.fi_age ?? s.plan_to_age + 1) : Math.max(i.start_age ?? s.age, s.age);
+    const end = i.end_mode==='age' && i.end_age!=null ? i.end_age : i.end_mode==='fi' ? (R.fi_age!=null ? R.fi_age-1 : s.plan_to_age) : s.plan_to_age;
+    const base = i.amount * FREQ[i.frequency] * (i.kind==='income' ? 1 + (i.bonus_pct||0)/100 : 1);
+    const data = ages.map(a => a>=start && a<=end ? Math.round(base * Math.pow(1+(i.growth_pct||0)/100, a - s.age)) : 0);
+    $('#viewTitle').textContent = i.name + (i.kind==='income' ? ' \u2013 yearly income' : ' \u2013 yearly expense');
+    $('#viewCard').style.display = 'block';
+    const color = COLORS[i.kind];
+    if (ic) ic.destroy();
+    ic = new Chart($('#itemChart'), {type:'bar', data:{labels:ages.map(String), datasets:[{label:'Per year', data, backgroundColor:color}]},
+      options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>money(c.parsed.y)+' / year'}}},
+        scales:{y:{ticks:{callback:v=>money(v)}}, x:{ticks:{maxTicksLimit:14}}}}});
+    $('#viewCard').scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+  $('#viewClose').onclick = () => { $('#viewCard').style.display='none'; if (ic){ ic.destroy(); ic=null; } };
+  function closeForm(){ $('#itemForm').style.display='none'; editing=null; }
+
+  document.querySelectorAll('[data-add]').forEach(b => b.onclick = () => openForm(b.dataset.add));
+  $('#discard').onclick = closeForm;
+  ['end_mode','fixed_growth','account_type'].forEach(n => $('#itemForm')[n].addEventListener('change', syncToggles));
+  $('#startMode').addEventListener('change', syncToggles);
+  $('#itemForm').start_age.addEventListener('input', syncToggles);
+  ['start_age','end_age'].forEach(n => $('#itemForm')[n].addEventListener('change', () => { syncToggles(); clampAge($('#itemForm')[n]); syncToggles();
+    const f = $('#itemForm'); if (f.end_age.value!=='' && f.start_age.value!=='' && +f.end_age.value < +f.start_age.value) f.end_age.value = f.start_age.value; }));
+
+  $('#itemForm').onsubmit = async e => {
+    e.preventDefault();
+    const f = e.target, body = {kind, start_at_fi: kind!=='account' && $('#startMode').value==='fi'};
+    for (const el of f.elements){
+      if (!el.name || el.closest('.grp') && el.closest('.grp').style.display==='none') continue;
+      let v = el.value;
+      if (['taxed','payroll_taxed','tax_deferred','fixed_growth'].includes(el.name)) v = v==='1';
+      body[el.name] = v;
+    }
+    const r = await post(editing ? urls.edit(editing.id) : urls.add, body);
+    if (!r.ok){
+      $('#formErr').textContent = Object.values(r.data.errors||{}).flat().join(' ');
+      return;
+    }
+    S = r.data; closeForm(); render();
+  };
+  $('#del').onclick = () => {
+    if (!editing) return;
+    $('#delName').textContent = editing.name;
+    bootstrap.Modal.getOrCreateInstance($('#delModal')).show();
+  };
+  $('#delConfirm').onclick = async () => {
+    bootstrap.Modal.getOrCreateInstance($('#delModal')).hide();
+    if (!editing) return;
+    S = (await post(urls.del(editing.id))).data; closeForm(); render();
+  };
+
+  function fillSettings(){
+    const s = S.scenario;
+    $('#s_age').value = s.age; $('#s_plan').value = s.plan_to_age;
+    $('#s_status').value = s.filing_status; $('#s_state').value = s.state;
+  }
+  $('#s_save').onclick = async () => {
+    const r = await post(urls.settings, {age:$('#s_age').value, plan_to_age:$('#s_plan').value, filing_status:$('#s_status').value, state:$('#s_state').value});
+    $('#s_err').textContent = r.ok ? '' : (r.data.error || 'Invalid settings.');
+    if (r.ok){ S = r.data; render(); }
+  };
+
+  function renderStats(){
+    const R = S.results, s = S.scenario;
+    $('#k_nw').textContent = money(R.net_worth_now);
+    $('#k_plan').textContent = s.plan_to_age;
+    $('#k_fi').textContent = R.status==='empty' ? 'Never' : R.fi_age===null ? 'Never' : R.fi_age;
+    $('#k_coast').textContent = R.coast_age ?? '\u2014';
+    $('#k_succ').textContent = R.success_pct===null ? '\u2014' : R.success_pct + '%';
+    const h = $('#headline');
+    if (!S.items.length) h.innerHTML = `Your net worth is <strong>$0</strong> and, for now, you will <strong>never retire</strong>. Add an income, expense or account to get started.`;
+    else if (R.fi_age===null) h.innerHTML = `On these inputs you will <strong>not reach financial independence</strong> by ${s.plan_to_age}. ${R.notes.join(' ')}`;
+    else if (R.fi_age===s.age) h.innerHTML = `You can already be financially independent today (${R.success_pct}% of simulations hold to ${s.plan_to_age}).`;
+    else h.innerHTML = `You could reach financial independence at age <strong>${R.fi_age}</strong>, ${R.fi_age-s.age} years from now. ${R.notes.join(' ')}`;
+  }
+
+  function renderAlloc(){
+    const accts = S.items.filter(i => i.kind==='account');
+    const card = $('#allocCard');
+    if (!accts.length || !S.items.some(i=>i.kind==='income')){ card.style.display='none'; return; }
+    card.style.display='block';
+    const R = S.results;
+    $('#allocHint').textContent = R.surplus_now>0
+      ? `You have about ${money(R.surplus_now)} a year left after expenses and taxes; about ${money(R.unallocated_now)} of it is still unallocated.`
+      : 'Right now your expenses and taxes use all your income, so there is nothing to allocate.';
+    const adv = accts.filter(a=>a.section==='adv').sort((a,b)=>a.priority-b.priority||a.id-b.id);
+    const tax = accts.filter(a=>a.section==='taxable'), dorm = accts.filter(a=>a.section==='dormant');
+    $('#allocAdv').style.display = adv.length ? 'block':'none';
+    $('#allocTax').style.display = tax.length ? 'block':'none';
+    $('#allocDorm').style.display = dorm.length ? 'block':'none';
+
+    const advBox = $('#advList'); advBox.innerHTML = '';
+    const saveOrder = async () => {
+      const order = [...advBox.children].map(r => +r.dataset.id);
+      S = (await post(urls.allocate, {order})).data; render();
+    };
+    let dragEl = null;
+    adv.forEach(a => {
+      const hasMatch = a.employer_match_pct > 0 && a.linked_income;
+      const steps = hasMatch ? ['none','match','max'] : ['none','max'];
+      const names = {none:'None', match:'Employer match', max:'Max'};
+      const row = document.createElement('div');
+      row.className = 'd-flex align-items-center gap-2 border rounded bg-white p-2 mb-1 flex-wrap';
+      row.draggable = false; row.dataset.id = a.id;
+      row.innerHTML = `<span class="drag-handle" style="cursor:grab;touch-action:none" title="Drag to reorder">&#9776;</span><span class="small fw-semibold nm" style="min-width:30%"></span>
+        <span class="flex-grow-1" style="min-width:160px"><input type="range" class="form-range" min="0" max="${steps.length-1}" step="1" value="${Math.max(0, steps.indexOf(a.savings_level))}"><span class="d-flex justify-content-between text-muted" style="font-size:.7rem">${steps.map(s=>`<span>${names[s]}</span>`).join('')}</span></span>
+        <span class="btn-group btn-group-sm"><button type="button" class="btn btn-outline-secondary up">&uarr;</button><button type="button" class="btn btn-outline-secondary dn">&darr;</button></span>`;
+      row.querySelector('.nm').textContent = a.name;
+      row.querySelector('input').onchange = async e => {
+        S = (await post(urls.allocate, {levels:{[a.id]:steps[+e.target.value]}})).data; render();
+      };
+      row.querySelector('.up').onclick = () => { if (row.previousElementSibling){ advBox.insertBefore(row, row.previousElementSibling); saveOrder(); } };
+      row.querySelector('.dn').onclick = () => { if (row.nextElementSibling){ advBox.insertBefore(row.nextElementSibling, row); saveOrder(); } };
+      row.ondragstart = () => { dragEl = row; row.style.opacity = .5; };
+      row.ondragend = () => { row.style.opacity = 1; row.draggable = false; dragEl = null; };
+      row.querySelector('.drag-handle').onpointerdown = () => { row.draggable = true; };
+      row.onpointerup = () => { row.draggable = false; };
+      row.ondragover = e => {
+        e.preventDefault(); if (!dragEl || dragEl===row) return;
+        const mid = row.getBoundingClientRect().top + row.offsetHeight/2;
+        advBox.insertBefore(dragEl, e.clientY < mid ? row : row.nextSibling);
+      };
+      row.ondrop = e => { e.preventDefault(); saveOrder(); };
+      advBox.appendChild(row);
+    });
+
+    const taxBox = $('#taxList'); taxBox.innerHTML = '';
+    const vals = {}; tax.forEach(a => vals[a.id] = a.allocation_pct);
+    const rows = {};
+    tax.forEach(a => {
+      const row = document.createElement('div'); row.className = 'd-flex align-items-center gap-2 mb-1';
+      row.innerHTML = `<span class="small" style="width:35%"></span><input type="range" class="form-range" min="0" max="100" value="${a.allocation_pct}"><span class="small" style="width:3em">${a.allocation_pct}%</span>`;
+      row.children[0].textContent = a.name;
+      const rng = row.children[1];
+      rows[a.id] = row;
+      rng.oninput = () => {
+        // Other sliders shift proportionally so the total stays at 100%.
+        const v = +rng.value, others = tax.filter(o => o.id !== a.id), osum = others.reduce((s,o)=>s+vals[o.id],0);
+        vals[a.id] = others.length ? v : 100;
+        others.forEach(o => vals[o.id] = osum > 0 ? vals[o.id]*(100-v)/osum : (100-v)/others.length);
+        tax.forEach(o => { rows[o.id].children[1].value = vals[o.id]; rows[o.id].children[2].textContent = Math.round(vals[o.id])+'%'; });
+      };
+      rng.onchange = async () => { S = (await post(urls.allocate, {pct:{[a.id]:Math.round(vals[a.id])}})).data; render(); };
+      if (tax.length === 1) rng.disabled = true;
+      taxBox.appendChild(row);
+    });
+    $('#dormList').innerHTML = '';
+    dorm.forEach(a => { const d = document.createElement('div'); d.textContent = `${a.name} \u2013 ${money(a.amount)}`; $('#dormList').appendChild(d); });
+  }
+
+  const fiMarker = {id:'fiMarker', afterDatasetsDraw(c){
+    const fi = c.options.plugins.fiMarker && c.options.plugins.fiMarker.age; if (fi==null) return;
+    const x = c.scales.x.getPixelForValue(String(fi)); if (!isFinite(x)) return;
+    const {top,bottom} = c.chartArea, g = c.ctx; g.save(); g.strokeStyle='#EC652B'; g.setLineDash([5,4]); g.lineWidth=2;
+    g.beginPath(); g.moveTo(x,top); g.lineTo(x,bottom); g.stroke(); g.fillStyle='#EC652B'; g.fillText('FI '+fi, x+4, top+12); g.restore();
+  }};
+
+  function renderTimeline(){
+    const R = S.results, k = $('#real').checked ? R.defl : R.ages.map(()=>1);
+    const m = a => a.map((v,i) => Math.round(v*k[i]));
+    const data = {labels:R.ages.map(String), datasets:[
+      {type:'line', label:'Net worth (median)', data:m(R.p50), borderColor:'#285C53', backgroundColor:'#285C53', pointRadius:0, borderWidth:3, yAxisID:'y', order:1},
+      {type:'line', label:'10th percentile', data:m(R.p10), borderColor:'#285C5366', pointRadius:0, borderWidth:1, yAxisID:'y', order:2},
+      {type:'line', label:'90th percentile', data:m(R.p90), borderColor:'#285C5366', pointRadius:0, borderWidth:1, fill:'-2', backgroundColor:'#285C5314', yAxisID:'y', order:2},
+      {type:'line', label:'Magic number', data:m(R.magic), borderColor:'#4F378A', borderDash:[6,4], pointRadius:0, borderWidth:2, yAxisID:'y', order:1},
+      {type:'bar', label:'Saved', data:m(R.saved), backgroundColor:'#28A06E99', yAxisID:'y1', order:3},
+      {type:'bar', label:'Withdrawn', data:m(R.withdrawn), backgroundColor:'#EC652B99', yAxisID:'y1', order:3}]};
+    const opts = {responsive:true, maintainAspectRatio:false, interaction:{mode:'index', intersect:false},
+      plugins:{fiMarker:{age:R.fi_age}, tooltip:{callbacks:{label:c=>c.dataset.label+': '+money(c.parsed.y)}}},
+      scales:{y:{ticks:{callback:v=>money(v)}}, y1:{position:'right', grid:{drawOnChartArea:false}, ticks:{callback:v=>money(v)}},
+              x:{ticks:{maxTicksLimit:12}}}};
+    if (tl){ tl.data = data; tl.options = opts; tl.update(); }
+    else tl = new Chart($('#timeline'), {data, options:opts, plugins:[fiMarker]});
+  }
+
+  function renderSankey(){
+    const R = S.results, sl = $('#yearSlider');
+    sl.min = 0; sl.max = R.ages.length-1;
+    if (+sl.value > +sl.max) sl.value = 0;
+    const i = +sl.value; $('#sankeyAge').textContent = R.ages[i];
+    const flows = R.sankey[i].map(([from,to,flow]) => ({from,to,flow}));
+    const color = n => n==='Money in' ? '#999' : /tax/i.test(n) ? '#C0392B' : n==='Shortfall' ? '#8B0000' : n==='Unallocated cash' || /^Cash savings/.test(n) ? '#AAA' : COLORS[R.node_kinds[n]] || '#EC652B';
+    const cfg = {type:'sankey', data:{datasets:[{data:flows, colorFrom:c=>color(c.dataset.data[c.dataIndex].from), colorTo:c=>color(c.dataset.data[c.dataIndex].to), size:'max', font:{size:12}}]},
+      options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}}};
+    if (sk) sk.destroy();
+    if (flows.length) sk = new Chart($('#sankey'), cfg); else sk = null;
+  }
+
+  function renderAcctStack(){
+    const R = S.results, k = $('#real').checked ? R.defl : R.ages.map(()=>1);
+    const pal = ['#4F378A','#285C53','#EC652B','#28A06E','#8E6BD1','#D4A017','#3C7DD9','#B5446E'];
+    const accts = S.items.filter(i=>i.kind==='account' && R.acct_bal && R.acct_bal[i.id]);
+    const data = {labels:R.ages.map(String), datasets:accts.map((a,n) => ({label:a.name, data:R.acct_bal[a.id][1].map((v,t)=>Math.round(v*k[t])),
+      backgroundColor:pal[n%pal.length]+'CC', borderColor:pal[n%pal.length], borderWidth:1, pointRadius:0, fill:true}))};
+    const opts = {responsive:true, maintainAspectRatio:false, interaction:{mode:'index', intersect:false},
+      plugins:{fiMarker:{age:R.fi_age}, legend:{position:'bottom'}, tooltip:{callbacks:{label:c=>c.dataset.label+': '+money(c.parsed.y)}}},
+      scales:{y:{stacked:true, ticks:{callback:v=>money(v)}}, x:{ticks:{maxTicksLimit:12}}}};
+    if (st){ st.data = data; st.options = opts; st.update(); }
+    else st = new Chart($('#acctStack'), {type:'line', data, options:opts, plugins:[fiMarker]});
+  }
+
+  function renderRetireOpts(){
+    const R = S.results, o = R.retire_options || [];
+    document.querySelectorAll('.plan-age').forEach(e => e.textContent = S.scenario.plan_to_age);
+    const data = {labels:o.map(x=>String(x.age)), datasets:[{label:'Chance money lasts', data:o.map(x=>x.success),
+      backgroundColor:o.map(x => x.age===R.fi_age ? '#EC652B' : x.success>=85 ? '#285C53' : '#285C5355')}]};
+    const opts = {responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>`Retire at ${c.label}: ${c.parsed.y}% chance`}}},
+      scales:{y:{min:0, max:100, ticks:{callback:v=>v+'%'}}, x:{title:{display:true, text:'Retirement age'}}}};
+    if (ro){ ro.data = data; ro.options = opts; ro.update(); } else ro = new Chart($('#retireOpts'), {type:'bar', data, options:opts});
+  }
+
+  function renderCashLines(){
+    const R = S.results;
+    const data = {labels:R.ages.map(String), datasets:[
+      {label:'Income', data:R.income, borderColor:'#285C53', backgroundColor:'#285C53', pointRadius:0, borderWidth:2, yAxisID:'y'},
+      {label:'Spending (excl. taxes)', data:R.expenses, borderColor:'#EC652B', backgroundColor:'#EC652B', pointRadius:0, borderWidth:2, yAxisID:'y'},
+      {label:'Taxes', data:R.taxes, borderColor:'#C0392B', backgroundColor:'#C0392B', pointRadius:0, borderWidth:1, borderDash:[4,3], yAxisID:'y'},
+      {label:'Savings rate', data:R.savings_rate, borderColor:'#4F378A', backgroundColor:'#4F378A', pointRadius:0, borderWidth:2, yAxisID:'y1', spanGaps:false}]};
+    const opts = {responsive:true, maintainAspectRatio:false, interaction:{mode:'index', intersect:false},
+      plugins:{fiMarker:{age:R.fi_age}, legend:{position:'bottom'}, tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.dataset.yAxisID==='y1' ? (c.parsed.y==null?'\u2013':c.parsed.y+'%') : money(c.parsed.y))}}},
+      scales:{y:{ticks:{callback:v=>money(v)}}, y1:{position:'right', min:0, max:100, grid:{drawOnChartArea:false}, ticks:{callback:v=>v+'%'}}, x:{ticks:{maxTicksLimit:12}}}};
+    if (cl){ cl.data = data; cl.options = opts; cl.update(); } else cl = new Chart($('#cashLines'), {type:'line', data, options:opts, plugins:[fiMarker]});
+  }
+
+  function render(){
+    fillSettings(); renderSidebar(); renderStats(); renderAlloc();
+    const has = S.results.status==='ok';
+    $('#charts').style.display = has ? 'block' : 'none';
+    if (has){ renderTimeline(); renderSankey(); renderAcctStack(); renderRetireOpts(); renderCashLines(); }
+  }
+  $('#real').onchange = () => { if (S.results.status==='ok'){ renderTimeline(); renderAcctStack(); } };
+  $('#yearSlider').oninput = () => renderSankey();
+  $('#allocToggle').onclick = () => {
+    const b = $('#allocBody'), hide = b.style.display !== 'none';
+    b.style.display = hide ? 'none' : 'block';
+    $('#allocToggle').innerHTML = hide ? '&#9660; Show' : '&#9650; Hide';
+    $('#allocToggle').setAttribute('aria-expanded', String(!hide));
+  };
+  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el, {container:'body'}));
+  render();
+})();
+</script>
+{% endblock %}

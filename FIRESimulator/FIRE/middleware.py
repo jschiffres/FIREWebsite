@@ -1,6 +1,6 @@
 PRIVATE_PREFIXES = (
     '/plan/', '/myplans/', '/account/', '/new/', '/compare/', '/downloadplan/', '/downloadpdf/',
-    '/copyplan/', '/renameplan/', '/deleteplan/', '/billing/', '/admin/', '/password-change/',
+    '/copyplan/', '/renameplan/', '/deleteplan/', '/billing/', '/admin/',     '/password-change/', '/lab/',
 )
 
 

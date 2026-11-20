@@ -37,6 +37,7 @@ ALLOWED_HOSTS = [h for h in os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(','
 INSTALLED_APPS = [
     'bootstrap5',
     'FIRE.apps.FireConfig',
+    'lab.apps.LabConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -205,6 +206,9 @@ GA_MEASUREMENT_ID = os.environ.get('GA_MEASUREMENT_ID', '').strip()
 # Premium tier. Without a payment provider wired in, self-service upgrade is a demo that only works in DEBUG
 # (or when explicitly enabled); production upgrades should go through a real checkout.
 FREE_PLAN_LIMIT = 2
+
+# Single-page planner (/lab/). On by default and not linked from the site; set LAB_ENABLED=false to turn it off.
+LAB_ENABLED = os.environ.get('LAB_ENABLED', 'true').lower() == 'true'
 PREMIUM_DEMO_UPGRADE = os.environ.get('PREMIUM_DEMO_UPGRADE', str(DEBUG)).lower() == 'true'
 
 # Stripe billing. Real payments are enabled whenever a secret key is set (the demo upgrade is then disabled).

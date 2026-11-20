@@ -27,6 +27,7 @@ handler404 = "FIRE.views.not_found"
 handler500 = "FIRE.views.server_error"
 
 urlpatterns = [
+    path('lab/', include('lab.urls')),
     #PASSWORD: Reset, Change
     path("password-reset/", ratelimit('pwreset', 5, 3600)(auth_views.PasswordResetView.as_view(
         form_class=AnyUserPasswordResetForm,
