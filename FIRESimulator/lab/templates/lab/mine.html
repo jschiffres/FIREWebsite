@@ -1,0 +1,56 @@
+{% extends "FIRE/base.html" %}
+{% block title %}My scenarios{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:860px">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div><h2 class="mb-0">My scenarios</h2>
+      <div class="small text-muted">{{ scenarios|length }} of {% if premium %}unlimited{% else %}{{ limit }}{% endif %} used</div></div>
+    {% if at_limit %}<span class="small text-muted">Limit reached.{% if not premium %} <a href="{% url 'myaccount' %}#premium">Upgrade for unlimited</a>.{% endif %}</span>
+    {% else %}<a class="btn btn-action-filled" href="{% url 'lab_home' %}">New scenario</a>{% endif %}
+  </div>
+  {% if messages %}{% for m in messages %}<div class="alert alert-{{ m.tags|default:'info' }} py-2">{{ m }}</div>{% endfor %}{% endif %}
+  {% for s in scenarios %}
+  <div class="card card-body mb-2">
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <div class="me-auto">
+        <a class="fw-bold" href="{% url 'lab_scenario' s.pk %}">{{ s.name }}</a>
+        <div class="small text-muted">Age {{ s.age }}, plan to {{ s.plan_to_age }} &middot; {{ s.item_count }} item{{ s.item_count|pluralize }} &middot; {{ s.created|date:"M j, Y" }}</div>
+      </div>
+      <a class="btn btn-sm btn-action-filled" href="{% url 'lab_scenario' s.pk %}">Open</a>
+      <button class="btn btn-sm btn-action-empty" data-bs-toggle="collapse" data-bs-target="#rn{{ s.pk }}">Rename</button>
+      <button class="btn btn-sm btn-outline-danger" data-del="{% url 'lab_remove' s.pk %}" data-name="{{ s.name }}">Delete</button>
+    </div>
+    <form method="post" action="{% url 'lab_rename' s.pk %}" class="collapse mt-2" id="rn{{ s.pk }}">
+      {% csrf_token %}
+      <div class="input-group"><input name="name" class="form-control" maxlength="60" value="{{ s.name }}"><button class="btn btn-action-filled">Save</button></div>
+    </form>
+  </div>
+  {% empty %}
+  <p class="text-muted">No scenarios yet. <a href="{% url 'lab_home' %}">Start one</a>.</p>
+  {% endfor %}
+  {% if not premium %}
+  <p class="small text-muted mt-3">Premium unlocks unlimited scenarios, extra charts and CSV/PDF exports. <a href="{% url 'myaccount' %}#premium">Learn more</a></p>
+  {% endif %}
+</div>
+<div class="modal fade" id="delModal" data-bs-backdrop="delete" tabindex="-1" aria-label="Delete scenario?" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content back-modal">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi-exclamation-circle-fill"></i> <span id="delName"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">Are you sure you want to <b style="color:red">DELETE</b> this scenario?</div>
+      <div class="modal-footer" style="background: #FCFBF9;">
+        <form method="post" id="delForm">{% csrf_token %}<button class="btn btn-danger"><i class="bi bi-x-circle-fill"> </i>Delete</button></form>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+document.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
+  document.getElementById('delName').textContent = b.dataset.name;
+  document.getElementById('delForm').action = b.dataset.del;
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('delModal')).show();
+});
+</script>
+{% endblock %}

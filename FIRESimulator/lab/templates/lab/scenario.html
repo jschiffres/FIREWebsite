@@ -18,11 +18,23 @@
 </style>
 <div class="container-fluid py-3" style="max-width:1300px">
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-    <div><span class="badge text-bg-warning">Experimental</span> <strong class="ms-2">FI Planner Lab</strong></div>
-    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#settings">Settings</button>
+    <div><span class="badge text-bg-warning">Experimental</span> <strong class="ms-2" id="scName">{{ sc.name }}</strong></div>
+    <div class="d-flex flex-wrap gap-2" id="exportBar">
+      {% if user.is_authenticated %}<a class="btn btn-sm btn-outline-secondary" href="{% url 'lab_mine' %}">My scenarios</a>{% endif %}
+      <button class="btn btn-sm btn-outline-secondary" id="tourBtn" type="button">Take the tour</button>
+      <a class="btn btn-sm btn-outline-secondary" href="{% url 'lab_export_csv' sc.pk %}"{% if not premium %} title="Premium feature"{% endif %}>{% if not premium %}&#128274; {% endif %}CSV</a>
+      <a class="btn btn-sm btn-outline-secondary" href="{% url 'lab_export_pdf' sc.pk %}"{% if not premium %} title="Premium feature"{% endif %}>{% if not premium %}&#128274; {% endif %}PDF</a>
+      <button class="btn btn-sm btn-outline-secondary" id="settingsBtn" data-bs-toggle="collapse" data-bs-target="#settings">Settings</button>
+    </div>
   </div>
+  {% if not user.is_authenticated %}
+  <div class="alert alert-info py-2 small">This scenario is only saved in this browser link. <a href="{% url 'signupuser' %}">Sign up free</a> or <a href="{% url 'loginuser' %}">log in</a> to keep it on your account (free accounts keep {{ free_plan_limit }} scenarios).</div>
+  {% elif not mine %}
+  <div class="alert alert-warning py-2 small">This scenario is not saved to your account because you have reached your limit of {{ limit }}. <a href="{% url 'lab_mine' %}">Manage scenarios</a>{% if not premium %} or <a href="{% url 'myaccount' %}#premium">upgrade to Premium</a>{% endif %}.</div>
+  {% endif %}
   <div id="settings" class="collapse mb-3">
     <div class="row g-2 align-items-end">
+      {% if mine %}<div class="col-12 col-md-4"><label class="form-label small">Scenario name</label><input id="s_name" maxlength="60" class="form-control" value="{{ sc.name }}"></div>{% endif %}
       <div class="col-6 col-md-2"><label class="form-label small">Your age</label><input id="s_age" type="number" class="form-control" value="{{ sc.age }}"></div>
       <div class="col-6 col-md-2"><label class="form-label small">Plan to age</label><input id="s_plan" type="number" class="form-control" value="{{ sc.plan_to_age }}"></div>
       <div class="col-6 col-md-3"><label class="form-label small">Filing status</label>
@@ -36,13 +48,13 @@
 
   <div class="row g-3 mb-3" id="kpis">
     <div class="col-6 col-md-3"><div class="lab-kpi"><div class="small text-muted">Current net worth</div><div class="v" id="k_nw">$0</div></div></div>
-    <div class="col-6 col-md-3"><div class="lab-kpi"><div class="small text-muted">FI age</div><div class="v" id="k_fi">Never</div></div></div>
-    <div class="col-6 col-md-3"><div class="lab-kpi"><div class="small text-muted">Coast FI age <span class="tip" data-bs-toggle="tooltip" title="The earliest age you could stop saving and still reach your FI number by your FI age, with your investments just growing at their expected return. It uses your FI age as the target retirement age.">?</span></div><div class="v" id="k_coast">&mdash;</div></div></div>
-    <div class="col-6 col-md-3"><div class="lab-kpi"><div class="small text-muted">Chance plan holds to <span id="k_plan"></span></div><div class="v" id="k_succ">&mdash;</div></div></div>
+    <div class="col-6 col-md-3"><div class="lab-kpi"><div class="small text-muted">4% rule age <span class="tip" data-bs-toggle="tooltip" title="The first age your median net worth reaches the Magic Number: 25 times your yearly spending.">?</span></div><div class="v" id="k_coast">&mdash;</div></div></div>
+    <div class="col-6 col-md-3"><div class="lab-kpi"><div class="small text-muted">FI age <span class="tip" data-bs-toggle="tooltip" title="The earliest age you can stop working and have your money last to your plan age in at least 85% of 1,000 simulated markets.">?</span></div><div class="v" id="k_fi">Never</div></div></div>
+    <div class="col-6 col-md-3"><div class="lab-kpi"><div class="small text-muted">Chance plan holds to <span id="k_plan"></span> <span class="tip" data-bs-toggle="tooltip" title="The simulation runs 1,000 possible market histories. Each year every account earns a random return around an assumed average: employer, IRA and taxable 7% (15-16% volatility), HSA and education 6% (12%), cash 3% (1%), alternative 8% (30%), unless you set a fixed growth rate. Accounts move mostly together (correlation 0.9 for stocks, 0.5 alternative, 0 cash). Income, spending, taxes and contributions are the same in every run. After you stop working, spending is covered by cash, then taxable, then retirement accounts, with taxes on withdrawals. A run fails if money runs out before your plan age. This is the share of runs that last. FI age is the earliest retirement age where at least 85% last.">?</span></div><div class="v" id="k_succ">&mdash;</div></div></div>
   </div>
   <div id="headline" class="alert alert-secondary"></div>
 
-  <div class="d-flex flex-wrap gap-2 mb-3">
+  <div class="d-flex flex-wrap gap-2 mb-3" id="addBar">
     <button class="btn btn-action-filled" data-add="income">+ Income</button>
     <button class="btn btn-action-filled" data-add="expense">+ Expense</button>
     <button class="btn btn-action-filled" data-add="account">+ Account</button>
@@ -97,6 +109,7 @@
           <h6 class="mb-0" id="viewTitle"></h6>
           <button type="button" class="btn-close" id="viewClose" aria-label="Close"></button>
         </div>
+        <div id="viewLock" class="lock-note" style="display:none"></div>
         <div class="chart-box" style="height:260px"><canvas id="itemChart"></canvas></div>
         <p class="small text-muted mb-0 mt-2">Yearly amount by age, from now until the end of your plan.</p>
       </div>
@@ -142,11 +155,13 @@
         </div>
         <div class="card card-body mb-3">
           <h6 class="mb-2">Your account balances over time</h6>
+          <div class="lock-note" style="display:none"></div>
           <div class="chart-box"><canvas id="acctStack"></canvas></div>
           <p class="small text-muted mb-0 mt-2">Median balance of each account (stacked). It shows which accounts carry your plan and how your mix shifts as you save, then draw down after FI. Follows the Today's dollars switch above.</p>
         </div>
         <div class="card card-body mb-3">
           <h6 class="mb-2">What if you retire at a different age?</h6>
+          <div class="lock-note" style="display:none"></div>
           <div class="chart-box" style="height:260px"><canvas id="retireOpts"></canvas></div>
           <p class="small text-muted mb-0 mt-2">Chance your money lasts to <span class="plan-age"></span> for each possible retirement age. Your FI age is the earliest age at or above 85%.</p>
         </div>
@@ -181,14 +196,36 @@
     del: id => "{% url 'lab_item_add' sc.pk %}" + id + "/delete/",
     settings: "{% url 'lab_settings' sc.pk %}", allocate: "{% url 'lab_allocate' sc.pk %}"};
   const csrf = "{{ csrf_token }}";
+  const PREMIUM = {{ premium|yesno:"true,false" }}, SHOW_TOUR = {{ show_tour|yesno:"true,false" }};
+  const UPGRADE_URL = "{% if user.is_authenticated %}{% url 'myaccount' %}#premium{% else %}{% url 'signupuser' %}{% endif %}";
+  document.querySelectorAll('.lock-note').forEach(n => n.innerHTML = `<div class="p-3 text-center rounded" style="background:#f4f1ec">&#128274; This is a Premium feature. <a href="${UPGRADE_URL}">${"{% if user.is_authenticated %}Upgrade to Premium{% else %}Sign up to upgrade{% endif %}"}</a> to unlock it.</div>`);
   const $ = s => document.querySelector(s);
   const money = n => (n < 0 ? '-$' : '$') + Math.abs(Math.round(n)).toLocaleString();
   const COLORS = {income:'#285C53', expense:'#EC652B', account:'#4F378A'};
   let S = JSON.parse($('#lab-state').textContent), editing = null, kind = null, tl = null, sk = null, st = null, ro = null, cl = null;
 
+  let pending = 0, savedTimer = null;
+  function saveBadge(text, spin){
+    let b = document.getElementById('saveBadge');
+    if (!b){
+      b = document.createElement('div'); b.id = 'saveBadge'; b.setAttribute('role','status');
+      b.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:2000;background:#285C53;color:#fff;padding:6px 14px;border-radius:20px;font-size:.85rem;box-shadow:0 2px 8px rgba(0,0,0,.25)';
+      document.body.appendChild(b);
+    }
+    b.innerHTML = (spin ? '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>' : '') + text;
+    b.style.display = 'block';
+  }
   async function post(url, body){
-    const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':csrf}, body:JSON.stringify(body||{})});
-    return {ok:r.ok, data:await r.json()};
+    pending++; clearTimeout(savedTimer); saveBadge('Saving\u2026', true);
+    try {
+      const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':csrf}, body:JSON.stringify(body||{})});
+      return {ok:r.ok, data:await r.json()};
+    } finally {
+      if (--pending === 0){
+        saveBadge('\u2713 Saved', false);
+        savedTimer = setTimeout(() => { document.getElementById('saveBadge').style.display = 'none'; }, 1500);
+      }
+    }
   }
 
   function describe(i){
@@ -256,7 +293,12 @@
   let ic = null;
   function viewAccount(i){
     const R = S.results, rows = (R.acct_bal||{})[i.id];
-    if (!rows){ return; }
+    if (!rows){
+      if (!PREMIUM){ $('#viewTitle').textContent = i.name; $('#viewCard').style.display='block'; $('#viewCard').querySelector('.chart-box').style.display='none';
+        $('#viewLock').style.display='block'; if (ic){ ic.destroy(); ic=null; } }
+      return;
+    }
+    $('#viewCard').querySelector('.chart-box').style.display=''; $('#viewLock').style.display='none';
     const ages = R.ages.map(String);
     $('#viewTitle').textContent = i.name + ' \u2013 projected balance (median, with 10th\u201390th percentile range)';
     $('#viewCard').style.display = 'block';
@@ -268,13 +310,14 @@
       {label:'Median', data:adj(rows[1]), borderColor:color, backgroundColor:color+'22', pointRadius:0, borderWidth:2, fill:false},
       {label:'10th percentile', data:adj(rows[0]), borderColor:color+'55', borderDash:[4,3], pointRadius:0, fill:false}]},
       options:{responsive:true, maintainAspectRatio:false, interaction:{mode:'index', intersect:false},
-        plugins:{legend:{display:true, position:'bottom'}, tooltip:{callbacks:{label:c=>c.dataset.label+': '+money(c.parsed.y)}}},
-        scales:{y:{ticks:{callback:v=>money(v)}}, x:{ticks:{maxTicksLimit:14}}}}});
+        plugins:{fiMarker:{age:R.fi_age}, legend:{display:true, position:'bottom'}, tooltip:{callbacks:{label:c=>c.dataset.label+': '+money(c.parsed.y)}}},
+        scales:{y:{ticks:{callback:v=>money(v)}}, x:{ticks:{maxTicksLimit:14}}}}, plugins:[fiMarker]});
     $('#viewCard').scrollIntoView({behavior:'smooth', block:'nearest'});
   }
   function viewItem(i){
     const R = S.results, s = S.scenario, ages = [];
     if (i.kind==='account'){ viewAccount(i); return; }
+    $('#viewCard').querySelector('.chart-box').style.display=''; $('#viewLock').style.display='none';
     for (let a = s.age; a <= s.plan_to_age; a++) ages.push(a);
     const start = i.start_at_fi ? (R.fi_age ?? s.plan_to_age + 1) : Math.max(i.start_age ?? s.age, s.age);
     const end = i.end_mode==='age' && i.end_age!=null ? i.end_age : i.end_mode==='fi' ? (R.fi_age!=null ? R.fi_age-1 : s.plan_to_age) : s.plan_to_age;
@@ -285,8 +328,8 @@
     const color = COLORS[i.kind];
     if (ic) ic.destroy();
     ic = new Chart($('#itemChart'), {type:'bar', data:{labels:ages.map(String), datasets:[{label:'Per year', data, backgroundColor:color}]},
-      options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>money(c.parsed.y)+' / year'}}},
-        scales:{y:{ticks:{callback:v=>money(v)}}, x:{ticks:{maxTicksLimit:14}}}}});
+      options:{responsive:true, maintainAspectRatio:false, plugins:{fiMarker:{age:R.fi_age}, legend:{display:false}, tooltip:{callbacks:{label:c=>money(c.parsed.y)+' / year'}}},
+        scales:{y:{ticks:{callback:v=>money(v)}}, x:{ticks:{maxTicksLimit:14}}}}, plugins:[fiMarker]});
     $('#viewCard').scrollIntoView({behavior:'smooth', block:'nearest'});
   }
   $('#viewClose').onclick = () => { $('#viewCard').style.display='none'; if (ic){ ic.destroy(); ic=null; } };
@@ -331,9 +374,11 @@
     const s = S.scenario;
     $('#s_age').value = s.age; $('#s_plan').value = s.plan_to_age;
     $('#s_status').value = s.filing_status; $('#s_state').value = s.state;
+    if ($('#s_name')) $('#s_name').value = s.name;
+    $('#scName').textContent = s.name;
   }
   $('#s_save').onclick = async () => {
-    const r = await post(urls.settings, {age:$('#s_age').value, plan_to_age:$('#s_plan').value, filing_status:$('#s_status').value, state:$('#s_state').value});
+    const r = await post(urls.settings, {name: $('#s_name') ? $('#s_name').value : '', age:$('#s_age').value, plan_to_age:$('#s_plan').value, filing_status:$('#s_status').value, state:$('#s_state').value});
     $('#s_err').textContent = r.ok ? '' : (r.data.error || 'Invalid settings.');
     if (r.ok){ S = r.data; render(); }
   };
@@ -343,7 +388,7 @@
     $('#k_nw').textContent = money(R.net_worth_now);
     $('#k_plan').textContent = s.plan_to_age;
     $('#k_fi').textContent = R.status==='empty' ? 'Never' : R.fi_age===null ? 'Never' : R.fi_age;
-    $('#k_coast').textContent = R.coast_age ?? '\u2014';
+    $('#k_coast').textContent = R.rule_age ?? '\u2014';
     $('#k_succ').textContent = R.success_pct===null ? '\u2014' : R.success_pct + '%';
     const h = $('#headline');
     if (!S.items.length) h.innerHTML = `Your net worth is <strong>$0</strong> and, for now, you will <strong>never retire</strong>. Add an income, expense or account to get started.`;
@@ -430,7 +475,7 @@
     const fi = c.options.plugins.fiMarker && c.options.plugins.fiMarker.age; if (fi==null) return;
     const x = c.scales.x.getPixelForValue(String(fi)); if (!isFinite(x)) return;
     const {top,bottom} = c.chartArea, g = c.ctx; g.save(); g.strokeStyle='#EC652B'; g.setLineDash([5,4]); g.lineWidth=2;
-    g.beginPath(); g.moveTo(x,top); g.lineTo(x,bottom); g.stroke(); g.fillStyle='#EC652B'; g.fillText('FI '+fi, x+4, top+12); g.restore();
+    g.beginPath(); g.moveTo(x,top); g.lineTo(x,bottom); g.stroke(); g.fillStyle='#EC652B'; g.fillText('FI age '+fi+' (simulation)', x+4, top+12); g.restore();
   }};
 
   function renderTimeline(){
@@ -440,7 +485,7 @@
       {type:'line', label:'Net worth (median)', data:m(R.p50), borderColor:'#285C53', backgroundColor:'#285C53', pointRadius:0, borderWidth:3, yAxisID:'y', order:1},
       {type:'line', label:'10th percentile', data:m(R.p10), borderColor:'#285C5366', pointRadius:0, borderWidth:1, yAxisID:'y', order:2},
       {type:'line', label:'90th percentile', data:m(R.p90), borderColor:'#285C5366', pointRadius:0, borderWidth:1, fill:'-2', backgroundColor:'#285C5314', yAxisID:'y', order:2},
-      {type:'line', label:'Magic number', data:m(R.magic), borderColor:'#4F378A', borderDash:[6,4], pointRadius:0, borderWidth:2, yAxisID:'y', order:1},
+      {type:'line', label:'Magic number (4% rule)', data:m(R.magic), borderColor:'#4F378A', borderDash:[6,4], pointRadius:0, borderWidth:2, yAxisID:'y', order:1},
       {type:'bar', label:'Saved', data:m(R.saved), backgroundColor:'#28A06E99', yAxisID:'y1', order:3},
       {type:'bar', label:'Withdrawn', data:m(R.withdrawn), backgroundColor:'#EC652B99', yAxisID:'y1', order:3}]};
     const opts = {responsive:true, maintainAspectRatio:false, interaction:{mode:'index', intersect:false},
@@ -505,9 +550,11 @@
     fillSettings(); renderSidebar(); renderStats(); renderAlloc();
     const has = S.results.status==='ok';
     $('#charts').style.display = has ? 'block' : 'none';
-    if (has){ renderTimeline(); renderSankey(); renderAcctStack(); renderRetireOpts(); renderCashLines(); }
+    if (has){ renderTimeline(); renderSankey(); renderCashLines();
+      ['acctStack','retireOpts'].forEach(id => { const box = $('#'+id).closest('.chart-box'); box.style.display = PREMIUM ? '' : 'none'; box.previousElementSibling.style.display = PREMIUM ? 'none' : 'block'; });
+      if (PREMIUM){ renderAcctStack(); renderRetireOpts(); } }
   }
-  $('#real').onchange = () => { if (S.results.status==='ok'){ renderTimeline(); renderAcctStack(); } };
+  $('#real').onchange = () => { if (S.results.status==='ok'){ renderTimeline(); if (PREMIUM) renderAcctStack(); } };
   $('#yearSlider').oninput = () => renderSankey();
   $('#allocToggle').onclick = () => {
     const b = $('#allocBody'), hide = b.style.display !== 'none';
@@ -519,4 +566,5 @@
   render();
 })();
 </script>
+{% include "lab/_tour.html" %}
 {% endblock %}

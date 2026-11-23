@@ -122,3 +122,106 @@ class ViewTests(TestCase):
     @override_settings(LAB_ENABLED=False)
     def test_disabled_404(self):
         self.assertEqual(self.client.get(reverse('lab_home')).status_code, 404)
+
+
+class OwnershipAndPremiumTests(TestCase):
+    def setUp(self):
+        from django.contrib.auth.models import User
+        from FIRE.models import Profile
+        self.User, self.Profile = User, Profile
+        self.u = User.objects.create_user('a', 'a@example.com', 'pw-12345-xyz')
+        self.o = User.objects.create_user('b', 'b@example.com', 'pw-12345-xyz')
+
+    def premium(self, user):
+        self.Profile.objects.update_or_create(user=user, defaults={'is_premium': True, 'email_verified': True})
+
+    def test_owner_only_access(self):
+        sc = Scenario.objects.create(age=30, owner=self.u)
+        self.client.force_login(self.o)
+        self.assertEqual(self.client.get(reverse('lab_scenario', args=[sc.pk])).status_code, 404)
+        self.client.force_login(self.u)
+        self.assertEqual(self.client.get(reverse('lab_scenario', args=[sc.pk])).status_code, 200)
+
+    def test_free_limit_and_premium(self):
+        self.client.force_login(self.u)
+        for _ in range(2):
+            self.assertEqual(self.client.post(reverse('lab_home'), {'age': 30}).status_code, 302)
+        r = self.client.post(reverse('lab_home'), {'age': 30})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(self.u.lab_scenarios.count(), 2)
+        self.premium(self.u)
+        self.assertEqual(self.client.post(reverse('lab_home'), {'age': 30}).status_code, 302)
+
+    def test_claim_session_scenario_on_login(self):
+        self.client.post(reverse('lab_home'), {'age': 33})
+        sc = Scenario.objects.get()
+        self.assertIsNone(sc.owner)
+        self.client.force_login(self.u)
+        self.assertEqual(self.client.get(reverse('lab_mine')).status_code, 200)
+        sc.refresh_from_db()
+        self.assertEqual(sc.owner, self.u)
+
+    def test_mine_requires_login(self):
+        self.assertEqual(self.client.get(reverse('lab_mine')).status_code, 302)
+
+    def test_extras_stripped_for_free(self):
+        sc = Scenario.objects.create(age=30, owner=self.u)
+        self.client.force_login(self.u)
+        body = json.dumps({'kind': 'income', 'name': 'Job', 'amount': '9000', 'frequency': 'monthly',
+                           'growth_pct': '0', 'bonus_pct': '0', 'taxed': True, 'payroll_taxed': True, 'end_mode': 'fi'})
+        r = self.client.post(reverse('lab_item_add', args=[sc.pk]), body, content_type='application/json')
+        res = r.json()['results']
+        self.assertEqual(res['retire_options'], [])
+        self.assertEqual(res['acct_bal'], {})
+
+    def test_exports_gated(self):
+        sc = Scenario.objects.create(age=30, owner=self.u)
+        self.client.force_login(self.u)
+        for name in ('lab_export_csv', 'lab_export_pdf'):
+            self.assertEqual(self.client.get(reverse(name, args=[sc.pk])).status_code, 302)
+        self.premium(self.u)
+        from .models import Item
+        Item.objects.create(scenario=sc, kind='income', name='Job', amount=9000, frequency='monthly')
+        Item.objects.create(scenario=sc, kind='expense', name='Rent', amount=2000, frequency='monthly')
+        r = self.client.get(reverse('lab_export_csv', args=[sc.pk]))
+        self.assertEqual(r.status_code, 200)
+        self.assertIn(b'Job', r.content)
+        r = self.client.get(reverse('lab_export_pdf', args=[sc.pk]))
+        self.assertEqual(r.status_code, 200)
+        self.assertTrue(r.content.startswith(b'%PDF'))
+
+class AutoBrokerageTests(TestCase):
+    def test_leftover_savings_are_invested_without_taxable_account(self):
+        from .models import Item  # noqa: F401
+        items = [inc(id=1, amount=150000), {**inc(id=2), 'kind': 'expense', 'amount': 40000, 'end_mode': 'life',
+                                            'name': 'Rent'}]
+        r = simulation.run(SC, items)
+        self.assertEqual(r['unallocated_now'], 0)
+        self.assertTrue(any('automatic taxable brokerage' in n for n in r['notes']))
+
+    def test_one_off_income_does_not_zero_magic_number(self):
+        items = [inc(id=1, amount=100000), {**inc(id=2), 'kind': 'expense', 'amount': 40000, 'end_mode': 'life',
+                                            'name': 'Rent'},
+                 {**inc(id=3), 'name': 'Gift', 'amount': 500000, 'start_age': 40, 'end_mode': 'age', 'end_age': 40}]
+        r = simulation.run(SC, items)
+        self.assertTrue(all(m > 0 for m in r['magic']))
+
+class WithdrawalTests(TestCase):
+    def test_pretax_withdrawals_are_fully_funded_and_magic_is_25x(self):
+        items = [inc(id=1, name='Salary', amount=75000, frequency='yearly', growth_pct=5, end_mode='fi'),
+                 inc(id=2, name='Bills', amount=62000, frequency='yearly', kind='expense', growth_pct=2.5, end_mode='life'),
+                 inc(id=3, name='401k', amount=75000, kind='account', account_type='employer', contribution_type='pretax', savings_level='max'),
+                 inc(id=4, name='Inv', amount=50000, kind='account', account_type='taxable', contribution_type='posttax', allocation_pct=100)]
+        r = simulation.run(SC, items)
+        self.assertEqual(r['magic'][0], 62000 * 25)
+        self.assertLessEqual(r['fi_age'], 72)
+
+class RefundConvergenceTests(TestCase):
+    def test_max_401k_leaves_nothing_unallocated_when_savings_below_limit(self):
+        for expense in (52000, 55000, 57000):
+            items = [inc(id=1, name='Salary', amount=75000, frequency='yearly', growth_pct=5, end_mode='fi'),
+                     inc(id=2, name='Bills', amount=expense, frequency='yearly', kind='expense', end_mode='life'),
+                     inc(id=3, name='401k', amount=0, kind='account', account_type='employer',
+                         contribution_type='pretax', savings_level='max')]
+            r = simulation.run(SC, items)
+            self.assertEqual(r['unallocated_now'], 0, expense)
