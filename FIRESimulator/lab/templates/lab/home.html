@@ -11,5 +11,8 @@
     <button class="btn btn-action-filled btn-lg px-4">Go!</button>
   </form>
   {% if error %}<p class="text-danger mt-3">{{ error }}</p>{% endif %}
+  {% if user.is_authenticated %}
+  <p class="small text-muted mt-4">{{ owned }} of {{ limit }} scenarios used &middot; <a href="{% url 'lab_mine' %}">My scenarios</a></p>
+  {% endif %}
 </div>
 {% endblock %}

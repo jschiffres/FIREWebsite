@@ -1,18 +1,25 @@
 import json
 from functools import wraps
 
+import logging
+
 from django.conf import settings
-from django.http import Http404, JsonResponse
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.db.models import Count
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from FIRE import taxes
+from FIRE.models import user_is_premium
 
-from . import simulation
+from . import exports, simulation
 from .forms import item_form
 from .models import Item, Scenario
 
 NUM = ('amount', 'growth_pct', 'bonus_pct', 'contribution_limit', 'fixed_growth_pct', 'employer_match_pct')
+PREMIUM_SCENARIO_LIMIT = 50
 
 
 def lab_only(view):
@@ -22,6 +29,41 @@ def lab_only(view):
             raise Http404
         return view(request, *a, **kw)
     return wrapper
+
+
+def scenario_limit(user):
+    return PREMIUM_SCENARIO_LIMIT if user_is_premium(user) else settings.FREE_PLAN_LIMIT
+
+
+def get_scenario(request, pk):
+    """Anonymous scenarios are reachable by their link; owned ones only by their owner."""
+    sc = get_object_or_404(Scenario, pk=pk)
+    if sc.owner_id and sc.owner_id != request.user.id:
+        raise Http404
+    return sc
+
+
+def remember(request, sc):
+    ids = request.session.get('lab_ids', [])
+    if str(sc.pk) not in ids:
+        request.session['lab_ids'] = ids + [str(sc.pk)]
+
+
+def claim_session_scenarios(request):
+    """Attach scenarios started anonymously in this browser to the signed-in user, up to their plan's limit."""
+    ids = request.session.get('lab_ids')
+    if not ids or not request.user.is_authenticated:
+        return
+    room = max(0, scenario_limit(request.user) - request.user.lab_scenarios.count())
+    pending = list(Scenario.objects.filter(pk__in=ids, owner__isnull=True).order_by('created'))
+    for sc in pending[:room]:
+        sc.owner = request.user
+        sc.save(update_fields=['owner'])
+    left = [str(sc.pk) for sc in pending[room:]]
+    if left:
+        request.session['lab_ids'] = left
+    else:
+        request.session.pop('lab_ids', None)
 
 
 def serialize_item(it):
@@ -36,12 +78,16 @@ def serialize_item(it):
     return d
 
 
-def state(sc):
+def state(sc, premium=False):
     items = [serialize_item(i) for i in sc.items.all()]
     cfg = {'age': sc.age, 'plan_to_age': sc.plan_to_age, 'filing_status': sc.filing_status,
            'state': sc.state, 'seed': sc.id.int % (2 ** 32)}
-    return {'scenario': {k: cfg[k] for k in ('age', 'plan_to_age', 'filing_status', 'state')},
-            'items': items, 'results': simulation.run(cfg, items)}
+    return {'scenario': {**{k: cfg[k] for k in ('age', 'plan_to_age', 'filing_status', 'state')}, 'name': sc.name},
+            'items': items, 'premium': premium, 'results': simulation.run(cfg, items, extras=premium)}
+
+
+def _state(request, sc):
+    return state(sc, user_is_premium(request.user))
 
 
 def _body(request):
@@ -55,32 +101,125 @@ def _body(request):
 @lab_only
 def home(request):
     error = ''
+    user = request.user
+    signed_in = user.is_authenticated
+    owned = user.lab_scenarios.count() if signed_in else 0
+    limit = scenario_limit(user) if signed_in else None
     if request.method == 'POST':
         try:
             age = int(request.POST.get('age', ''))
         except ValueError:
             age = 0
-        if 16 <= age <= 90:
-            return redirect('lab_scenario', pk=Scenario.objects.create(age=age).pk)
-        error = 'Enter an age between 16 and 90.'
-    return render(request, 'lab/home.html', {'error': error})
+        if signed_in and owned >= limit:
+            error = (f'You have used all {limit} of your scenarios. Delete one'
+                     f'{"" if user_is_premium(user) else " or upgrade to Premium"} to start another.')
+        elif 16 <= age <= 90:
+            sc = Scenario.objects.create(age=age, owner=user if signed_in else None)
+            if not signed_in:
+                remember(request, sc)
+            return redirect('lab_scenario', pk=sc.pk)
+        else:
+            error = 'Enter an age between 16 and 90.'
+    return render(request, 'lab/home.html', {'error': error, 'owned': owned, 'limit': limit})
 
 
 @lab_only
 def scenario(request, pk):
-    sc = get_object_or_404(Scenario, pk=pk)
+    sc = get_scenario(request, pk)
+    claim_session_scenarios(request)
+    sc.refresh_from_db()
+    user = request.user
+    premium = user_is_premium(user)
     rebalance(sc)
+    others = user.is_authenticated and Scenario.objects.filter(owner=user).exclude(pk=sc.pk).exists()
     return render(request, 'lab/scenario.html', {
-        'sc': sc, 'state': state(sc), 'states': taxes.state_choices(),
+        'sc': sc, 'state': state(sc, premium), 'states': taxes.state_choices(),
         'frequencies': Item.FREQUENCIES, 'account_types': Item.ACCOUNT_TYPES,
         'contribution_types': [c for c in Item.CONTRIBUTION_TYPES if c[0] != 'none'],
+        'premium': premium, 'mine': user.is_authenticated and sc.owner_id == user.id,
+        'limit': scenario_limit(user) if user.is_authenticated else None,
+        'show_tour': not others and not sc.items.exists(),
     })
+
+
+@lab_only
+@login_required
+def mine(request):
+    claim_session_scenarios(request)
+    rows = list(request.user.lab_scenarios.order_by('-created'))
+    counts = dict(Item.objects.filter(scenario__in=rows).values_list('scenario').annotate(n=Count('id')))
+    for sc in rows:
+        sc.item_count = counts.get(sc.pk, 0)
+    limit = scenario_limit(request.user)
+    return render(request, 'lab/mine.html', {
+        'scenarios': rows, 'limit': limit, 'at_limit': len(rows) >= limit, 'premium': user_is_premium(request.user)})
+
+
+@lab_only
+@login_required
+@require_POST
+def rename(request, pk):
+    sc = get_scenario(request, pk)
+    name = request.POST.get('name', '').strip()[:60]
+    if name:
+        sc.name = name
+        sc.save(update_fields=['name'])
+    return redirect('lab_mine')
+
+
+@lab_only
+@login_required
+@require_POST
+def remove(request, pk):
+    sc = get_scenario(request, pk)
+    if sc.owner_id == request.user.id:
+        sc.delete()
+        messages.success(request, 'Scenario deleted.')
+    return redirect('lab_mine')
+
+
+def _export_blocked(request):
+    if user_is_premium(request.user):
+        return None
+    messages.warning(request, 'Exporting a lab scenario is a Premium feature. Upgrade your account to unlock it.')
+    return redirect('myaccount' if request.user.is_authenticated else 'loginuser')
+
+
+@lab_only
+def export_csv(request, pk):
+    sc = get_scenario(request, pk)
+    blocked = _export_blocked(request)
+    if blocked:
+        return blocked
+    st = state(sc, True)
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="fi-planner-scenario.csv"'
+    exports.write_csv(response, sc, st['items'], st['results'])
+    return response
+
+
+@lab_only
+def export_pdf(request, pk):
+    sc = get_scenario(request, pk)
+    blocked = _export_blocked(request)
+    if blocked:
+        return blocked
+    st = state(sc, True)
+    try:
+        pdf = exports.build_pdf(sc, st['items'], st['results'])
+    except Exception:
+        logging.getLogger(__name__).exception('Lab PDF generation failed')
+        messages.warning(request, 'Could not create the PDF. Please try again.')
+        return redirect('lab_scenario', pk=sc.pk)
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="fi-planner-scenario.pdf"'
+    return response
 
 
 @lab_only
 @require_POST
 def save_item(request, pk, item_pk=None):
-    sc = get_object_or_404(Scenario, pk=pk)
+    sc = get_scenario(request, pk)
     data = _body(request)
     kind = data.get('kind')
     inst = get_object_or_404(Item, pk=item_pk, scenario=sc) if item_pk else None
@@ -99,22 +238,22 @@ def save_item(request, pk, item_pk=None):
         obj.priority = sc.items.count()
     obj.save()
     rebalance(sc)
-    return JsonResponse(state(sc))
+    return JsonResponse(_state(request, sc))
 
 
 @lab_only
 @require_POST
 def delete_item(request, pk, item_pk):
-    sc = get_object_or_404(Scenario, pk=pk)
+    sc = get_scenario(request, pk)
     get_object_or_404(Item, pk=item_pk, scenario=sc).delete()
     rebalance(sc)
-    return JsonResponse(state(sc))
+    return JsonResponse(_state(request, sc))
 
 
 @lab_only
 @require_POST
 def settings_view(request, pk):
-    sc = get_object_or_404(Scenario, pk=pk)
+    sc = get_scenario(request, pk)
     data = _body(request)
     try:
         age = int(data.get('age', sc.age))
@@ -128,8 +267,11 @@ def settings_view(request, pk):
     if data.get('state') in dict(taxes.state_choices()):
         sc.state = data['state']
     sc.age, sc.plan_to_age = age, plan
+    name = str(data.get('name', '')).strip()[:60]
+    if name:
+        sc.name = name
     sc.save()
-    return JsonResponse(state(sc))
+    return JsonResponse(_state(request, sc))
 
 
 @lab_only
@@ -137,7 +279,7 @@ def settings_view(request, pk):
 def allocate(request, pk):
     """Body (all optional): {order: [ids], levels: {id: none|match|max}, pct: {id: percent}}.
     Taxable-section percentages are always rebalanced to total 100."""
-    sc = get_object_or_404(Scenario, pk=pk)
+    sc = get_scenario(request, pk)
     raw = _body(request)
     accounts = {str(i.pk): i for i in sc.items.filter(kind='account', contribution_type__in=['pretax', 'posttax'])}
     changed = set()
@@ -165,7 +307,7 @@ def allocate(request, pk):
     for k in changed:
         accounts[k].save(update_fields=['priority', 'savings_level'])
     rebalance(sc, anchor)
-    return JsonResponse(state(sc))
+    return JsonResponse(_state(request, sc))
 
 
 def rebalance(sc, anchor=None):

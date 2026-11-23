@@ -1,5 +1,6 @@
 import uuid
 
+from django.conf import settings
 from django.db import models
 
 
@@ -7,6 +8,10 @@ class Scenario(models.Model):
     FILING = [('single', 'Single'), ('married', 'Married filing jointly')]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    # Null for anonymous scenarios, which stay reachable by their link until a signed-in user claims them.
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE,
+                              related_name='lab_scenarios')
+    name = models.CharField(max_length=60, default='My scenario')
     age = models.PositiveSmallIntegerField()
     plan_to_age = models.PositiveSmallIntegerField(default=95)
     filing_status = models.CharField(max_length=10, choices=FILING, default='single')

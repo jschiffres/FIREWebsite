@@ -9,7 +9,7 @@ from FIRE import taxes
 
 FREQ = {'weekly': 52, 'biweekly': 26, 'bimonthly': 24, 'monthly': 12, 'quarterly': 4, 'biannual': 2, 'yearly': 1}
 
-WITHDRAWAL_RATE = 0.04          # used only for the "magic number" reference line
+WITHDRAWAL_RATE = 0.04          # the 4% rule behind the magic number
 GENERAL_INFLATION = 0.025       # used only to show "today's dollars"
 SUCCESS_THRESHOLD = 0.85        # share of simulated lifetimes that must stay funded to plan age
 CAP_GAINS_EFFECTIVE = 0.075     # 15% long-term rate on an assumed 50% gain share
@@ -41,16 +41,32 @@ def section(acct):
     return 'taxable'
 
 
+_FED_CURVES = {}
+
+
+def _fed_curve(status):
+    """Tax is piecewise linear in taxable income, so one interpolation replaces a loop over brackets."""
+    if status not in _FED_CURVES:
+        xs, ys, lower, tax = [0.0], [0.0], 0.0, 0.0
+        last_rate = 0.0
+        for upper, rate in taxes.FEDERAL[status]['brackets']:
+            last_rate = rate
+            if upper is None:
+                break
+            tax += (upper - lower) * rate
+            xs.append(float(upper))
+            ys.append(tax)
+            lower = upper
+        _FED_CURVES[status] = (np.array(xs), np.array(ys), last_rate)
+    return _FED_CURVES[status]
+
+
 def _fed(income, status, factor):
     rules = taxes.FEDERAL[status]
-    taxable = np.maximum(0.0, income - rules['deduction'] * factor)
-    tax, lower = np.zeros_like(taxable, dtype=float), 0.0
-    for upper, rate in rules['brackets']:
-        top = np.inf if upper is None else upper * factor
-        tax = tax + np.clip(taxable - lower, 0.0, top - lower) * rate
-        lower = top
-    return tax
-
+    xs, ys, top_rate = _fed_curve(status)
+    taxable = np.maximum(0.0, income - rules['deduction'] * factor) / factor
+    tax = np.interp(taxable, xs, ys) + np.maximum(0.0, taxable - xs[-1]) * top_rate
+    return tax * factor
 
 def _payroll(wages, status, factor):
     ss = np.minimum(wages, taxes.SOCIAL_SECURITY_WAGE_BASE * factor) * taxes.SOCIAL_SECURITY_RATE
@@ -170,7 +186,7 @@ def cashflows(sc, items, fi_age):
         return it['allocation_pct'] / pct_sum if pct_sum > 0 else 1 / len(taxable_accts)
 
     refund = zeros()
-    for _ in range(4):
+    for _ in range(60):
         # Pre-tax contributions lower the tax bill, and that refund is also cash to allocate.
         contrib, pretax_total, remaining = {}, zeros(), base_surplus + refund
         spendable = remaining.copy()
@@ -196,7 +212,7 @@ def cashflows(sc, items, fi_age):
         after = np.maximum(0.0, taxable_base - pretax_total)
         tax_after = _fed(after, status, factor) + srate * after + payroll
         new_refund = np.where(net_before > 0, tax_base - tax_after, 0.0)
-        if np.allclose(new_refund, refund, atol=0.5):
+        if np.allclose(new_refund, refund, atol=0.001, rtol=0):
             refund = new_refund
             break
         refund = new_refund
@@ -274,8 +290,13 @@ def simulate(sc, items, fi_age, n, seed, detail=False):
                     net = g - tax
                 else:
                     g = need.copy()
-                    for _ in range(4):
-                        g = need + _fed(ordinary + g, status, f) - _fed(ordinary, status, f) + srate * g
+                    base_tax = _fed(ordinary, status, f)
+                    for _ in range(40):
+                        nxt = need + _fed(ordinary + g, status, f) - base_tax + srate * g
+                        done = np.abs(nxt - g).max() < 0.01
+                        g = nxt
+                        if done:
+                            break
                     g = np.minimum(b, g)
                     tax = _fed(ordinary + g, status, f) - _fed(ordinary, status, f) + srate * g
                     net = g - tax
@@ -330,23 +351,41 @@ def _sankey(sc, items, cf, out, labels):
             add('Money in', labels[it['id']], arr[t])
         for aid, c in cf['contrib'].items():
             add('Money in', f"{labels[aid]} (saved)", c[t])
+        for aid, m in cf['employer'].items():
+            if aid in labels:
+                add(f"Employer match ({labels[aid]})", f"{labels[aid]} (saved)", m[t])
         add('Money in', 'Unallocated cash', max(cf['free'][t], 0))
         result.append(links)
     return result
 
 
-def run(sc, items):
-    """sc: dict(age, plan_to_age, filing_status, state, seed). Returns a JSON-ready results dict."""
+def run(sc, items, extras=True):
+    """sc: dict(age, plan_to_age, filing_status, state, seed). Returns a JSON-ready results dict.
+    extras=False leaves out the Premium series (per-account balances and the retire-at-other-ages odds)."""
     a0, plan = sc['age'], sc['plan_to_age']
     accounts = [i for i in items if i['kind'] == 'account']
     seed = sc['seed']
     base = {
         'status': 'empty', 'net_worth_now': sum(a['amount'] for a in accounts), 'fi_age': None,
-        'coast_age': None, 'success_pct': None, 'fi_number': None, 'unallocated_pct': 100, 'unallocated_now': 0,
+        'coast_age': None, 'rule_age': None, 'success_pct': None, 'fi_number': None, 'unallocated_pct': 100, 'unallocated_now': 0,
         'ages': [], 'notes': [],
     }
     if not items:
         return base
+
+    auto = not any(section(i) == 'taxable' for i in accounts)
+    if auto and any(i['kind'] == 'income' for i in items):
+        # Savings beyond the tax-advantaged limits need somewhere to go; idle cash would earn 0% for decades.
+        items = items + [{
+            'id': -1, 'kind': 'account', 'name': 'Taxable brokerage (automatic)', 'amount': 0, 'frequency': 'yearly',
+            'growth_pct': 0, 'bonus_pct': 0, 'taxed': True, 'payroll_taxed': True, 'tax_deferred': False,
+            'start_age': None, 'start_at_fi': False, 'end_mode': 'life', 'end_age': None, 'account_type': 'taxable',
+            'contribution_type': 'posttax', 'contribution_limit': None, 'fixed_growth': False,
+            'fixed_growth_pct': None, 'allocation_pct': 100, 'employer_match_pct': 0, 'savings_level': 'none',
+            'priority': 0, 'linked_income': None}]
+        accounts = [i for i in items if i['kind'] == 'account']
+    else:
+        auto = False
 
     def ok(age):
         return 1 - simulate(sc, items, age, N_SEARCH, seed)['ruin'] >= SUCCESS_THRESHOLD
@@ -367,7 +406,10 @@ def run(sc, items):
     cf, nw = out['cf'], out['nw']
     ages = cf['ages']
     p10, p50, p90 = np.percentile(nw, [10, 50, 90], axis=1)
-    magic = np.maximum(0.0, cf['expenses'] - cf['nonwork']) / WITHDRAWAL_RATE
+    # Only non-work income that keeps going (not a one-off such as an inheritance) offsets the magic number.
+    lasting = np.minimum.accumulate(cf['nonwork'][::-1])[::-1]
+    need_now = np.maximum(0.0, cf['expenses'] - lasting)
+    magic = need_now / WITHDRAWAL_RATE
     saved = sum(cf['contrib'].values(), np.zeros(len(ages))) + np.maximum(cf['free'], 0)
     withdrawn = -(sum(out['wd'].values(), np.zeros(len(ages))) + out['cash_used'])
     success = 1 - out['ruin']
@@ -383,7 +425,7 @@ def run(sc, items):
     if fi is not None and fi not in opts_ages and fi < plan:
         opts_ages = sorted(opts_ages + [fi])
     retire_options = [{'age': a, 'success': round(100 * (1 - simulate(sc, items, a, N_SEARCH, seed)['ruin']))}
-                      for a in opts_ages]
+                      for a in opts_ages] if extras else []
     coast = None
     if fi is not None and fi > a0:
         mean = sum(a['amount'] * MARKET[a['account_type']][0] for a in accounts)
@@ -395,6 +437,9 @@ def run(sc, items):
                 coast = int(ages[t])
                 break
 
+    # First age the median net worth reaches the 4% rule number (a quicker, rougher test than the FI age).
+    rule_age = next((int(a) for a, n, m in zip(ages, p50, magic) if m > 0 and n >= m), None)
+
     notes = []
     surplus0 = float(cf['spendable'][0])
     left0 = max(0.0, float(cf['free'][0]))
@@ -403,6 +448,9 @@ def run(sc, items):
     if surplus0 > 0 and left0 >= 1:
         notes.append(f"About ${left0:,.0f} a year ({base['unallocated_pct']}% of your surplus) is unallocated and "
                      "earns 0%. Allocate it to an account below.")
+    if auto:
+        notes.append('Savings beyond your tax-advantaged limits are invested in an automatic taxable brokerage '
+                     'account. Add your own taxable account to choose where that money goes.')
     if not accounts:
         notes.append('Add an account to invest your savings. Without one, surplus cash earns nothing.')
     if not any(i['kind'] == 'income' for i in items):
@@ -416,11 +464,12 @@ def run(sc, items):
         'magic': [round(float(x)) for x in magic],
         'saved': [round(float(x)) for x in saved], 'withdrawn': [round(float(x)) for x in withdrawn],
         'defl': [round(1 / (1 + GENERAL_INFLATION) ** t, 4) for t in range(len(ages))],
-        'fi_age': fi, 'coast_age': coast, 'success_pct': round(success * 100),
+        'fi_age': fi, 'coast_age': coast, 'rule_age': rule_age, 'success_pct': round(success * 100),
         'fi_number': round(float(magic[fi - a0])) if fi is not None and fi - a0 < len(ages) else None,
         'surplus_now': round(float(cf['spendable'][0])),
         'sankey': _sankey(sc, items, cf, out, labels),
-        'acct_bal': {str(k): [[round(float(x)) for x in row] for row in v] for k, v in out['acct_bal'].items()},
+        'acct_bal': ({str(k): [[round(float(x)) for x in row] for row in v] for k, v in out['acct_bal'].items()}
+                     if extras else {}),
         'income': [round(float(x)) for x in gross],
         'expenses': [round(float(x)) for x in cf['expenses']],
         'taxes': [round(float(x)) for x in cf['tax_fed'] + cf['tax_state'] + cf['tax_payroll'] + out['wd_tax']],
@@ -428,7 +477,8 @@ def run(sc, items):
         'retire_options': retire_options,
         'node_kinds': {**{labels[i['id']]: i['kind'] for i in items if i['kind'] != 'account'},
                        **{f"{labels[a['id']]} (saved)": 'account' for a in accounts},
-                       **{f"{labels[a['id']]} (withdrawal)": 'account' for a in accounts}},
+                       **{f"{labels[a['id']]} (withdrawal)": 'account' for a in accounts},
+                       **{f"Employer match ({labels[a['id']]})": 'income' for a in accounts}},
         'notes': notes,
     })
     return base

@@ -1,0 +1,83 @@
+<style>
+  #tourShade{position:fixed;inset:0;z-index:1990;display:none}
+  #tourHole{position:fixed;z-index:1991;border-radius:8px;box-shadow:0 0 0 9999px rgba(0,0,0,.55);pointer-events:none;transition:all .2s}
+  #tourPop{position:fixed;z-index:1992;background:#fff;border-radius:10px;padding:1rem;width:min(340px,calc(100vw - 24px));box-shadow:0 6px 24px rgba(0,0,0,.3);display:none}
+  #tourPop h6{color:#285C53;font-weight:700}
+</style>
+<div id="tourShade"></div><div id="tourHole" style="display:none"></div>
+<div id="tourPop" role="dialog" aria-live="polite" aria-label="Lab tour">
+  <h6 id="tourTitle"></h6>
+  <p class="small mb-3" id="tourText"></p>
+  <div class="d-flex align-items-center gap-2">
+    <span class="small text-muted me-auto" id="tourCount"></span>
+    <button type="button" class="btn btn-sm btn-link text-muted" id="tourSkip">Skip</button>
+    <button type="button" class="btn btn-sm btn-action-empty" id="tourBack">Back</button>
+    <button type="button" class="btn btn-sm btn-action-filled" id="tourNext">Next</button>
+  </div>
+</div>
+<script>
+(function(){
+  const KEY = 'labTourDone', $ = s => document.querySelector(s);
+  const prem = {{ premium|yesno:"true,false" }};
+  const steps = [
+    {title:'Welcome to the FI Planner Lab', text:'This quick tour shows how to build a plan. Nothing here is permanent, so feel free to experiment.'},
+    {sel:'#addBar', title:'Add your money', text:'Start by adding incomes, expenses and accounts. Each one opens a form right on the page. Save it and it joins your plan.'},
+    {sel:'#sidebar', title:'Your plan', text:'Everything you add is listed here, colored by type. Hover an item to see details, view its chart or edit it.'},
+    {sel:'#kpis', title:'Your numbers', text:'As you add items, your net worth, FI age, 4% rule age and the chance your plan holds are calculated with Monte Carlo simulation.'},
+    {sel:'#charts', title:'Your charts', text:'Once you have a few items, charts appear: your whole timeline, a cash-flow Sankey you can scrub by year, and more.', fallback:'Once you have a few items, charts appear here: your whole timeline and a cash-flow Sankey you can scrub by year.'},
+    {sel:'#allocCard', title:'Savings allocation', text:'Decide where your savings go: tax-advantaged accounts by priority, then the rest across taxable accounts.', fallback:'After you add accounts, a savings allocation card lets you set which accounts get your savings first.'},
+    {sel:'#settingsBtn', title:'Settings', text:'Change your age, plan age, filing status and state here' + '{% if mine %} and rename your scenario{% endif %}.'},
+    {sel:'#exportBar', title:'Save and export', text: prem ? 'Download your scenario as a CSV or PDF at any time.' : 'Premium unlocks CSV and PDF downloads, extra charts and unlimited scenarios. Free accounts keep {{ free_plan_limit }} scenarios.'},
+    {title:'You are ready', text:'Add your first income to get started. You can replay this tour anytime with the Take the tour button.'}
+  ];
+  let i = 0, open = false;
+  const pop = $('#tourPop'), hole = $('#tourHole'), shade = $('#tourShade');
+
+  function place(){
+    const s = steps[i];
+    let el = s.sel ? $(s.sel) : null;
+    if (el && el.offsetParent === null) el = null;
+    $('#tourTitle').textContent = s.title;
+    $('#tourText').textContent = el || !s.sel ? s.text : (s.fallback || s.text);
+    $('#tourCount').textContent = (i + 1) + ' of ' + steps.length;
+    $('#tourBack').style.display = i ? '' : 'none';
+    $('#tourNext').textContent = i === steps.length - 1 ? 'Done' : 'Next';
+    const vw = innerWidth, vh = innerHeight;
+    if (!el){
+      hole.style.display = 'none';
+      shade.style.background = 'rgba(0,0,0,.55)';
+      pop.style.display = 'block';
+      pop.style.left = Math.max(12, (vw - pop.offsetWidth) / 2) + 'px';
+      pop.style.top = Math.max(12, (vh - pop.offsetHeight) / 3) + 'px';
+      return;
+    }
+    shade.style.background = 'transparent';
+    el.scrollIntoView({block:'center', behavior:'instant'});
+    const r = el.getBoundingClientRect(), pad = 6;
+    const top = Math.max(r.top - pad, 4), bottom = Math.min(r.bottom + pad, vh - 4);
+    Object.assign(hole.style, {display:'block', left:(r.left - pad) + 'px', top:top + 'px', width:(r.width + pad * 2) + 'px', height:(bottom - top) + 'px'});
+    pop.style.display = 'block';
+    const ph = pop.offsetHeight, pw = pop.offsetWidth;
+    let y = bottom + 10;
+    if (y + ph > vh - 8) y = top - ph - 10;
+    if (y < 8) y = vh - ph - 12;
+    pop.style.top = Math.max(8, y) + 'px';
+    pop.style.left = Math.min(Math.max(12, r.left), vw - pw - 12) + 'px';
+  }
+  function start(){ i = 0; open = true; shade.style.display = 'block'; place(); $('#tourNext').focus(); }
+  function end(){ open = false; shade.style.display = hole.style.display = pop.style.display = 'none'; try { localStorage.setItem(KEY, '1'); } catch(e){} }
+  $('#tourNext').onclick = () => { if (i >= steps.length - 1) end(); else { i++; place(); } };
+  $('#tourBack').onclick = () => { if (i) { i--; place(); } };
+  $('#tourSkip').onclick = shade.onclick = end;
+  $('#tourBtn').onclick = start;
+  addEventListener('resize', () => open && place());
+  addEventListener('keydown', e => {
+    if (!open) return;
+    if (e.key === 'Escape') end();
+    else if (e.key === 'ArrowRight') $('#tourNext').click();
+    else if (e.key === 'ArrowLeft') $('#tourBack').click();
+  });
+  let done = false; try { done = !!localStorage.getItem(KEY); } catch(e){}
+  if ({{ show_tour|yesno:"true,false" }} && !done) setTimeout(start, 400);
+})();
+</script>
