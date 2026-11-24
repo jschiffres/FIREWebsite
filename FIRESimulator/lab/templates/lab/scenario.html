@@ -15,24 +15,54 @@
   #itemForm .btn-action-filled{background:var(--kc);border-color:var(--kc)}
   .tip{display:inline-block;width:1.1rem;height:1.1rem;line-height:1.1rem;text-align:center;border-radius:50%;background:#e4e4e4;color:#555;font-size:.7rem;font-weight:700;cursor:help;margin-left:.15rem}
   .chart-box{position:relative;height:360px}
+  .caret-ico{display:inline-block;transition:transform .2s}
+  #settingsBtn[aria-expanded=true] .caret-ico{transform:rotate(180deg)}
+  #logicModal h6{margin-top:1rem;color:#0d6efd}
 </style>
 <div class="container-fluid py-3" style="max-width:1300px">
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <div><span class="badge text-bg-warning">Experimental</span> <strong class="ms-2" id="scName">{{ sc.name }}</strong></div>
     <div class="d-flex flex-wrap gap-2" id="exportBar">
-      {% if user.is_authenticated %}<a class="btn btn-sm btn-outline-secondary" href="{% url 'lab_mine' %}">My scenarios</a>{% endif %}
-      <button class="btn btn-sm btn-outline-secondary" id="tourBtn" type="button">Take the tour</button>
+      <button class="btn btn-sm btn-outline-secondary" id="settingsBtn" type="button" data-bs-toggle="collapse" data-bs-target="#settings" aria-expanded="false" aria-controls="settings">Settings <span class="caret-ico" aria-hidden="true">&#9662;</span></button>
       <a class="btn btn-sm btn-outline-secondary" href="{% url 'lab_export_csv' sc.pk %}"{% if not premium %} title="Premium feature"{% endif %}>{% if not premium %}&#128274; {% endif %}CSV</a>
       <a class="btn btn-sm btn-outline-secondary" href="{% url 'lab_export_pdf' sc.pk %}"{% if not premium %} title="Premium feature"{% endif %}>{% if not premium %}&#128274; {% endif %}PDF</a>
-      <button class="btn btn-sm btn-outline-secondary" id="settingsBtn" data-bs-toggle="collapse" data-bs-target="#settings">Settings</button>
-    </div>
+      <button class="btn btn-sm btn-outline-secondary" id="tourBtn" type="button">Take the tour</button>
+      <button class="btn btn-sm btn-outline-secondary" id="logicBtn" type="button" data-bs-toggle="modal" data-bs-target="#logicModal">FAQ / Logic</button>    </div>
   </div>
   {% if not user.is_authenticated %}
   <div class="alert alert-info py-2 small">This scenario is only saved in this browser link. <a href="{% url 'signupuser' %}">Sign up free</a> or <a href="{% url 'loginuser' %}">log in</a> to keep it on your account (free accounts keep {{ free_plan_limit }} scenarios).</div>
   {% elif not mine %}
   <div class="alert alert-warning py-2 small">This scenario is not saved to your account because you have reached your limit of {{ limit }}. <a href="{% url 'lab_mine' %}">Manage scenarios</a>{% if not premium %} or <a href="{% url 'myaccount' %}#premium">upgrade to Premium</a>{% endif %}.</div>
   {% endif %}
-  <div id="settings" class="collapse mb-3">
+  <div class="modal fade" id="logicModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">FAQ / How the numbers work</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+      <div class="modal-body small">
+        <h6>What is the Magic Number / 4% rule age?</h6>
+        <p>The Magic Number is 25 times your yearly spending, minus any lasting income you will still have after you stop working (pension, rental, Social Security and similar). The 4% rule age is the first age your <em>median</em> net worth reaches it. It is a rule of thumb, not a guarantee.</p>
+        <h6>What is FI age?</h6>
+        <p>The earliest age you could stop working and still have money last to your plan age in at least 85% of the simulated markets. It is stricter than the 4% rule age, so it is usually later.</p>
+        <h6>How does the Monte Carlo simulation work?</h6>
+        <p>The planner runs 1,000 possible market histories. Each year every account earns a random return around an assumed average: employer, IRA and taxable 7% (15-16% volatility), HSA and education 6% (12%), cash 3% (1%), alternative assets 8% (30%). Accounts with a fixed growth rate you set skip the randomness. Accounts move mostly together because they share a market shock (correlation about 0.9 for stocks, 0.5 for alternatives, 0 for cash). Returns are independent from year to year.</p>
+        <p>Income, spending, taxes and contributions are the same in every run. Only investment returns vary. Spending and income growth use the rates you entered.</p>
+        <h6>What does "Chance plan holds" mean?</h6>
+        <p>The share of the 1,000 runs where your spending is covered every year up to your plan age. A run fails the first year money runs out.</p>
+        <h6>What do the chart band and line show?</h6>
+        <p>The line is the median (middle) outcome. The shaded band runs from the 10th to the 90th percentile, so 1 in 10 runs is worse than the bottom edge and 1 in 10 is better than the top edge.</p>
+        <h6>How are taxes calculated?</h6>
+        <p>Taxes are estimated each year from your income: federal income tax with your filing status, FICA payroll tax, and a flat state estimate. Pre-tax contributions (401k, traditional IRA, HSA) lower taxable income and any refund is counted as extra savings. Tax brackets and limits grow with inflation.</p>
+        <h6>How are savings allocated?</h6>
+        <p>What is left after expenses and taxes goes to your accounts in priority order. Each account can take a share, contribute enough to get the employer match, or max out its yearly limit. An employer match is added on top and shown as its own source in the cash flow chart. If you have income but no taxable account, an automatic taxable brokerage account holds the rest.</p>
+        <h6>How are withdrawals taken after you stop working?</h6>
+        <p>Spending not covered by other income comes from cash first, then taxable accounts, alternative assets, post-tax retirement (Roth), pre-tax retirement (401k, IRA) and finally the HSA. Taxable withdrawals assume a flat 7.5% effective capital gains rate. Pre-tax withdrawals are increased so that, after income tax, you still receive the amount needed.</p>
+        <h6>Why does the cash flow chart show an age?</h6>
+        <p>It shows the average of the runs that last to your plan age, for the year you pick. Runs that run out of money are left out so the chart shows what a working plan looks like.</p>
+        <h6>What is not modeled?</h6>
+        <p>Random inflation, changing tax law, sequence-dependent spending changes, long-term care or other surprises, and detailed Social Security rules. Treat results as estimates, not financial advice.</p>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button></div>
+    </div></div>
+  </div>  <div id="settings" class="collapse mb-3">
     <div class="row g-2 align-items-end">
       {% if mine %}<div class="col-12 col-md-4"><label class="form-label small">Scenario name</label><input id="s_name" maxlength="60" class="form-control" value="{{ sc.name }}"></div>{% endif %}
       <div class="col-6 col-md-2"><label class="form-label small">Your age</label><input id="s_age" type="number" class="form-control" value="{{ sc.age }}"></div>
