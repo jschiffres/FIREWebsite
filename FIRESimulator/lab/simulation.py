@@ -252,9 +252,9 @@ def simulate(sc, items, fi_age, n, seed, detail=False):
 
     nw = np.zeros((T, n))
     ruined = np.zeros(n, dtype=bool)
-    wd = {a['id']: np.zeros(T) for a in accounts}
+    wd = {a['id']: np.zeros((T, n)) for a in accounts}
     ab = {a['id']: np.zeros((3, T)) for a in accounts}
-    wd_tax, shortfall, cash_used = np.zeros(T), np.zeros(T), np.zeros(T)
+    wd_tax, shortfall, cash_used = np.zeros((T, n)), np.zeros((T, n)), np.zeros((T, n))
     status, srate = cf['status'], cf['srate']
 
     for t in range(T):
@@ -274,7 +274,7 @@ def simulate(sc, items, fi_age, n, seed, detail=False):
             need = np.full(n, -free)
             take = np.minimum(unalloc, need)
             if detail:
-                cash_used[t] = take.mean()
+                cash_used[t] = take
             unalloc, need = unalloc - take, need - take
             ordinary = np.full(n, cf['taxable_base'][t])
             for a in order:
@@ -304,18 +304,21 @@ def simulate(sc, items, fi_age, n, seed, detail=False):
                 bal[a['id']] = b - g
                 need = np.maximum(0.0, need - net)
                 if detail:
-                    wd[a['id']][t] = g.mean()
-                    wd_tax[t] += float(np.mean(tax))
+                    wd[a['id']][t] = g
+                    wd_tax[t] += tax
             short = need > 1.0
             ruined |= short
             if detail:
-                shortfall[t] = need.mean()
+                shortfall[t] = need
         for aid in bal:
             bal[aid] = bal[aid] * (1 + growth[aid][t])
 
     out = {'nw': nw, 'ruin': ruined.mean(), 'cf': cf}
     if detail:
-        out.update(wd=wd, wd_tax=wd_tax, shortfall=shortfall, cash_used=cash_used, acct_bal=ab)
+        keep = ~ruined if (~ruined).any() else np.ones(n, dtype=bool)
+        avg = lambda x: x[:, keep].mean(axis=1)
+        out.update(wd={k: avg(v) for k, v in wd.items()}, wd_tax=avg(wd_tax), shortfall=avg(shortfall),
+                   cash_used=avg(cash_used), acct_bal=ab)
     return out
 
 
